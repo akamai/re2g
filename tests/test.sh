@@ -2,42 +2,55 @@
 
 re2g=$1;
 
+fail=0;
+
 function re2expect () {
   e=$1;
   shift;
-  o=$($re2g "$@")
-  if [ "$e" eq "$o" ]; then
-    echo SUCCESS "$@" => "'$e'";
+  o=$($re2g "$@");
+  s=$?;
+  if [ $s = 0 ]; then 
+    if [ "$e" = "$o" ]; then
+      echo SUCCESS "$@" '=>' "'$e'";
+    else
+      echo FAILURE "$@" '=>' "'$o'" NOT "'$e'";
+      fail=`expr $fail + 1`;
+    fi
   else
-    echo FAILURE "$@" => "'$o'" NOT "'$e'";
+    echo FAILURE "$@" ' ERR ' $s; 
+    fail=`expr $fail + 1`;
   fi
 }
 
 
 #$re2g -h;
 
-$re2g fred f; #fred
+re2expect fred fred f 
 
-$re2g fred b; #EMPTY
+re2expect "" fred b 
 
-$re2g -o fred r.; #re
+re2expect re -o fred r. 
 
-$re2g -v fred r.; #EMPTY
+re2expect "" -v fred r. 
 
-$re2g -vo fred r.; #EMPTY
+re2expect "" -vo fred r. 
  
 
-$re2g fred r x; #fxed
+re2expect fxed fred r x 
 
-$re2g -p fred q z; #fred
+re2expect fred -p fred q z 
 
-$re2g -v fred q z; #fred
+re2expect fred -v fred q z 
 
-$re2g fred q z; #EMPTY
+re2expect "" fred q z 
 
-$re2g fredrob r. x; #fxdrob
+re2expect fxdrob fredrob r. x 
 
-$re2g -g fredrob r. x; #fxdxb
+re2expect fxdxb -g fredrob r. x 
 
-$re2g -g fredrob 'r(.)' '\1x'; #fexdoxb
+re2expect fexdoxb -g fredrob 'r(.)' '\1x' 
 
+if [ $fail -gt 0 ]; then
+  echo $fail Errors
+  exit 1;
+fi

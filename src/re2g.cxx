@@ -58,6 +58,8 @@ int main(int argc, char** argv){
       argv++;
       argc--;
     }
+  } else {
+    o_usage = 1;
   }
 
   if(o_usage){

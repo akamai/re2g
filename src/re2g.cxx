@@ -99,12 +99,12 @@ int main(int argc,char** argv){
     if(o_print_match && !o_global){
       matched = RE2::Extract(in,pat,rep,&out);
       to_print=&out;
-    } else if(o_global && !o_print_match) {
-      matched = RE2::GlobalReplace(&in,pat,rep);
-      to_print=&in;
     } else if(o_global && o_print_match){
       matched = RE2::GlobalExtract(in,pat,rep,&out);
       to_print=&out;
+    } else if(o_global && !o_print_match) {
+      matched = RE2::GlobalReplace(&in,pat,rep);
+      to_print=&in;
     } else {
       matched = RE2::Replace(&in,pat,rep);
       to_print=&in;

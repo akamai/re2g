@@ -7,8 +7,8 @@ int extract(const re2::StringPiece &text,
             const re2::StringPiece &rewrite,
             std::string *out,
             bool global){
-  return global?RE2::GlobalExtract(text,pattern,rewrite,out):
-    RE2::Extract(text,pattern,rewrite,out)?1:0;
+  return global?RE2::GlobalExtract(text, pattern, rewrite, out):
+    RE2::Extract(text, pattern, rewrite, out)?1:0;
 }
 
 
@@ -16,11 +16,11 @@ int replace(std::string *text,
             const re2::RE2& pattern,
             const re2::StringPiece &rewrite,
             bool global){
-  return global?RE2::GlobalReplace(text,pattern,rewrite):
-    RE2::Replace(text,pattern,rewrite)?1:0;
+  return global?RE2::GlobalReplace(text, pattern, rewrite):
+    RE2::Replace(text, pattern, rewrite)?1:0;
 }
 
-int main(int argc,char** argv){
+int main(int argc, char** argv){
   int o_global=0,
     o_usage=0,
     o_print_match=0,
@@ -99,13 +99,13 @@ int main(int argc,char** argv){
   if(argc==3){
     // re2g str pat
     if(o_print_match){
-      matched = extract(in,pat,"\\0",&out,o_global)>0;
-      to_print=&out;
+      matched = extract(in, pat, "\\0", &out, o_global) > 0;
+      to_print = &out;
     } else {
-      matched = RE2::PartialMatch(in,pat);
-      to_print= &in;
+      matched = RE2::PartialMatch(in, pat);
+      to_print = &in;
     }
-    to_print=(matched^o_negate_match)?to_print:NULL;
+    to_print=(matched ^ o_negate_match)?to_print:NULL;
   } else if(argc==4) {
     // re2g str pat rep
     std::string rep = std::string(argv[3]);
@@ -113,11 +113,11 @@ int main(int argc,char** argv){
     // need to pick: (-o) Extract, (default)Replace, (-g)GlobalReplace
     // also, print non matching lines? (-p)
     if(o_print_match){
-      matched = extract(in,pat,rep,&out,o_global)>0;
-      to_print=&out;
+      matched = extract(in, pat, rep, &out, o_global) > 0;
+      to_print = &out;
     } else {
-      matched = replace(&in,pat,rep,o_global)>0;
-      to_print=&in;
+      matched = replace(&in, pat, rep, o_global) > 0;
+      to_print = &in;
     }
     to_print=(matched ^ o_negate_match)?to_print:NULL;
 

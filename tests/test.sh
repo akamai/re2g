@@ -143,7 +143,7 @@ re2expect "" -og theteststring q
 re2expect "t" -og theteststring t
 re2expect "th" -og theteststring '(t.)'
 re2expect "" -og theteststring '(q.)'
-re2expect "hz" -og theteststring 't(.)' '\1z'
+re2expect "hzezszrz" -og theteststring 't(.)' '\1z'
 re2expect "" -og theteststring 'q(.)' '\1z'
 
 # pg
@@ -189,7 +189,7 @@ re2expect "" -opg theteststring q
 re2expect "t" -opg theteststring t
 re2expect "th" -opg theteststring '(t.)'
 re2expect "" -opg theteststring '(q.)'
-re2expect "hz" -opg theteststring 't(.)' '\1z'
+re2expect "hzezszrz" -opg theteststring 't(.)' '\1z'
 re2expect "theteststring" -opg theteststring 'q(.)' '\1z'
 
 # vopg

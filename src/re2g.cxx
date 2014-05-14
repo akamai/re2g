@@ -2,6 +2,28 @@
 #include <iostream>
 
 
+#define arraysize(array) (sizeof(array)/sizeof((array)[0]))
+
+bool ExtractAll(const re2::StringPiece &text,
+                 const re2::RE2& re,
+                 const re2::StringPiece &rewrite,
+                std::string *out) {
+  re2::StringPiece vec[1234];//[kVecSize];
+  int nvec = 1 + RE2::MaxSubmatch(rewrite);
+  if (nvec > arraysize(vec))
+    return false;
+
+  bool any = false;
+  out->clear();
+  int consumed = 0;
+  while(re.Match(text, consumed, text.size(), RE2::UNANCHORED, vec, nvec)){
+    consumed = vec[0].end() - text.begin();
+    if(re.Rewrite(out, rewrite, vec, nvec)) {
+      any = true;
+    }
+  }
+  return any;
+}
 
 int main(int argc,char** argv){
   int o_global=0,
@@ -99,12 +121,15 @@ int main(int argc,char** argv){
 
     // need to pick: (-o) Extract, (default)Replace, (-g)GlobalReplace
     // also, print non matching lines? (-p)
-    if(o_print_match){
+    if(o_print_match && !o_global){
       matched = RE2::Extract(in,pat,rep,&out);
       to_print=&out;
-    } else if(o_global) {
+    } else if(o_global && !o_print_match) {
       matched = RE2::GlobalReplace(&in,pat,rep);
       to_print=&in;
+    } else if(o_global && o_print_match){
+      matched = ExtractAll(in,pat,rep,&out);
+      to_print=&out;
     } else {
       matched = RE2::Replace(&in,pat,rep);
       to_print=&in;

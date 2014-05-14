@@ -5,19 +5,30 @@ re2g=$1;
 fail=0;
 
 function re2expect () {
-  e=$1;
-  shift;
-  o=$($re2g "$@");
-  s=$?;
+  e="$1";
+  t="$2";
+  f="";
+  shift 2;
+  
+  if printf -- "$1" | grep -q ^-; then
+    f="$1"
+    shift;
+    o=$(printf -- "$t"|$re2g "$f" /dev/stdin "$@");
+    s=$?;
+  else
+    o=$(printf -- "$t"|$re2g /dev/stdin "$@");
+    s=$?;
+  fi
+
   if [ $s = 0 ]; then 
     if [ "$e" = "$o" ]; then
-      echo SUCCESS "$@" '=>' "'$e'";
+      echo SUCCESS "$f $t $@" '=>' "'$e'";
     else
-      echo FAILURE "$@" '=>' "'$o'" NOT "'$e'";
+      echo FAILURE "$f $t $@" '=>' "'$o'" NOT "'$e'";
       fail=`expr $fail + 1`;
     fi
   else
-    echo FAILURE "$@" ' ERR ' $s; 
+    echo FAILURE "$f $t $@" ' ERR ' $s; 
     fail=`expr $fail + 1`;
   fi
 }
@@ -34,26 +45,26 @@ re2expect fred fred f
 
 re2expect "" fred b 
 
-re2expect re -o fred r. 
+re2expect re fred -o r.  
 
-re2expect "" -v fred r. 
+re2expect "" fred -v r.  
 
-re2expect "" -vo fred r. 
+re2expect "" fred -vo r.  
  
 
 re2expect fxed fred r x 
 
-re2expect fred -p fred q z 
+re2expect fred fred -p q z  
 
-re2expect fred -v fred q z 
+re2expect fred fred -v q z  
 
 re2expect "" fred q z 
 
 re2expect fxdrob fredrob r. x 
 
-re2expect fxdxb -g fredrob r. x 
+re2expect fxdxb fredrob -g r. x  
 
-re2expect fexdoxb -g fredrob 'r(.)' '\1x' 
+re2expect fexdoxb fredrob -g 'r(.)' '\1x'  
 
 
 # NONE
@@ -67,139 +78,139 @@ re2expect "" theteststring 'q(.)' '\1z'
 
 # v
 
-re2expect "theteststring" -v  theteststring q
-re2expect "" -v theteststring t
-re2expect "" -v theteststring '(t.)'
-re2expect "theteststring" -v theteststring '(q.)'
-re2expect "" -v theteststring 't(.)' '\1z'
-re2expect "theteststring" -v theteststring 'q(.)' '\1z'
+re2expect "theteststring" theteststring -v  q 
+re2expect "" theteststring -v t 
+re2expect "" theteststring -v '(t.)' 
+re2expect "theteststring" theteststring -v '(q.)' 
+re2expect "" theteststring -v 't(.)' '\1z' 
+re2expect "theteststring" theteststring -v 'q(.)' '\1z' 
 
 # o
 
-re2expect "" -o theteststring q
-re2expect "t" -o theteststring t
-re2expect "th" -o theteststring '(t.)'
-re2expect "" -o theteststring '(q.)'
-re2expect "hz" -o  theteststring 't(.)' '\1z'
-re2expect "" -o theteststring 'q(.)' '\1z'
+re2expect "" theteststring -o q 
+re2expect "t" theteststring -o t 
+re2expect "th" theteststring -o '(t.)' 
+re2expect "" theteststring -o '(q.)' 
+re2expect "hz" theteststring -o 't(.)' '\1z' 
+re2expect "" theteststring -o 'q(.)' '\1z' 
 
 # p
 
-re2expect "" -p theteststring q
-re2expect "theteststring" -p theteststring t
-re2expect "theteststring" -p theteststring '(t.)'
-re2expect "" -p theteststring '(q.)'
-re2expect "hzeteststring" -p theteststring 't(.)' '\1z'
-re2expect "theteststring" -p theteststring 'q(.)' '\1z'
+re2expect "" theteststring -p q 
+re2expect "theteststring" theteststring -p t 
+re2expect "theteststring" theteststring -p '(t.)' 
+re2expect "" theteststring -p '(q.)' 
+re2expect "hzeteststring" theteststring -p 't(.)' '\1z' 
+re2expect "theteststring" theteststring -p 'q(.)' '\1z' 
 
 # g
 
-re2expect "" -g theteststring q
-re2expect "theteststring" -g theteststring t
-re2expect "theteststring" -g theteststring '(t.)'
-re2expect "" -g theteststring '(q.)'
-re2expect "hzeezsszrzing" -g theteststring 't(.)' '\1z'
-re2expect "" -g theteststring 'q(.)' '\1z'
+re2expect "" theteststring -g q 
+re2expect "theteststring" theteststring -g t 
+re2expect "theteststring" theteststring -g '(t.)' 
+re2expect "" theteststring -g '(q.)' 
+re2expect "hzeezsszrzing" theteststring -g 't(.)' '\1z' 
+re2expect "" theteststring -g 'q(.)' '\1z' 
 
 # vo
 
-re2expect "theteststring" -vo  theteststring q
-re2expect "" -vo theteststring t
-re2expect "" -vo theteststring '(t.)'
-re2expect "theteststring" -vo theteststring '(q.)'
-re2expect "" -vo theteststring 't(.)' '\1z'
-re2expect "theteststring" -vo theteststring 'q(.)' '\1z'
+re2expect "theteststring" theteststring -vo q 
+re2expect "" theteststring -vo t 
+re2expect "" theteststring -vo '(t.)' 
+re2expect "theteststring" theteststring -vo '(q.)' 
+re2expect "" theteststring -vo 't(.)' '\1z' 
+re2expect "theteststring" theteststring -vo 'q(.)' '\1z' 
 
 # vp
 
-re2expect "theteststring" -vp  theteststring q
-re2expect "" -vp theteststring t
-re2expect "" -vp theteststring '(t.)'
-re2expect "theteststring" -vp theteststring '(q.)'
-re2expect "theteststring" -vp theteststring 't(.)' '\1z'
-re2expect "theteststring" -vp theteststring 'q(.)' '\1z'
+re2expect "theteststring" theteststring -vp q 
+re2expect "" theteststring -vp t 
+re2expect "" theteststring -vp '(t.)' 
+re2expect "theteststring" theteststring -vp '(q.)' 
+re2expect "theteststring" theteststring -vp 't(.)' '\1z' 
+re2expect "theteststring" theteststring -vp 'q(.)' '\1z' 
 
 # vg
 
-re2expect "theteststring" -vg  theteststring q
-re2expect "" -vg theteststring t
-re2expect "" -vg theteststring '(t.)'
-re2expect "theteststring" -vg theteststring '(q.)'
-re2expect "" -vg theteststring 't(.)' '\1z'
-re2expect "theteststring" -vg theteststring 'q(.)' '\1z'
+re2expect "theteststring" theteststring -vg  q 
+re2expect "" theteststring -vg t 
+re2expect "" theteststring -vg '(t.)' 
+re2expect "theteststring" theteststring -vg '(q.)' 
+re2expect "" theteststring -vg 't(.)' '\1z' 
+re2expect "theteststring" theteststring -vg 'q(.)' '\1z' 
 
 # op
 
-re2expect "" -op theteststring q
-re2expect "t" -op theteststring t
-re2expect "th" -op theteststring '(t.)'
-re2expect "" -op theteststring '(q.)'
-re2expect "hz" -op theteststring 't(.)' '\1z'
-re2expect "theteststring" -op theteststring 'q(.)' '\1z'
+re2expect "" theteststring -op q 
+re2expect "t" theteststring -op t 
+re2expect "th" theteststring -op '(t.)' 
+re2expect "" theteststring -op '(q.)' 
+re2expect "hz" theteststring -op 't(.)' '\1z' 
+re2expect "theteststring" theteststring -op 'q(.)' '\1z' 
 
 # og
 
-re2expect "" -og theteststring q
-re2expect "tttt" -og theteststring t
-re2expect "thtetstr" -og theteststring '(t.)'
-re2expect "" -og theteststring '(q.)'
-re2expect "hzezszrz" -og theteststring 't(.)' '\1z'
-re2expect "" -og theteststring 'q(.)' '\1z'
+re2expect "" theteststring -og q 
+re2expect "tttt" theteststring -og t 
+re2expect "thtetstr" theteststring -og '(t.)' 
+re2expect "" theteststring -og '(q.)' 
+re2expect "hzezszrz" theteststring -og 't(.)' '\1z' 
+re2expect "" theteststring -og 'q(.)' '\1z' 
 
 # pg
 
-re2expect "" -pg theteststring q
-re2expect "theteststring" -pg theteststring t
-re2expect "theteststring" -pg theteststring '(t.)'
-re2expect "" -pg theteststring '(q.)'
-re2expect "hzeezsszrzing" -pg theteststring 't(.)' '\1z'
-re2expect "theteststring" -pg theteststring 'q(.)' '\1z'
+re2expect "" theteststring -pg q 
+re2expect "theteststring" theteststring -pg t 
+re2expect "theteststring" theteststring -pg '(t.)' 
+re2expect "" theteststring -pg '(q.)' 
+re2expect "hzeezsszrzing" theteststring -pg 't(.)' '\1z' 
+re2expect "theteststring" theteststring -pg 'q(.)' '\1z' 
 
 # vop
 
-re2expect "theteststring" -vop  theteststring q
-re2expect "" -vop theteststring t
-re2expect "" -vop theteststring '(t.)'
-re2expect "theteststring" -vop theteststring '(q.)'
-re2expect "theteststring" -vop theteststring 't(.)' '\1z'
-re2expect "theteststring" -vop theteststring 'q(.)' '\1z'
+re2expect "theteststring" theteststring -vop q 
+re2expect "" theteststring -vop t 
+re2expect "" theteststring -vop '(t.)' 
+re2expect "theteststring" theteststring -vop '(q.)' 
+re2expect "theteststring" theteststring -vop 't(.)' '\1z' 
+re2expect "theteststring" theteststring -vop 'q(.)' '\1z' 
 
 # vog
 
-re2expect "theteststring" -vog  theteststring q
-re2expect "" -vog theteststring t
-re2expect "" -vog theteststring '(t.)'
-re2expect "theteststring" -vog theteststring '(q.)'
-re2expect "" -vog theteststring 't(.)' '\1z'
-re2expect "theteststring" -vog theteststring 'q(.)' '\1z'
+re2expect "theteststring" theteststring -vog q 
+re2expect "" theteststring -vog t 
+re2expect "" theteststring -vog '(t.)' 
+re2expect "theteststring" theteststring -vog '(q.)' 
+re2expect "" theteststring -vog 't(.)' '\1z' 
+re2expect "theteststring" theteststring -vog 'q(.)' '\1z' 
 
 
 # vpg
 
-re2expect "theteststring" -vpg  theteststring q
-re2expect "" -vpg theteststring t
-re2expect "" -vpg theteststring '(t.)'
-re2expect "theteststring" -vpg theteststring '(q.)'
-re2expect "theteststring" -vpg theteststring 't(.)' '\1z'
-re2expect "theteststring" -vpg theteststring 'q(.)' '\1z'
+re2expect "theteststring" theteststring -vpg q 
+re2expect "" theteststring -vpg t 
+re2expect "" theteststring -vpg '(t.)' 
+re2expect "theteststring" theteststring -vpg '(q.)' 
+re2expect "theteststring" theteststring -vpg 't(.)' '\1z' 
+re2expect "theteststring" theteststring -vpg 'q(.)' '\1z' 
 
 # opg
 
-re2expect "" -opg theteststring q
-re2expect "tttt" -opg theteststring t
-re2expect "thtetstr" -opg theteststring '(t.)'
-re2expect "" -opg theteststring '(q.)'
-re2expect "hzezszrz" -opg theteststring 't(.)' '\1z'
-re2expect "theteststring" -opg theteststring 'q(.)' '\1z'
+re2expect "" theteststring -opg q 
+re2expect "tttt" theteststring -opg t 
+re2expect "thtetstr" theteststring -opg '(t.)' 
+re2expect "" theteststring -opg '(q.)' 
+re2expect "hzezszrz" theteststring -opg 't(.)' '\1z' 
+re2expect "theteststring" theteststring -opg 'q(.)' '\1z' 
 
 # vopg
 
-re2expect "theteststring" -vopg theteststring q
-re2expect "" -vopg theteststring t
-re2expect "" -vopg theteststring '(t.)'
-re2expect "theteststring" -vopg theteststring '(q.)'
-re2expect "theteststring" -vopg theteststring 't(.)' '\1z'
-re2expect "theteststring" -vopg theteststring 'q(.)' '\1z'
+re2expect "theteststring" theteststring -vopg q 
+re2expect "" theteststring -vopg t 
+re2expect "" theteststring -vopg '(t.)' 
+re2expect "theteststring" theteststring -vopg '(q.)' 
+re2expect "theteststring" theteststring -vopg 't(.)' '\1z' 
+re2expect "theteststring" theteststring -vopg 'q(.)' '\1z' 
 
 
 

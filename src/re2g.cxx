@@ -1,6 +1,6 @@
 #include <re2/re2.h>
 #include <iostream>
-
+#include <fstream>
 
 int extract(const re2::StringPiece &text,
             const re2::RE2& pattern,
@@ -86,7 +86,7 @@ int main(int argc, char** argv){
     "u:" << o_also_print_unreplaced << std::endl <<
     "n:" << o_negate_match << std::endl;*/
 
-  std::string in = std::string(argv[1]);
+  std::string fin = std::string(argv[1]);
   std::string out;
   std::string *to_print = NULL;
   RE2::RE2 pat(argv[2]);
@@ -98,44 +98,45 @@ int main(int argc, char** argv){
 
   bool matched;
   bool print;
-  if(argc==3){
-    // re2g str pat
-    if(o_print_match){
-      matched = extract(in, pat, "\\0", &out, o_global) > 0;
-      to_print = &out;
-    } else {
-      matched = RE2::PartialMatch(in, pat);
-      to_print = &in;
-    }
-    to_print=(matched ^ o_negate_match)?to_print:NULL;
-  } else if(argc==4) {
-    // re2g str pat rep
-    std::string rep = std::string(argv[3]);
+  std::string line;
+  std::ifstream ins(argv[1]);
 
-    // need to pick: (-o) Extract, (default)Replace, (-g)GlobalReplace
-    // also, print non matching lines? (-p)
-    if(o_print_match){
-      matched = extract(in, pat, rep, &out, o_global) > 0;
-      to_print = &out;
-    } else {
-      matched = replace(&in, pat, rep, o_global) > 0;
-      to_print = &in;
-    }
-    to_print=(matched ^ o_negate_match)?to_print:NULL;
+  while (std::getline(ins, line)) {
+    std::string in(line);
 
-    if(o_also_print_unreplaced && !to_print){
-      out = std::string(argv[1]);
-      to_print = & out;
+    if(argc==3){
+      // re2g str pat
+      if(o_print_match){
+        matched = extract(in, pat, "\\0", &out, o_global) > 0;
+        to_print = &out;
+      } else {
+        matched = RE2::PartialMatch(in, pat);
+        to_print = &in;
+       }
+      to_print=(matched ^ o_negate_match)?to_print:NULL;
+    } else if(argc==4) {
+      // re2g str pat rep
+      std::string rep = std::string(argv[3]);
+      
+      // need to pick: (-o) Extract, (default)Replace, (-g)GlobalReplace
+      // also, print non matching lines? (-p)
+      if(o_print_match){
+        matched = extract(in, pat, rep, &out, o_global) > 0;
+        to_print = &out;
+      } else {
+        matched = replace(&in, pat, rep, o_global) > 0;
+        to_print = &in;
+      }
+      to_print=(matched ^ o_negate_match)?to_print:NULL;
+      
+      if(o_also_print_unreplaced && !to_print){
+        out = std::string(line);
+        to_print = & out;
+      }
     }
-  } else {
-    std::cout << RE2::PartialMatch("f", "f") << std::endl;
-    std::cout << RE2::PartialMatch("fred", "z") << std::endl;
-    std::cout << RE2::PartialMatch("fred", "[fz]") << std::endl;
-  }
-  if(to_print){
-    std::cout << *to_print << std::endl;
-  } else {
-    std::cout << std::endl;
+    if(to_print){
+      std::cout << *to_print << std::endl;
+    }
   }
 }
 

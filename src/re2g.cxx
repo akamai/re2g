@@ -1,6 +1,16 @@
 #include <re2/re2.h>
 #include <iostream>
 
+
+int extract(const re2::StringPiece &text,
+            const re2::RE2& pattern,
+            const re2::StringPiece &rewrite,
+            std::string *out,
+            bool global){
+  return global?RE2::GlobalExtract(text,pattern,rewrite,out):
+    RE2::Extract(text,pattern,rewrite,out)?1:0;
+}
+
 int main(int argc,char** argv){
   int o_global=0,
     o_usage=0,
@@ -79,11 +89,8 @@ int main(int argc,char** argv){
   bool print;
   if(argc==3){
     // re2g str pat
-    if(o_print_match && !o_global){
-      matched = RE2::Extract(in,pat,"\\0",&out);
-      to_print=&out;
-    } else if(o_global && o_print_match){
-      matched = RE2::GlobalExtract(in,pat,"\\0",&out);
+    if(o_print_match){
+      matched = extract(in,pat,"\\0",&out,o_global)>0;
       to_print=&out;
     } else {
       matched = RE2::PartialMatch(in,pat);
@@ -96,13 +103,10 @@ int main(int argc,char** argv){
 
     // need to pick: (-o) Extract, (default)Replace, (-g)GlobalReplace
     // also, print non matching lines? (-p)
-    if(o_print_match && !o_global){
-      matched = RE2::Extract(in,pat,rep,&out);
+    if(o_print_match){
+      matched = extract(in,pat,rep,&out,o_global)>0;
       to_print=&out;
-    } else if(o_global && o_print_match){
-      matched = RE2::GlobalExtract(in,pat,rep,&out);
-      to_print=&out;
-    } else if(o_global && !o_print_match) {
+    } else if(o_global) {
       matched = RE2::GlobalReplace(&in,pat,rep);
       to_print=&in;
     } else {

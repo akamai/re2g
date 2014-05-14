@@ -52,9 +52,9 @@ int main(int argc,char** argv){
               << "   h: display help"  << std::endl
               << "   v: invert match"  << std::endl
               << "   o: only print matching portion"  << std::endl
+              << "   g: global search/replace, default is one per line"  << std::endl
               << "   p: (when replacing) print lines where no replacement was made"  << std::endl
-              << "   g: (when replacing) global replace, default is one per line"  << std::endl
-         << std::endl;
+              << std::endl;
     return 0;
   }
 
@@ -79,11 +79,12 @@ int main(int argc,char** argv){
   bool print;
   if(argc==3){
     // re2g str pat
-    // ignores o_global
-    if(o_print_match){
+    if(o_print_match && !o_global){
       matched = RE2::Extract(in,pat,"\\0",&out);
       to_print=&out;
-
+    } else if(o_global && o_print_match){
+      matched = RE2::GlobalExtract(in,pat,"\\0",&out);
+      to_print=&out;
     } else {
       matched = RE2::PartialMatch(in,pat);
       to_print= &in;
@@ -91,8 +92,6 @@ int main(int argc,char** argv){
     to_print=(matched^o_negate_match)?to_print:NULL;
   } else if(argc==4) {
     // re2g str pat rep
-    // ignores o_print_match
-
     std::string rep = std::string(argv[3]);
 
     // need to pick: (-o) Extract, (default)Replace, (-g)GlobalReplace

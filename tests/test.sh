@@ -23,7 +23,7 @@ function re2expect () {
 }
 
 
-if [ $($re2g -h|md5) = 2207057546ffc967a07db798bbf1ae34 ]; then
+if [ $($re2g -h|md5) = 6e54dc81aa6b720287b09369f7287c5e ]; then
   echo SUCCESS "-h => USAGE";
 else
   echo FAILURE "-h => help has diverged"
@@ -140,8 +140,8 @@ re2expect "theteststring" -op theteststring 'q(.)' '\1z'
 # og
 
 re2expect "" -og theteststring q
-re2expect "t" -og theteststring t
-re2expect "th" -og theteststring '(t.)'
+re2expect "tttt" -og theteststring t
+re2expect "thtetstr" -og theteststring '(t.)'
 re2expect "" -og theteststring '(q.)'
 re2expect "hzezszrz" -og theteststring 't(.)' '\1z'
 re2expect "" -og theteststring 'q(.)' '\1z'
@@ -186,8 +186,8 @@ re2expect "theteststring" -vpg theteststring 'q(.)' '\1z'
 # opg
 
 re2expect "" -opg theteststring q
-re2expect "t" -opg theteststring t
-re2expect "th" -opg theteststring '(t.)'
+re2expect "tttt" -opg theteststring t
+re2expect "thtetstr" -opg theteststring '(t.)'
 re2expect "" -opg theteststring '(q.)'
 re2expect "hzezszrz" -opg theteststring 't(.)' '\1z'
 re2expect "theteststring" -opg theteststring 'q(.)' '\1z'

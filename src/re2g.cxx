@@ -134,7 +134,7 @@ int main(int argc,char** argv){
       matched = RE2::Replace(&in,pat,rep);
       to_print=&in;
     }
-    to_print=(matched^o_negate_match)?to_print:NULL;
+    to_print=(matched ^ o_negate_match)?to_print:NULL;
 
     if(o_also_print_unreplaced && !to_print){
       out = std::string(argv[1]);

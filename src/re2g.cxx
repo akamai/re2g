@@ -32,15 +32,32 @@ int main(int argc,char** argv){
           case 'v':
             o_negate_match = 1;
             break;
-          case '?':
           default:
             o_usage = 1;
           }
         }
       }
+      argv[1] = argv[0];
       argv++;
       argc--;
     }
+  }
+
+  if(o_usage){
+    std::cout << argv[0] << " [-flags] text pattern [replacement]" << std::endl
+              << std:: endl
+              << "TEXT text to search" << std::endl
+              << "PATTERN re2 expression to apply" << std::endl
+              << "REPLACEMENT optional replacement string, supports \\0 .. \\9 references"  << std::endl
+              << "FLAGS modifiers to operation"  << std::endl
+              << std::endl
+              << "   h: display help"  << std::endl
+              << "   v: invert match"  << std::endl
+              << "   o: only print matching portion"  << std::endl
+              << "   p: (when replacing) print lines where no replacement was made"  << std::endl
+              << "   g: (when replacing) global replace, default is one per line"  << std::endl
+         << std::endl;
+    return 0;
   }
 
   /*

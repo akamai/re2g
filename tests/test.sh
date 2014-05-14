@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 re2g=$1;
 
@@ -212,7 +212,9 @@ re2expect "theteststring" theteststring -vopg '(q.)'
 re2expect "theteststring" theteststring -vopg 't(.)' '\1z' 
 re2expect "theteststring" theteststring -vopg 'q(.)' '\1z' 
 
+diff  <(grep q tests/test.sh)  <($re2g tests/test.sh q) || fail=$(expr 1 + $fail);
 
+diff  <(grep -v q tests/test.sh)  <($re2g -v tests/test.sh q) || fail=$(expr 1 + $fail);
 
 
 if [ $fail -gt 0 ]; then

@@ -26,6 +26,7 @@ int main(int argc, char** argv){
     o_print_match=0,
     o_also_print_unreplaced=0,
     o_negate_match=0;
+  enum {SEARCH,REPLACE} mode;
 
   if(argc>1){
     if(argv[1][0] == '-'){
@@ -61,6 +62,16 @@ int main(int argc, char** argv){
   } else {
     o_usage = 1;
   }
+
+
+  if(argc == 3){
+    mode = SEARCH;
+  } else if(argc == 4){
+    mode = REPLACE;
+  } else {
+    o_usage = 1;
+  }
+
 
   if(o_usage){
     std::cout << argv[0] << " [-flags] text pattern [replacement]" << std::endl
@@ -104,7 +115,7 @@ int main(int argc, char** argv){
   while (std::getline(ins, line)) {
     std::string in(line);
 
-    if(argc==3){
+    if(mode == SEARCH){
       // re2g str pat
       if(o_print_match){
         matched = extract(in, pat, "\\0", &out, o_global) > 0;
@@ -114,7 +125,7 @@ int main(int argc, char** argv){
         to_print = &in;
        }
       to_print=(matched ^ o_negate_match)?to_print:NULL;
-    } else if(argc==4) {
+    } else if(mode == REPLACE) {
       // re2g str pat rep
       std::string rep = std::string(argv[3]);
       

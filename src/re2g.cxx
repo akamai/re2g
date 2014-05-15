@@ -28,7 +28,8 @@ int main(int argc, const char** argv){
     o_negate_match=0,
     o_substitute=0,
     o_print_fname=0,
-    o_no_print_fname=0;
+    o_no_print_fname=0,
+    o_count = 0;
   enum {SEARCH,REPLACE} mode;
 
 
@@ -62,6 +63,9 @@ int main(int argc, const char** argv){
             break;
           case 'h':
             o_no_print_fname = 1;
+            break;
+          case 'c':
+            o_count = 1;
             break;
           default:
             o_usage = 1;
@@ -105,6 +109,7 @@ int main(int argc, const char** argv){
               << "   p: (when replacing) print lines where no replacement was made"  << std::endl
               << "   H: always print file name"  << std::endl
               << "   h: never print file name"  << std::endl
+              << "   c: print match count instead of normal output"  << std::endl
               << std::endl;
     return 0;
   }
@@ -148,9 +153,11 @@ int main(int argc, const char** argv){
     std::ifstream ins(fname);
 
     if(fnames == &def_fname){
+      //for output compatibility with grep
       fname = "(standard input)";
     }
 
+    long long count = 0;
     std::string line;
     while (std::getline(ins, line)) {
       std::string *to_print = NULL;
@@ -175,17 +182,27 @@ int main(int argc, const char** argv){
         }
         to_print=(matched ^ o_negate_match)?to_print:NULL;
         
-        if(o_also_print_unreplaced && !to_print){
+        if(o_also_print_unreplaced && !to_print && !o_count){
           out = std::string(line);
-          to_print = & out;
+          to_print = &out;
         }
       }
       if(to_print){
-        if(o_print_fname){
-          std::cout << fname << ":";
+        count++;
+        if(!o_count){
+          if(o_print_fname){
+            std::cout << fname << ":";
+          }
+          std::cout << *to_print << std::endl;
         }
-        std::cout << *to_print << std::endl;
       }
+    }
+    if(o_count){
+      if(o_print_fname){
+        std::cout << fname << ":";
+      }
+      std::cout << count << std::endl;
+
     }
     ins.close();
   }

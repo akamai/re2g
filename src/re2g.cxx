@@ -25,7 +25,8 @@ int main(int argc, char** argv){
     o_usage=0,
     o_print_match=0,
     o_also_print_unreplaced=0,
-    o_negate_match=0;
+    o_negate_match=0,
+    o_substitute;
   enum {SEARCH,REPLACE} mode;
 
   if(argc>1){
@@ -50,6 +51,9 @@ int main(int argc, char** argv){
           case 'v':
             o_negate_match = 1;
             break;
+          case 's':
+            o_substitute = 1;
+            break;
           default:
             o_usage = 1;
           }
@@ -64,9 +68,9 @@ int main(int argc, char** argv){
   }
 
 
-  if(argc == 3){
+  if(!o_substitute && argc == 3){
     mode = SEARCH;
-  } else if(argc == 4){
+  } else if(o_substitute && argc == 4){
     mode = REPLACE;
   } else {
     o_usage = 1;
@@ -84,6 +88,7 @@ int main(int argc, char** argv){
               << "   h: display help"  << std::endl
               << "   v: invert match"  << std::endl
               << "   o: only print matching portion"  << std::endl
+              << "   s: do substitution"  << std::endl
               << "   g: global search/replace, default is one per line"  << std::endl
               << "   p: (when replacing) print lines where no replacement was made"  << std::endl
               << std::endl;

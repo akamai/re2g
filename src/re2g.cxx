@@ -20,16 +20,17 @@ int replace(std::string *text,
     RE2::Replace(text, pattern, rewrite)?1:0;
 }
 
-int main(int argc, char** argv){
+int main(int argc, const char** argv){
   int o_global=0,
     o_usage=0,
     o_print_match=0,
     o_also_print_unreplaced=0,
     o_negate_match=0,
-    o_substitute,
-    o_print_fname;
+    o_substitute=0,
+    o_print_fname=0,
+    o_no_print_fname=0;
   enum {SEARCH,REPLACE} mode;
-  int files_arg;
+
 
   if(argc>1){
     if(argv[1][0] == '-'){
@@ -37,7 +38,7 @@ int main(int argc, char** argv){
         //ignore standalone '--' as argv[1];
       } else {
         // we have flags
-        char* fs=argv[1]+1;
+        const char* fs = argv[1]+1;
         char c;
         while((c=*fs++)){
           switch (c) {
@@ -56,8 +57,11 @@ int main(int argc, char** argv){
           case 's':
             o_substitute = 1;
             break;
-          case 'h':
+          case 'H':
             o_print_fname = 1;
+            break;
+          case 'h':
+            o_no_print_fname = 1;
             break;
           default:
             o_usage = 1;
@@ -73,10 +77,11 @@ int main(int argc, char** argv){
   }
 
 
-  if(!o_substitute && argc >= 3){
+  int files_arg;
+  if(!o_substitute && argc >= 2){
     mode = SEARCH;
-    files_arg= 2;
-  } else if(o_substitute && argc >= 4){
+    files_arg = 2;
+  } else if(o_substitute && argc >= 3){
     mode = REPLACE;
     files_arg = 3;
   } else {
@@ -98,7 +103,8 @@ int main(int argc, char** argv){
               << "   s: do substitution"  << std::endl
               << "   g: global search/replace, default is one per line"  << std::endl
               << "   p: (when replacing) print lines where no replacement was made"  << std::endl
-              << "   h: always print file name"  << std::endl
+              << "   H: always print file name"  << std::endl
+              << "   h: never print file name"  << std::endl
               << std::endl;
     return 0;
   }
@@ -131,12 +137,25 @@ int main(int argc, char** argv){
     rep = std::string("\\0");
     o_also_print_unreplaced = 0;
     mode = REPLACE;
-  } 
-  if(files_arg < argc - 1){
+  }
+
+  int num_files = argc - files_arg;
+
+  if(num_files > 1 && !o_no_print_fname){
     o_print_fname = 1;
   }
-  while(files_arg < argc){
-    char* fname = argv[files_arg];
+
+  const char** fnames;
+  const char* def_fname="/dev/stdin";
+
+  if(num_files == 0){
+    num_files = 1;
+    fnames = &def_fname;
+  } else {
+    fnames = &argv[files_arg];
+  }
+  for(int fidx = 0; fidx < num_files; fidx++){
+    const char* fname = fnames[fidx];
     std::ifstream ins(fname);
 
     while (std::getline(ins, line)) {
@@ -174,7 +193,6 @@ int main(int argc, char** argv){
       }
     }
     ins.close();
-    files_arg++;
   }
 }
 

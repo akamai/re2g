@@ -27,7 +27,7 @@ function re2expect () {
 }
 
 
-if [ $($re2g -h|md5) = a8a873f726bc1af443c4b21f175c3d15 ]; then
+if [ $($re2g -h|md5) = 55898691fbbb3aaee0af6bdb3b2f42e5 ]; then
   echo SUCCESS "-h => USAGE";
 else
   echo FAILURE "-h => help has diverged"
@@ -209,7 +209,16 @@ diff -q <(grep q tests/test.sh)  <($re2g q tests/test.sh) || fail=$(expr 1 + $fa
 
 diff -q <(grep -v q tests/test.sh)  <($re2g -v q tests/test.sh) || fail=$(expr 1 + $fail);
 
+diff -q <(grep -h q tests/test.sh)  <($re2g -h q tests/test.sh) || fail=$(expr 1 + $fail);
+
+diff -q <(grep -H q tests/test.sh)  <($re2g -H q tests/test.sh) || fail=$(expr 1 + $fail);
+
+
 diff -q <(grep red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g red /usr/share/dict/propernames /usr/share/dict/words) || fail=$(expr 1 + $fail);
+
+diff -q <(grep -h red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -h red /usr/share/dict/propernames /usr/share/dict/words) || fail=$(expr 1 + $fail);
+
+diff -q <(grep -H red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -H red /usr/share/dict/propernames /usr/share/dict/words) || fail=$(expr 1 + $fail);
 
 if [ $fail -gt 0 ]; then
   echo $fail Errors

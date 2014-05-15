@@ -26,7 +26,8 @@ int main(int argc, char** argv){
     o_print_match=0,
     o_also_print_unreplaced=0,
     o_negate_match=0,
-    o_substitute;
+    o_substitute,
+    o_print_fname;
   enum {SEARCH,REPLACE} mode;
   int files_arg;
 
@@ -55,6 +56,9 @@ int main(int argc, char** argv){
           case 's':
             o_substitute = 1;
             break;
+          case 'h':
+            o_print_fname = 1;
+            break;
           default:
             o_usage = 1;
           }
@@ -81,7 +85,7 @@ int main(int argc, char** argv){
 
 
   if(o_usage){
-    std::cout << argv[0] << " [-flags] text pattern [replacement]" << std::endl
+    std::cout << argv[0] << " [-flags] pattern [replacement] file1..." << std::endl
               << std:: endl
               << "TEXT text to search" << std::endl
               << "PATTERN re2 expression to apply" << std::endl
@@ -94,6 +98,7 @@ int main(int argc, char** argv){
               << "   s: do substitution"  << std::endl
               << "   g: global search/replace, default is one per line"  << std::endl
               << "   p: (when replacing) print lines where no replacement was made"  << std::endl
+              << "   h: always print file name"  << std::endl
               << std::endl;
     return 0;
   }
@@ -127,8 +132,12 @@ int main(int argc, char** argv){
     o_also_print_unreplaced = 0;
     mode = REPLACE;
   } 
+  if(files_arg < argc - 1){
+    o_print_fname = 1;
+  }
   while(files_arg < argc){
-    std::ifstream ins(argv[files_arg]);
+    char* fname = argv[files_arg];
+    std::ifstream ins(fname);
 
     while (std::getline(ins, line)) {
       std::string in(line);
@@ -158,6 +167,9 @@ int main(int argc, char** argv){
         }
       }
       if(to_print){
+        if(o_print_fname){
+          std::cout << fname << ":";
+        }
         std::cout << *to_print << std::endl;
       }
     }

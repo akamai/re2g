@@ -27,7 +27,7 @@ function re2expect () {
 }
 
 
-if [ $($re2g -h|md5) = 8869ffda57a24512eb71b79d27dd0455 ]; then
+if [ $($re2g -h|md5) = a8a873f726bc1af443c4b21f175c3d15 ]; then
   echo SUCCESS "-h => USAGE";
 else
   echo FAILURE "-h => help has diverged"
@@ -205,10 +205,11 @@ re2expect "theteststring" theteststring -vopg '(q.)'
 re2expect "theteststring" theteststring -vopgs 't(.)' '\1z' 
 re2expect "theteststring" theteststring -vopgs 'q(.)' '\1z' 
 
-diff  <(grep q tests/test.sh)  <($re2g q tests/test.sh) || fail=$(expr 1 + $fail);
+diff -q <(grep q tests/test.sh)  <($re2g q tests/test.sh) || fail=$(expr 1 + $fail);
 
-diff  <(grep -v q tests/test.sh)  <($re2g -v q tests/test.sh) || fail=$(expr 1 + $fail);
+diff -q <(grep -v q tests/test.sh)  <($re2g -v q tests/test.sh) || fail=$(expr 1 + $fail);
 
+diff -q <(grep red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g red /usr/share/dict/propernames /usr/share/dict/words) || fail=$(expr 1 + $fail);
 
 if [ $fail -gt 0 ]; then
   echo $fail Errors

@@ -97,10 +97,9 @@ int main(int argc, char** argv){
     "u:" << o_also_print_unreplaced << std::endl <<
     "n:" << o_negate_match << std::endl;*/
 
-  std::string fin = std::string(argv[1]);
   std::string out;
   std::string *to_print = NULL;
-  RE2::RE2 pat(argv[2]);
+  RE2::RE2 pat(argv[1]);
 
   //rationalize flags
   if(o_negate_match && o_print_match){
@@ -110,11 +109,11 @@ int main(int argc, char** argv){
   bool matched;
   bool print;
   std::string line;
-  std::ifstream ins(argv[1]);
+  std::ifstream ins(argv[argc-1]);
   std::string rep;
 
   if(mode == REPLACE) {
-    rep = std::string(argv[3]);
+    rep = std::string(argv[2]);
   } else if(mode == SEARCH && o_print_match){
     //o_print_match for SEARCH uses REPLACE code with constant repstr
     rep = std::string("\\0");

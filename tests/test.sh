@@ -7,28 +7,21 @@ fail=0;
 function re2expect () {
   e="$1";
   t="$2";
-  f="";
   shift 2;
-  
-  if printf -- "$1" | grep -q ^-; then
-    f="$1"
-    shift;
-    o=$(printf -- "$t"|$re2g "$f" /dev/stdin "$@");
-    s=$?;
-  else
-    o=$(printf -- "$t"|$re2g /dev/stdin "$@");
-    s=$?;
-  fi
+
+  o=$(printf -- "$t"|$re2g "$@" /dev/stdin);
+  s=$?;
+
 
   if [ $s = 0 ]; then 
     if [ "$e" = "$o" ]; then
-      echo SUCCESS "$f $t $@" '=>' "'$e'";
+      echo SUCCESS "$@ <<<\"$t\"" '=>' "'$e'";
     else
-      echo FAILURE "$f $t $@" '=>' "'$o'" NOT "'$e'";
+      echo FAILURE "$@ <<<\"$t\"" '=>' "'$o'" NOT "'$e'";
       fail=`expr $fail + 1`;
     fi
   else
-    echo FAILURE "$f $t $@" ' ERR ' $s; 
+    echo FAILURE "$@ <<<\"$t\"" ' ERR ' $s; 
     fail=`expr $fail + 1`;
   fi
 }
@@ -212,9 +205,9 @@ re2expect "theteststring" theteststring -vopg '(q.)'
 re2expect "theteststring" theteststring -vopg 't(.)' '\1z' 
 re2expect "theteststring" theteststring -vopg 'q(.)' '\1z' 
 
-diff  <(grep q tests/test.sh)  <($re2g tests/test.sh q) || fail=$(expr 1 + $fail);
+diff  <(grep q tests/test.sh)  <($re2g q tests/test.sh) || fail=$(expr 1 + $fail);
 
-diff  <(grep -v q tests/test.sh)  <($re2g -v tests/test.sh q) || fail=$(expr 1 + $fail);
+diff  <(grep -v q tests/test.sh)  <($re2g -v q tests/test.sh) || fail=$(expr 1 + $fail);
 
 
 if [ $fail -gt 0 ]; then

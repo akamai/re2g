@@ -28,6 +28,7 @@ int main(int argc, char** argv){
     o_negate_match=0,
     o_substitute;
   enum {SEARCH,REPLACE} mode;
+  int files_arg;
 
   if(argc>1){
     if(argv[1][0] == '-'){
@@ -68,10 +69,12 @@ int main(int argc, char** argv){
   }
 
 
-  if(!o_substitute && argc == 3){
+  if(!o_substitute && argc >= 3){
     mode = SEARCH;
-  } else if(o_substitute && argc == 4){
+    files_arg= 2;
+  } else if(o_substitute && argc >= 4){
     mode = REPLACE;
+    files_arg = 3;
   } else {
     o_usage = 1;
   }
@@ -114,7 +117,7 @@ int main(int argc, char** argv){
   bool matched;
   bool print;
   std::string line;
-  std::ifstream ins(argv[argc-1]);
+  std::ifstream ins(argv[files_arg]);
   std::string rep;
 
   if(mode == REPLACE) {

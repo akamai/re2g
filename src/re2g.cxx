@@ -39,6 +39,7 @@ int main(int argc, const char** argv){
     o_count = 0,
     o_list = 0,
     o_neg_list = 0,
+    o_literal = 0,
     o_case_insensitive = 0,
     o_full_line = 0;
   enum {SEARCH,REPLACE} mode;
@@ -84,6 +85,9 @@ int main(int argc, const char** argv){
           case 'L':
             o_list = 1;
             o_neg_list = 1;
+            break;
+          case 'F':
+            o_literal = 1;
             break;
           case 'i':
           case 'y':
@@ -138,6 +142,7 @@ int main(int argc, const char** argv){
               << "   l: list matching files instead of normal output"  << std::endl
               << "   L: list nonmatching files instead of normal output"  << std::endl
               << "   i: ignore case when matching; same as (?i)"  << std::endl
+              << "   F: treat pattern argument as literal string"  << std::endl
               << "   x: match whole lines only"  << std::endl
               << std::endl;
     return 0;
@@ -147,6 +152,9 @@ int main(int argc, const char** argv){
 
   if(o_case_insensitive){
     opts.set_case_sensitive(false);
+  }
+  if(o_literal){
+    opts.set_literal(true);
   }
   
   RE2::RE2 pat(argv[1],opts);

@@ -158,6 +158,10 @@ int main(int argc, const char** argv){
     const char* fname = fnames[fidx];
     std::ifstream ins(fname);
 
+    if(fnames == &def_fname){
+      fname = "(standard input)";
+    }
+
     while (std::getline(ins, line)) {
       std::string in(line);
       

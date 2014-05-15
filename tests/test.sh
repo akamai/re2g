@@ -9,7 +9,7 @@ function re2expect () {
   t="$2";
   shift 2;
 
-  o=$(printf -- "$t"|$re2g "$@" /dev/stdin);
+  o=$(printf -- "$t"|$re2g "$@");
   s=$?;
 
 
@@ -219,6 +219,8 @@ diff -q <(grep red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g r
 diff -q <(grep -h red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -h red /usr/share/dict/propernames /usr/share/dict/words) || fail=$(expr 1 + $fail);
 
 diff -q <(grep -H red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -H red /usr/share/dict/propernames /usr/share/dict/words) || fail=$(expr 1 + $fail);
+
+diff -q <(echo "food" | grep -H foo)  <(echo "food" | $re2g -H foo) || fail=$(expr 1 + $fail);
 
 if [ $fail -gt 0 ]; then
   echo $fail Errors

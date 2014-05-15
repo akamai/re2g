@@ -29,7 +29,8 @@ int main(int argc, const char** argv){
     o_substitute=0,
     o_print_fname=0,
     o_no_print_fname=0,
-    o_count = 0;
+    o_count = 0,
+    o_list = 0;
   enum {SEARCH,REPLACE} mode;
 
 
@@ -66,6 +67,9 @@ int main(int argc, const char** argv){
             break;
           case 'c':
             o_count = 1;
+            break;
+          case 'l':
+            o_list = 1;
             break;
           default:
             o_usage = 1;
@@ -110,6 +114,7 @@ int main(int argc, const char** argv){
               << "   H: always print file name"  << std::endl
               << "   h: never print file name"  << std::endl
               << "   c: print match count instead of normal output"  << std::endl
+              << "   l: list matching files instead of normal output"  << std::endl
               << std::endl;
     return 0;
   }
@@ -189,7 +194,7 @@ int main(int argc, const char** argv){
       }
       if(to_print){
         count++;
-        if(!o_count){
+        if(!o_count && !o_list){
           if(o_print_fname){
             std::cout << fname << ":";
           }
@@ -203,6 +208,8 @@ int main(int argc, const char** argv){
       }
       std::cout << count << std::endl;
 
+    } else if(o_list && count>0){
+      std::cout << fname << std::endl;        
     }
     ins.close();
   }

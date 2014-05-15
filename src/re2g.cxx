@@ -111,23 +111,26 @@ int main(int argc, char** argv){
   bool print;
   std::string line;
   std::ifstream ins(argv[1]);
+  std::string rep;
 
+  if(mode == REPLACE) {
+    rep = std::string(argv[3]);
+  } else if(mode == SEARCH && o_print_match){
+    //o_print_match for SEARCH uses REPLACE code with constant repstr
+    rep = std::string("\\0");
+    o_also_print_unreplaced = 0;
+    mode = REPLACE;
+  } 
   while (std::getline(ins, line)) {
     std::string in(line);
 
     if(mode == SEARCH){
       // re2g str pat
-      if(o_print_match){
-        matched = extract(in, pat, "\\0", &out, o_global) > 0;
-        to_print = &out;
-      } else {
-        matched = RE2::PartialMatch(in, pat);
-        to_print = &in;
-       }
+      matched = RE2::PartialMatch(in, pat);
+      to_print = &in;
       to_print=(matched ^ o_negate_match)?to_print:NULL;
     } else if(mode == REPLACE) {
       // re2g str pat rep
-      std::string rep = std::string(argv[3]);
       
       // need to pick: (-o) Extract, (default)Replace, (-g)GlobalReplace
       // also, print non matching lines? (-p)

@@ -7,7 +7,7 @@ int extract(const re2::StringPiece &text,
             const re2::RE2& pattern,
             const re2::StringPiece &rewrite,
             std::string *out,
-            bool global){
+            bool global) {
   return global?RE2::GlobalExtract(text, pattern, rewrite, out):
     RE2::Extract(text, pattern, rewrite, out)?1:0;
 }
@@ -16,23 +16,23 @@ int extract(const re2::StringPiece &text,
 int replace(std::string *text,
             const re2::RE2& pattern,
             const re2::StringPiece &rewrite,
-            bool global){
+            bool global) {
   return global?RE2::GlobalReplace(text, pattern, rewrite):
     RE2::Replace(text, pattern, rewrite)?1:0;
 }
 
 bool match(const re2::StringPiece &text,
            const re2::RE2& pattern,
-           bool whole_line){
+           bool whole_line) {
   return whole_line?RE2::FullMatch(text, pattern):
     RE2::PartialMatch(text, pattern);
 }
 
-int main(int argc, const char** argv){
+int main(int argc, const char** argv) {
   const char *appname=argv[0];
   const char *apn=argv[0];
-  while(*apn){
-    if(*apn++ == '/'){
+  while(*apn) {
+    if(*apn++ == '/') {
       appname=apn;
     }
   }
@@ -54,15 +54,15 @@ int main(int argc, const char** argv){
   enum {SEARCH,REPLACE} mode;
 
 
-  if(argc>1){
-    if(argv[1][0] == '-'){
-      if ( argv[1][1] == '-'){
+  if(argc>1) {
+    if(argv[1][0] == '-') {
+      if ( argv[1][1] == '-') {
         //ignore standalone '--' as argv[1];
       } else {
         // we have flags
         const char* fs = argv[1]+1;
         char c;
-        while((c=*fs++)){
+        while((c=*fs++)) {
           switch (c) {
           case 'g':
             o_global = 1;
@@ -120,10 +120,10 @@ int main(int argc, const char** argv){
 
 
   int files_arg;
-  if(!o_substitute && argc >= 2){
+  if(!o_substitute && argc >= 2) {
     mode = SEARCH;
     files_arg = 2;
-  } else if(o_substitute && argc >= 3){
+  } else if(o_substitute && argc >= 3) {
     mode = REPLACE;
     files_arg = 3;
   } else {
@@ -131,7 +131,7 @@ int main(int argc, const char** argv){
   }
 
 
-  if(o_usage){
+  if(o_usage) {
     std::cout << appname << " [-flags] pattern [replacement] file1..." << std::endl
               << std:: endl
               << "TEXT text to search" << std::endl
@@ -159,17 +159,17 @@ int main(int argc, const char** argv){
 
   re2::RE2::Options opts(re2::RE2::DefaultOptions);
 
-  if(o_case_insensitive){
+  if(o_case_insensitive) {
     opts.set_case_sensitive(false);
   }
-  if(o_literal){
+  if(o_literal) {
     opts.set_literal(true);
   }
   
   RE2::RE2 pat(argv[1],opts);
 
   //rationalize flags
-  if(o_negate_match && o_print_match){
+  if(o_negate_match && o_print_match) {
     o_print_match = 0;
   }
 
@@ -177,7 +177,7 @@ int main(int argc, const char** argv){
   std::string rep;
   if(mode == REPLACE) {
     rep = std::string(argv[2]);
-  } else if(mode == SEARCH && o_print_match){
+  } else if(mode == SEARCH && o_print_match) {
     //o_print_match for SEARCH uses REPLACE code with constant repstr
     rep = std::string("\\0");
     o_also_print_unreplaced = 0;
@@ -186,30 +186,30 @@ int main(int argc, const char** argv){
 
   int num_files = argc - files_arg;
 
-  if(num_files > 1 && !o_no_print_fname){
+  if(num_files > 1 && !o_no_print_fname) {
     o_print_fname = 1;
   }
 
   const char** fnames;
   const char* def_fname="/dev/stdin";
 
-  if(num_files == 0){
+  if(num_files == 0) {
     num_files = 1;
     fnames = &def_fname;
   } else {
     fnames = &argv[files_arg];
   }
 
-  for(int fidx = 0; fidx < num_files; fidx++){
+  for(int fidx = 0; fidx < num_files; fidx++) {
     const char* fname = fnames[fidx];
     std::ifstream ins(fname);
 
-    if(fnames == &def_fname){
+    if(fnames == &def_fname) {
       //for output compatibility with grep
       fname = "(standard input)";
     }
 
-    if(!ins){
+    if(!ins) {
       std::cerr << appname << " " << fname << ':' << strerror(errno) << std::endl;
     } else {
       long long count = 0;
@@ -219,7 +219,7 @@ int main(int argc, const char** argv){
         std::string in(line);
         bool matched;
         
-        if(mode == SEARCH){
+        if(mode == SEARCH) {
           matched = match(in, pat,o_full_line);
           to_print = &in;
           to_print=(matched ^ o_negate_match)?to_print:NULL;
@@ -228,7 +228,7 @@ int main(int argc, const char** argv){
           // also, print non matching lines? (-p)
           std::string out;
           
-          if(o_print_match){
+          if(o_print_match) {
             matched = extract(in, pat, rep, &out, o_global) > 0;
             to_print = &out;
           } else {
@@ -237,29 +237,29 @@ int main(int argc, const char** argv){
           }
           to_print=(matched ^ o_negate_match)?to_print:NULL;
           
-          if(o_also_print_unreplaced && !to_print && !o_count){
+          if(o_also_print_unreplaced && !to_print && !o_count) {
             out = std::string(line);
             to_print = &out;
           }
         }
-        if(to_print){
+        if(to_print) {
           count++;
-          if(!o_count && !o_list){
-            if(o_print_fname){
+          if(!o_count && !o_list) {
+            if(o_print_fname) {
               std::cout << fname << ":";
             }
             std::cout << *to_print << std::endl;
           }
         }
       }
-      if(o_count){
-        if(o_print_fname){
+      if(o_count) {
+        if(o_print_fname) {
           std::cout << fname << ":";
         }
         std::cout << count << std::endl;
         
-      } else if(o_list && (count>0) ^ o_neg_list){
-        std::cout << fname << std::endl;        
+      } else if(o_list && (count > 0) ^ o_neg_list) {
+        std::cout << fname << std::endl;
       }
       ins.close();
     }

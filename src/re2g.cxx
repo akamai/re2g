@@ -1,6 +1,7 @@
 #include <re2/re2.h>
 #include <iostream>
 #include <fstream>
+#include <errno.h>
 
 int extract(const re2::StringPiece &text,
             const re2::RE2& pattern,
@@ -28,6 +29,14 @@ bool match(const re2::StringPiece &text,
 }
 
 int main(int argc, const char** argv){
+  const char *appname=argv[0];
+  const char *apn=argv[0];
+  while(*apn){
+    if(*apn++ == '/'){
+      appname=apn;
+    }
+  }
+
   int o_global=0,
     o_usage=0,
     o_print_match=0,
@@ -123,7 +132,7 @@ int main(int argc, const char** argv){
 
 
   if(o_usage){
-    std::cout << argv[0] << " [-flags] pattern [replacement] file1..." << std::endl
+    std::cout << appname << " [-flags] pattern [replacement] file1..." << std::endl
               << std:: endl
               << "TEXT text to search" << std::endl
               << "PATTERN re2 expression to apply" << std::endl
@@ -200,56 +209,60 @@ int main(int argc, const char** argv){
       fname = "(standard input)";
     }
 
-    long long count = 0;
-    std::string line;
-    while (std::getline(ins, line)) {
-      std::string *to_print = NULL;
-      std::string in(line);
-      bool matched;
-      
-      if(mode == SEARCH){
-        matched = match(in, pat,o_full_line);
-        to_print = &in;
-        to_print=(matched ^ o_negate_match)?to_print:NULL;
-      } else if(mode == REPLACE) {
-      // need to pick: (-o) Extract, (default) Replace, (-g)GlobalReplace
-      // also, print non matching lines? (-p)
-        std::string out;
-
-        if(o_print_match){
-          matched = extract(in, pat, rep, &out, o_global) > 0;
-          to_print = &out;
-        } else {
-          matched = replace(&in, pat, rep, o_global) > 0;
-          to_print = &in;
-        }
-        to_print=(matched ^ o_negate_match)?to_print:NULL;
+    if(!ins){
+      std::cerr << appname << " " << fname << ':' << strerror(errno) << std::endl;
+    } else {
+      long long count = 0;
+      std::string line;
+      while (std::getline(ins, line)) {
+        std::string *to_print = NULL;
+        std::string in(line);
+        bool matched;
         
-        if(o_also_print_unreplaced && !to_print && !o_count){
-          out = std::string(line);
-          to_print = &out;
-        }
-      }
-      if(to_print){
-        count++;
-        if(!o_count && !o_list){
-          if(o_print_fname){
-            std::cout << fname << ":";
+        if(mode == SEARCH){
+          matched = match(in, pat,o_full_line);
+          to_print = &in;
+          to_print=(matched ^ o_negate_match)?to_print:NULL;
+        } else if(mode == REPLACE) {
+          // need to pick: (-o) Extract, (default) Replace, (-g)GlobalReplace
+          // also, print non matching lines? (-p)
+          std::string out;
+          
+          if(o_print_match){
+            matched = extract(in, pat, rep, &out, o_global) > 0;
+            to_print = &out;
+          } else {
+            matched = replace(&in, pat, rep, o_global) > 0;
+            to_print = &in;
           }
-          std::cout << *to_print << std::endl;
+          to_print=(matched ^ o_negate_match)?to_print:NULL;
+          
+          if(o_also_print_unreplaced && !to_print && !o_count){
+            out = std::string(line);
+            to_print = &out;
+          }
+        }
+        if(to_print){
+          count++;
+          if(!o_count && !o_list){
+            if(o_print_fname){
+              std::cout << fname << ":";
+            }
+            std::cout << *to_print << std::endl;
+          }
         }
       }
-    }
-    if(o_count){
-      if(o_print_fname){
-        std::cout << fname << ":";
+      if(o_count){
+        if(o_print_fname){
+          std::cout << fname << ":";
+        }
+        std::cout << count << std::endl;
+        
+      } else if(o_list && (count>0) ^ o_neg_list){
+        std::cout << fname << std::endl;        
       }
-      std::cout << count << std::endl;
-
-    } else if(o_list && (count>0) ^ o_neg_list){
-      std::cout << fname << std::endl;        
+      ins.close();
     }
-    ins.close();
   }
 }
 

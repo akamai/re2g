@@ -109,15 +109,6 @@ int main(int argc, const char** argv){
     return 0;
   }
 
-  /*
-  std::cout << "g:" << o_global << std::endl << 
-    "u:" << o_usage << std::endl <<
-    "p:" << o_print_match << std::endl <<
-    "u:" << o_also_print_unreplaced << std::endl <<
-    "n:" << o_negate_match << std::endl;*/
-
-  std::string out;
-  std::string *to_print = NULL;
   RE2::RE2 pat(argv[1]);
 
   //rationalize flags
@@ -125,10 +116,8 @@ int main(int argc, const char** argv){
     o_print_match = 0;
   }
 
-  bool matched;
-  std::string line;
-  std::string rep;
 
+  std::string rep;
   if(mode == REPLACE) {
     rep = std::string(argv[2]);
   } else if(mode == SEARCH && o_print_match){
@@ -153,6 +142,7 @@ int main(int argc, const char** argv){
   } else {
     fnames = &argv[files_arg];
   }
+
   for(int fidx = 0; fidx < num_files; fidx++){
     const char* fname = fnames[fidx];
     std::ifstream ins(fname);
@@ -161,8 +151,11 @@ int main(int argc, const char** argv){
       fname = "(standard input)";
     }
 
+    std::string line;
     while (std::getline(ins, line)) {
+      std::string *to_print = NULL;
       std::string in(line);
+      bool matched;
       
       if(mode == SEARCH){
         matched = RE2::PartialMatch(in, pat);
@@ -171,6 +164,8 @@ int main(int argc, const char** argv){
       } else if(mode == REPLACE) {
       // need to pick: (-o) Extract, (default) Replace, (-g)GlobalReplace
       // also, print non matching lines? (-p)
+        std::string out;
+
         if(o_print_match){
           matched = extract(in, pat, rep, &out, o_global) > 0;
           to_print = &out;

@@ -27,7 +27,7 @@ function re2expect () {
 }
 
 
-if [ $($re2g -h|md5) = 8f7afd26ec99039e9936529fd413ad49 ]; then
+if [ $($re2g -h|md5) = c38c25eca9f88a4d61eb38c448d4baaa ]; then
   echo SUCCESS "-h => USAGE";
 else
   echo FAILURE "-h => help has diverged"
@@ -229,6 +229,11 @@ diff -q <(echo "food" | grep -H foo)  <(echo "food" | $re2g -H foo) || fail=$(ex
 diff -q <(grep -l re2e src/*.cxx tests/*.sh) <($re2g -l re2e src/*.cxx tests/*.sh) || fail=$(expr 1 + $fail);
 
 diff -q <(grep -vl re2e src/*.cxx tests/*.sh) <($re2g -vl re2e src/*.cxx tests/*.sh) || fail=$(expr 1 + $fail);
+
+
+diff -q <(grep -L re2e src/*.cxx tests/*.sh) <($re2g -L re2e src/*.cxx tests/*.sh) || fail=$(expr 1 + $fail);
+
+diff -q <(grep -vL re2e src/*.cxx tests/*.sh) <($re2g -vL re2e src/*.cxx tests/*.sh) || fail=$(expr 1 + $fail);
 
 
 if [ $fail -gt 0 ]; then

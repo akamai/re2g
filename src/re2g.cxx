@@ -126,7 +126,6 @@ int main(int argc, const char** argv){
   }
 
   bool matched;
-  bool print;
   std::string line;
   std::string rep;
 
@@ -166,14 +165,11 @@ int main(int argc, const char** argv){
       std::string in(line);
       
       if(mode == SEARCH){
-        // re2g str pat
         matched = RE2::PartialMatch(in, pat);
         to_print = &in;
         to_print=(matched ^ o_negate_match)?to_print:NULL;
       } else if(mode == REPLACE) {
-      // re2g str pat rep
-        
-      // need to pick: (-o) Extract, (default)Replace, (-g)GlobalReplace
+      // need to pick: (-o) Extract, (default) Replace, (-g)GlobalReplace
       // also, print non matching lines? (-p)
         if(o_print_match){
           matched = extract(in, pat, rep, &out, o_global) > 0;

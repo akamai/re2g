@@ -20,6 +20,13 @@ int replace(std::string *text,
     RE2::Replace(text, pattern, rewrite)?1:0;
 }
 
+bool match(const re2::StringPiece &text,
+           const re2::RE2& pattern,
+           bool whole_line){
+  return whole_line?RE2::FullMatch(text, pattern):
+    RE2::PartialMatch(text, pattern);
+}
+
 int main(int argc, const char** argv){
   int o_global=0,
     o_usage=0,
@@ -31,7 +38,9 @@ int main(int argc, const char** argv){
     o_no_print_fname=0,
     o_count = 0,
     o_list = 0,
-    o_neg_list = 0;
+    o_neg_list = 0,
+    o_case_insensitive = 0,
+    o_full_line = 0;
   enum {SEARCH,REPLACE} mode;
 
 
@@ -75,6 +84,13 @@ int main(int argc, const char** argv){
           case 'L':
             o_list = 1;
             o_neg_list = 1;
+            break;
+          case 'i':
+          case 'y':
+            o_case_insensitive = 1;
+            break;
+          case 'x':
+            o_full_line = 1;
             break;
           default:
             o_usage = 1;
@@ -121,11 +137,19 @@ int main(int argc, const char** argv){
               << "   c: print match count instead of normal output"  << std::endl
               << "   l: list matching files instead of normal output"  << std::endl
               << "   L: list nonmatching files instead of normal output"  << std::endl
+              << "   i: ignore case when matching; same as (?i)"  << std::endl
+              << "   x: match whole lines only"  << std::endl
               << std::endl;
     return 0;
   }
 
-  RE2::RE2 pat(argv[1]);
+  re2::RE2::Options opts(re2::RE2::DefaultOptions);
+
+  if(o_case_insensitive){
+    opts.set_case_sensitive(false);
+  }
+  
+  RE2::RE2 pat(argv[1],opts);
 
   //rationalize flags
   if(o_negate_match && o_print_match){
@@ -176,7 +200,7 @@ int main(int argc, const char** argv){
       bool matched;
       
       if(mode == SEARCH){
-        matched = RE2::PartialMatch(in, pat);
+        matched = match(in, pat,o_full_line);
         to_print = &in;
         to_print=(matched ^ o_negate_match)?to_print:NULL;
       } else if(mode == REPLACE) {

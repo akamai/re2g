@@ -265,9 +265,11 @@ int main(int argc, const char **argv) {
     } else {
       long long count = 0;
       std::string line;
+      int ca_printed = o_after_context;
       while(std::getline(ins, line)) {
         std::string *to_print = NULL;
         std::string in(line);
+        std::string out;
         bool matched;
         
         if(mode == SEARCH) {
@@ -277,7 +279,6 @@ int main(int argc, const char **argv) {
         } else if(mode == REPLACE) {
           // need to pick: (-o) Extract, (default) Replace, (-g)GlobalReplace
           // also, print non matching lines? (-p)
-          std::string out;
           
           if(o_print_match) {
             matched = extract(in, pat, rep, &out, o_global) > 0;
@@ -292,6 +293,14 @@ int main(int argc, const char **argv) {
             out = std::string(line);
             to_print = &out;
           }
+        }
+        if(to_print){
+          ca_printed = 0;
+        }
+        if(ca_printed < o_after_context && !to_print && !o_count){
+            out = std::string(line);
+            to_print = &out;
+            ca_printed ++;
         }
         if(to_print) {
           count++;

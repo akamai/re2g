@@ -29,6 +29,17 @@ bool match(const re2::StringPiece &text,
     RE2::PartialMatch(text, pattern);
 }
 
+int context_size(const char* str){
+  int v = 0;
+  if(str){
+    v = atoi(str);
+  }
+  if(v < 0) {
+    v = 0;
+  }
+  return v;
+}
+
 int main(int argc, const char **argv) {
   const char *appname = argv[0];
   const char *apn = argv[0];
@@ -51,7 +62,9 @@ int main(int argc, const char **argv) {
     o_neg_list = 0,
     o_literal = 0,
     o_case_insensitive = 0,
-    o_full_line = 0;
+    o_full_line = 0,
+    o_after_context = 0,
+    o_before_context = 0;
   enum {SEARCH, REPLACE} mode;
 
   const struct option options[] = {
@@ -69,13 +82,16 @@ int main(int argc, const char **argv) {
     {"ignore-case",no_argument,&o_case_insensitive,'i'},
     {"fixed-strings",no_argument,&o_literal,'F'},
     {"line-regexp",no_argument,&o_full_line,'x'},
+    {"after-context",optional_argument,NULL,'A'},
+    {"before-context",optional_argument,NULL,'B'},
+    {"context",optional_argument,NULL,'C'},
     { NULL, 0, NULL, 0 }
   };
 
   std::string rep;
   char c;
   int longopt=0;
-  while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFx",
+  while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFxB:C:A:",
                          (const struct option *)&options[0], &longopt))!=-1){
     if(0 == c && longopt >= 0 && 
        longopt < sizeof(options) - 1){
@@ -123,6 +139,15 @@ int main(int argc, const char **argv) {
     case 'x':
       o_full_line = 1;
       break;
+    case 'A':
+      o_after_context = context_size(optarg);
+      break;
+    case 'B':
+      o_before_context = context_size(optarg);
+      break;
+    case 'C':
+      o_after_context = o_before_context = context_size(optarg);
+      break; 
     default:
       o_usage = 1;
     }
@@ -133,17 +158,26 @@ int main(int argc, const char **argv) {
   if(o_neg_list){
     o_list = 1;
   }
-  
-  /*for(const struct option *o=&options[0];o->name;o++){
-    std::cout << o->name << ':' << *(o->flag) << std::endl;
+
+  /*  
+  for(const struct option *o=&options[0];o->name;o++){
+    std::cout << o->name << ':';
+    if(o->flag){
+      std::cout << *o->flag;
+    } else {
+      std::cout << "NULL";
+    }
+    std::cout << std::endl;
   }
   
+  std::cout << "C: [" << o_after_context << ',' << o_before_context << ']' << std::endl;
+
   std::cout << "ARGC: " << argc << std::endl;
   for(int i=0;i<argc;i++){
     std::cout << "ARGV[" << i << "]: " << argv[i]  << std::endl;
   }
-  std::cout   << std::endl;*/
-
+  std::cout   << std::endl;
+  */
   if(argc >= 1){
     mode=o_substitute?REPLACE:SEARCH;
   } else {

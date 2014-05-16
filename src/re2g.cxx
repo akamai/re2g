@@ -234,6 +234,11 @@ int main(int argc, const char **argv) {
     o_also_print_unreplaced = 0;
   }
 
+  if(o_also_print_unreplaced) {
+    o_before_context = 0;
+    o_after_context = 0;
+  }
+
 
   if(mode == SEARCH && o_print_match) {
     //o_print_match for SEARCH uses REPLACE code with constant repstr
@@ -297,14 +302,14 @@ int main(int argc, const char **argv) {
           }
           
           if(o_also_print_unreplaced && !matched) {
-            out = std::string(line);
-            to_print = &out;
+            to_print = &line;
           }
         }
         if(!(matched || o_also_print_unreplaced)){
           to_print = NULL;
         }
-        if(to_print){
+        if(matched){
+          count++;
           ca_printed = 0;
           while(o_before_context && !before.empty()){
             if(o_print_fname) {
@@ -315,13 +320,10 @@ int main(int argc, const char **argv) {
           }
         }
         if(ca_printed < o_after_context && !to_print && !o_count){
-            out = std::string(line);
-            to_print = &out;
+            to_print = &line;
             ca_printed ++;
         }
         if(to_print) {
-          before.clear();
-          count++; // should not count unreplaced lines, but does
           if(!o_count && !o_list) {
             if(o_print_fname) {
               std::cout << fname << ":";

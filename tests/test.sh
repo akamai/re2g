@@ -244,6 +244,12 @@ diff -q <(grep -L re2e src/*.cxx tests/*.sh) <($re2g -L re2e src/*.cxx tests/*.s
 diff -q <(grep -vL re2e src/*.cxx tests/*.sh) <($re2g -vL re2e src/*.cxx tests/*.sh) || fail=$(expr 1 + $fail);
 
 
+diff -q <(grep -C 9 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -C 9 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
+
+diff -q <(grep -B 7 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -B 7 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
+
+diff -q <(grep -A 12 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -A 12 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
+
 if [ $fail -gt 0 ]; then
   echo $fail Errors
   exit 1;

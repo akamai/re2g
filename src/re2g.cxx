@@ -3,6 +3,7 @@
 #include <fstream>
 #include <errno.h>
 #include <getopt.h>
+#include <deque>
 
 int extract(const re2::StringPiece &text,
             const re2::RE2& pattern,
@@ -254,7 +255,8 @@ int main(int argc, const char **argv) {
   for(int fidx = 0; fidx < num_files; fidx++) {
     const char* fname = fnames[fidx];
     std::ifstream ins(fname);
-
+    std::deque<std::string> before(o_before_context);
+    before.clear();
     if(fnames == &def_fname) {
       //for output compatibility with grep
       fname = "(standard input)";
@@ -267,6 +269,7 @@ int main(int argc, const char **argv) {
       std::string line;
       int ca_printed = o_after_context;
       while(std::getline(ins, line)) {
+        //std::cout << before.size() << std::endl;
         std::string *to_print = NULL;
         std::string in(line);
         std::string out;
@@ -296,6 +299,13 @@ int main(int argc, const char **argv) {
         }
         if(to_print){
           ca_printed = 0;
+          while(o_before_context && !before.empty()){
+            if(o_print_fname) {
+              std::cout << fname << ":";
+            }
+            std::cout << before.front() << std::endl;
+            before.pop_front();
+          }
         }
         if(ca_printed < o_after_context && !to_print && !o_count){
             out = std::string(line);
@@ -303,12 +313,20 @@ int main(int argc, const char **argv) {
             ca_printed ++;
         }
         if(to_print) {
-          count++;
+          before.clear();
+          count++; // should not count unreplaced lines, but does
           if(!o_count && !o_list) {
             if(o_print_fname) {
               std::cout << fname << ":";
             }
             std::cout << *to_print << std::endl;
+          }
+        } else {
+          if(o_before_context > 0){
+            if(before.size() >= o_before_context){
+              before.pop_front();
+            }
+            before.push_back(std::string(line));
           }
         }
       }

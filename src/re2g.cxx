@@ -125,15 +125,6 @@ int main(int argc, const char **argv) {
   argc -= optind;
   argv += optind;
   
-  //      }
-  //      argv[1] = argv[0];
-  //      argv++;
-  //      argc--;
-  //}
-  // } else {
-  //    o_usage = 1;
-  //  }
-  
   if(o_neg_list){
     o_list = 1;
   }
@@ -148,13 +139,8 @@ int main(int argc, const char **argv) {
   }
   std::cout   << std::endl;*/
 
-  int files_arg;
-  if(!o_substitute && argc >= 1) {
-    mode = SEARCH;
-    files_arg = 1;
-  } else if(o_substitute && argc >= 1) {
-    mode = REPLACE;
-    files_arg = 1;
+  if(argc >= 1){
+    mode=o_substitute?REPLACE:SEARCH;
   } else {
     o_usage = 1;
   }
@@ -203,16 +189,14 @@ int main(int argc, const char **argv) {
   }
 
 
-  if(mode == REPLACE) {
-    //rep = std::string(argv[1]);
-  } else if(mode == SEARCH && o_print_match) {
+  if(mode == SEARCH && o_print_match) {
     //o_print_match for SEARCH uses REPLACE code with constant repstr
     rep = std::string("\\0");
     o_also_print_unreplaced = 0;
     mode = REPLACE;
   }
 
-  int num_files = argc - files_arg;
+  int num_files = argc - 1;
 
   if(num_files > 1 && !o_no_print_fname) {
     o_print_fname = 1;
@@ -225,7 +209,7 @@ int main(int argc, const char **argv) {
     num_files = 1;
     fnames = &def_fname;
   } else {
-    fnames = &argv[files_arg];
+    fnames = &argv[1];
   }
 
   for(int fidx = 0; fidx < num_files; fidx++) {

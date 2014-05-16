@@ -27,7 +27,7 @@ function re2expect () {
 }
 
 
-if [ $($re2g -h|md5) = 211df818eb7fb4d9ebb7562fee684061 ]; then
+if [ $($re2g -h|md5) = 306e567c30a274627de4c342793c7bfe ]; then
   echo SUCCESS "-h => USAGE";
 else
   echo FAILURE "-h => help has diverged"
@@ -256,6 +256,11 @@ diff -q <(grep -HC 9 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re
 diff -q <(grep -HB 7 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -HB 7 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
 
 diff -q <(grep -HA 12 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -HA 12 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
+
+
+diff -q <(grep -m 2 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -m 2 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
+
+diff -q <(grep -m 5 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -m 5 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
 
 if [ $fail -gt 0 ]; then
   echo $fail Errors

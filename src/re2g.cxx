@@ -36,7 +36,7 @@ bool match(const re2::StringPiece &text,
     RE2::PartialMatch(text, pattern);
 }
 
-int context_size(const char* str){
+int str_to_size(const char* str){
   int v = 0;
   if(str){
     v = atoi(str);
@@ -86,7 +86,8 @@ int main(int argc, const char **argv) {
     o_full_line = 0,
     o_after_context = 0,
     o_before_context = 0,
-    o_print_lineno = 0;
+    o_print_lineno = 0,
+    o_max_matches = 0;
   enum {SEARCH, REPLACE} mode;
 
   const struct option options[] = {
@@ -108,13 +109,14 @@ int main(int argc, const char **argv) {
     {"before-context",optional_argument,NULL,'B'},
     {"context",optional_argument,NULL,'C'},
     {"line-number",no_argument,NULL,'n'},
+    {"max-count",required_argument,&o_max_matches,'m'},
     { NULL, 0, NULL, 0 }
   };
 
   std::string rep;
   char c;
   int longopt=0;
-  while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFxB:C:A:n",
+  while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFxB:C:A:nm:",
                          (const struct option *)&options[0], &longopt))!=-1){
     if(0 == c && longopt >= 0 && 
        longopt < sizeof(options) - 1){
@@ -163,13 +165,16 @@ int main(int argc, const char **argv) {
       o_full_line = 1;
       break;
     case 'A':
-      o_after_context = context_size(optarg);
+      o_after_context = str_to_size(optarg);
       break;
     case 'B':
-      o_before_context = context_size(optarg);
+      o_before_context = str_to_size(optarg);
       break;
     case 'C':
-      o_after_context = o_before_context = context_size(optarg);
+      o_after_context = o_before_context = str_to_size(optarg);
+      break; 
+    case 'm':
+      o_max_matches = str_to_size(optarg);
       break; 
     case 'n':
       o_print_lineno = 1;
@@ -212,7 +217,7 @@ int main(int argc, const char **argv) {
 
 
   if(o_usage) {
-    std::cout << appname << " [-?ogvgpHhclLiFxBAC][-s substitution] pattern file1..." << std::endl
+    std::cout << appname << " [-?ogvgpHhclLiFxBACnm][-s substitution] pattern file1..." << std::endl
               << std:: endl
               << "PATTERN re2 expression to apply" << std::endl
               << std::endl
@@ -234,6 +239,7 @@ int main(int argc, const char **argv) {
               << "   -A num, --after-context=num Display num lines following any match"  << std::endl
               << "   -C num, --context=num same as -A num -B num"  << std::endl
               << "   -n, --line-number print input line numbers, starting at 1"  << std::endl
+              << "   -m num, --max-count num stop reading each file after num matches"  << std::endl
 
 
               << std::endl;
@@ -310,8 +316,8 @@ int main(int argc, const char **argv) {
         o_print_lineno?1:-1,
         -1
       };
-      
-      while(std::getline(ins, line)) {
+
+      while(std::getline(ins, line) && (!o_max_matches || count < o_max_matches)) {
         //std::cout << before.size() << std::endl;
         std::string *to_print = NULL;
         std::string in(line);

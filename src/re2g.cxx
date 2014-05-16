@@ -23,6 +23,12 @@ int replace(std::string *text,
     RE2::Replace(text, pattern, rewrite) ? 1 : 0;
 }
 
+struct prefix {
+  const char* fname;
+  int line_no;
+  int offset;
+};
+
 bool match(const re2::StringPiece &text,
            const re2::RE2& pattern,
            bool whole_line) {
@@ -40,6 +46,20 @@ int context_size(const char* str){
   }
   return v;
 }
+
+void emit_line(const struct prefix *prefix,char marker, const std::string s){
+  if(prefix->fname){
+    std::cout << prefix->fname << marker;
+  }
+  if(prefix->line_no){
+    std::cout << prefix->line_no << marker;
+  }
+  if(prefix->offset){
+    std::cout << prefix->offset << marker;
+  }
+  std::cout << s << std::endl;
+}
+
 
 int main(int argc, const char **argv) {
   const char *appname = argv[0];
@@ -279,6 +299,12 @@ int main(int argc, const char **argv) {
       long long count = 0;
       std::string line;
       int ca_printed = o_after_context;
+      struct prefix pref = {
+        o_print_fname?fname:NULL,
+        0,
+        0
+      };
+
       while(std::getline(ins, line)) {
         //std::cout << before.size() << std::endl;
         std::string *to_print = NULL;
@@ -312,10 +338,7 @@ int main(int argc, const char **argv) {
           count++;
           ca_printed = 0;
           while(o_before_context && !before.empty()){
-            if(o_print_fname) {
-              std::cout << fname << ":";
-            }
-            std::cout << before.front() << std::endl;
+            emit_line(&pref,'-',before.front());
             before.pop_front();
           }
         }
@@ -325,10 +348,7 @@ int main(int argc, const char **argv) {
         }
         if(to_print) {
           if(!o_count && !o_list) {
-            if(o_print_fname) {
-              std::cout << fname << ":";
-            }
-            std::cout << *to_print << std::endl;
+            emit_line(&pref,matched?':':'-',*to_print);
           }
         } else {
           if(o_before_context > 0){

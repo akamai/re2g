@@ -250,6 +250,13 @@ diff -q <(grep -B 7 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2
 
 diff -q <(grep -A 12 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -A 12 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
 
+
+diff -q <(grep -HC 9 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -HC 9 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
+
+diff -q <(grep -HB 7 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -HB 7 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
+
+diff -q <(grep -HA 12 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -HA 12 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
+
 if [ $fail -gt 0 ]; then
   echo $fail Errors
   exit 1;

@@ -110,13 +110,15 @@ int main(int argc, const char **argv) {
     {"context",optional_argument,NULL,'C'},
     {"line-number",no_argument,NULL,'n'},
     {"max-count",required_argument,&o_max_matches,'m'},
+    {"exec",required_argument,NULL,'X'},
     { NULL, 0, NULL, 0 }
   };
 
   std::string rep;
+  std::string *util=NULL;
   char c;
   int longopt=0;
-  while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFxB:C:A:nm:",
+  while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFxB:C:A:nm:X:",
                          (const struct option *)&options[0], &longopt))!=-1){
     if(0 == c && longopt >= 0 && 
        longopt < sizeof(options) - 1){
@@ -175,7 +177,10 @@ int main(int argc, const char **argv) {
       break; 
     case 'm':
       o_max_matches = str_to_size(optarg);
-      break; 
+      break;
+    case 'X':
+      util = new std::string(optarg);
+      break;
     case 'n':
       o_print_lineno = 1;
       break; 
@@ -298,6 +303,15 @@ int main(int argc, const char **argv) {
   for(int fidx = 0; fidx < num_files; fidx++) {
     const char* fname = fnames[fidx];
     std::ifstream ins(fname);
+    if(util){
+      std::string command = *util;
+      if(!replace(&command,"\\{\\}",fname,true)){
+        command = command + " " + fname;
+      }
+      std::cout << "fork " << command << std::endl;
+    } // else {
+      //ins=...
+      //}
     std::deque<std::string> before(o_before_context);
     before.clear();
     if(fnames == &def_fname) {

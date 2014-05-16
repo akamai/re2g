@@ -74,11 +74,14 @@ int main(int argc, const char **argv) {
 
   std::string rep;
   char c;
+  int longopt=0;
   while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFx",
-                         (const struct option *)&options[0], NULL))!=-1){
+                         (const struct option *)&options[0], &longopt))!=-1){
+    if(0 == c && longopt >= 0 && 
+       longopt < sizeof(options) - 1){
+      c = options[longopt].val;
+    }
     switch(c) {
-    case 0:
-      break;
     case 'g':
       o_global = 1;
       break;

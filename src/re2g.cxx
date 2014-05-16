@@ -72,8 +72,9 @@ int main(int argc, const char **argv) {
     { NULL, 0, NULL, 0 }
   };
 
+  std::string rep;
   char c;
-  while((c = getopt_long(argc, (char *const *)argv, "?ogvgspHhclLiFx",
+  while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFx",
                               (const struct option *)&options[0], NULL))!=-1){
     switch(c) {
     case 'g':
@@ -89,6 +90,7 @@ int main(int argc, const char **argv) {
       o_negate_match = 1;
       break;
     case 's':
+      rep=std::string(optarg);
       o_substitute = 1;
       break;
     case 'H':
@@ -150,16 +152,16 @@ int main(int argc, const char **argv) {
   if(!o_substitute && argc >= 1) {
     mode = SEARCH;
     files_arg = 1;
-  } else if(o_substitute && argc >= 2) {
+  } else if(o_substitute && argc >= 1) {
     mode = REPLACE;
-    files_arg = 2;
+    files_arg = 1;
   } else {
     o_usage = 1;
   }
 
 
   if(o_usage) {
-    std::cout << appname << " [-flags] pattern [replacement] file1..." << std::endl
+    std::cout << appname << " [-?ogvgpHhclLiFx][-s substitution] pattern file1..." << std::endl
               << std:: endl
               << "TEXT text to search" << std::endl
               << "PATTERN re2 expression to apply" << std::endl
@@ -169,7 +171,7 @@ int main(int argc, const char **argv) {
               << "   -?, --help: display help"  << std::endl
               << "   -v, --invert-match: invert match"  << std::endl
               << "   -o, --only-matching: only print matching portion"  << std::endl
-              << "   -s, --sub do substitution"  << std::endl
+              << "   -s substitution, --sub=substitution do substitution"  << std::endl
               << "   -g, --global: global search/replace, default is one per line"  << std::endl
               << "   -p, --print-all: (when replacing) print lines where no replacement was made"  << std::endl
               << "   -H, --print-names: always print file name"  << std::endl
@@ -200,9 +202,9 @@ int main(int argc, const char **argv) {
     o_print_match = 0;
   }
 
-  std::string rep;
+
   if(mode == REPLACE) {
-    rep = std::string(argv[1]);
+    //rep = std::string(argv[1]);
   } else if(mode == SEARCH && o_print_match) {
     //o_print_match for SEARCH uses REPLACE code with constant repstr
     rep = std::string("\\0");

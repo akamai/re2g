@@ -166,20 +166,20 @@ int main(int argc, const char **argv) {
               << "REPLACEMENT optional replacement string, supports \\0 .. \\9 references"  << std::endl
               << "FLAGS modifiers to operation"  << std::endl
               << std::endl
-              << "   h: display help"  << std::endl
-              << "   v: invert match"  << std::endl
-              << "   o: only print matching portion"  << std::endl
-              << "   s: do substitution"  << std::endl
-              << "   g: global search/replace, default is one per line"  << std::endl
-              << "   p: (when replacing) print lines where no replacement was made"  << std::endl
-              << "   H: always print file name"  << std::endl
-              << "   h: never print file name"  << std::endl
-              << "   c: print match count instead of normal output"  << std::endl
-              << "   l: list matching files instead of normal output"  << std::endl
-              << "   L: list nonmatching files instead of normal output"  << std::endl
-              << "   i: ignore case when matching; same as (?i)"  << std::endl
-              << "   F: treat pattern argument as literal string"  << std::endl
-              << "   x: match whole lines only"  << std::endl
+              << "   -?, --help: display help"  << std::endl
+              << "   -v, --invert-match: invert match"  << std::endl
+              << "   -o, --only-matching: only print matching portion"  << std::endl
+              << "   -s, --sub do substitution"  << std::endl
+              << "   -g, --global: global search/replace, default is one per line"  << std::endl
+              << "   -p, --print-all: (when replacing) print lines where no replacement was made"  << std::endl
+              << "   -H, --print-names: always print file name"  << std::endl
+              << "   -h, --no-print-names: never print file name"  << std::endl
+              << "   -c, --count: print match count instead of normal output"  << std::endl
+              << "   -l, --files-with-matches: list matching files instead of normal output"  << std::endl
+              << "   -L, --files-without-match: list nonmatching files instead of normal output"  << std::endl
+              << "   -i, --ignore-case: ignore case when matching; same as (?i)"  << std::endl
+              << "   -F, --fixed-strings: treat pattern argument as literal string"  << std::endl
+              << "   -x, --line-regexp: match whole lines only"  << std::endl
               << std::endl;
     return 0;
   }

@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <errno.h>
+#include <getopt.h>
 
 int extract(const re2::StringPiece &text,
             const re2::RE2& pattern,
@@ -28,7 +29,7 @@ bool match(const re2::StringPiece &text,
     RE2::PartialMatch(text, pattern);
 }
 
-int main(int argc, const char** argv) {
+int main(int argc, const char **argv) {
   const char *appname = argv[0];
   const char *apn = argv[0];
   while(*apn) {
@@ -53,79 +54,105 @@ int main(int argc, const char** argv) {
     o_full_line = 0;
   enum {SEARCH, REPLACE} mode;
 
+  const struct option options[] = {
+    {"help",no_argument,&o_usage,'?'},
+    {"global",no_argument,&o_global,'g'},
+    {"invert-match",no_argument,&o_negate_match,'v'},
+    {"only-matching",no_argument,&o_global,'o'},
+    {"subtitute",no_argument,&o_substitute,'s'},
+    {"print-all",no_argument,&o_also_print_unreplaced,'p'},
+    {"print-names",no_argument,&o_print_fname,'H'},
+    {"no-print-names",no_argument,&o_no_print_fname,'h'},
+    {"count",no_argument,&o_count,'c'},
+    {"files-with-matches",no_argument,&o_list,'l'},
+    {"files-without-match",no_argument,&o_neg_list,'L'},
+    {"ignore-case",no_argument,&o_case_insensitive,'i'},
+    {"fixed-strings",no_argument,&o_literal,'F'},
+    {"line-regexp",no_argument,&o_full_line,'x'},
+    { NULL, 0, NULL, 0 }
+  };
 
-  if(argc > 1) {
-    if(argv[1][0] == '-') {
-      if(argv[1][1] == '-') {
-        //ignore standalone '--' as argv[1];
-      } else {
-        // we have flags
-        const char* fs = argv[1] + 1;
-        char c;
-        while((c = *fs++)) {
-          switch(c) {
-          case 'g':
-            o_global = 1;
-            break;
-          case 'o':
-            o_print_match = 1;
-            break;
-          case 'p':
-            o_also_print_unreplaced = 1;
-            break;
-          case 'v':
-            o_negate_match = 1;
-            break;
-          case 's':
-            o_substitute = 1;
-            break;
-          case 'H':
-            o_print_fname = 1;
-            break;
-          case 'h':
-            o_no_print_fname = 1;
-            break;
-          case 'c':
-            o_count = 1;
-            break;
-          case 'l':
-            o_list = 1;
-            break;
-          case 'L':
-            o_list = 1;
-            o_neg_list = 1;
-            break;
-          case 'F':
-            o_literal = 1;
-            break;
-          case 'i':
-          case 'y':
-            o_case_insensitive = 1;
-            break;
-          case 'x':
-            o_full_line = 1;
-            break;
-          default:
-            o_usage = 1;
-          }
-        }
-      }
-      argv[1] = argv[0];
-      argv++;
-      argc--;
+  char c;
+  while((c = getopt_long(argc, (char *const *)argv, "?ogvgspHhclLiFx",
+                              (const struct option *)&options[0], NULL))!=-1){
+    switch(c) {
+    case 'g':
+      o_global = 1;
+      break;
+    case 'o':
+      o_print_match = 1;
+      break;
+    case 'p':
+      o_also_print_unreplaced = 1;
+      break;
+    case 'v':
+      o_negate_match = 1;
+      break;
+    case 's':
+      o_substitute = 1;
+      break;
+    case 'H':
+      o_print_fname = 1;
+      break;
+    case 'h':
+      o_no_print_fname = 1;
+      break;
+    case 'c':
+      o_count = 1;
+      break;
+    case 'l':
+      o_list = 1;
+      break;
+    case 'L':
+      o_neg_list = 1;
+      break;
+    case 'F':
+      o_literal = 1;
+      break;
+    case 'i':
+    case 'y':
+      o_case_insensitive = 1;
+      break;
+    case 'x':
+      o_full_line = 1;
+      break;
+    default:
+      o_usage = 1;
     }
-  } else {
-    o_usage = 1;
   }
-
+  argc -= optind;
+  argv += optind;
+  
+  //      }
+  //      argv[1] = argv[0];
+  //      argv++;
+  //      argc--;
+  //}
+  // } else {
+  //    o_usage = 1;
+  //  }
+  
+  if(o_neg_list){
+    o_list = 1;
+  }
+  
+  /*  for(const struct option *o=&options[0];o->name;o++){
+    std::cout << o->name << ':' << *(o->flag) << std::endl;
+  }
+  
+  std::cout << "ARGC: " << argc << std::endl;
+  for(int i=0;i<argc;i++){
+    std::cout << "ARGV[" << i << "]: " << argv[i]  << std::endl;
+  }
+  std::cout   << std::endl;*/
 
   int files_arg;
-  if(!o_substitute && argc >= 2) {
+  if(!o_substitute && argc >= 1) {
     mode = SEARCH;
-    files_arg = 2;
-  } else if(o_substitute && argc >= 3) {
+    files_arg = 1;
+  } else if(o_substitute && argc >= 2) {
     mode = REPLACE;
-    files_arg = 3;
+    files_arg = 2;
   } else {
     o_usage = 1;
   }
@@ -166,17 +193,16 @@ int main(int argc, const char** argv) {
     opts.set_literal(true);
   }
   
-  RE2::RE2 pat(argv[1], opts);
+  RE2::RE2 pat(argv[0], opts);
 
   //rationalize flags
   if(o_negate_match && o_print_match) {
     o_print_match = 0;
   }
 
-
   std::string rep;
   if(mode == REPLACE) {
-    rep = std::string(argv[2]);
+    rep = std::string(argv[1]);
   } else if(mode == SEARCH && o_print_match) {
     //o_print_match for SEARCH uses REPLACE code with constant repstr
     rep = std::string("\\0");

@@ -226,8 +226,12 @@ int main(int argc, const char **argv) {
   RE2::RE2 pat(argv[0], opts);
 
   //rationalize flags
-  if(o_negate_match && o_print_match) {
+  if(o_negate_match) {
     o_print_match = 0;
+  }
+
+  if(o_count || mode == SEARCH) {
+    o_also_print_unreplaced = 0;
   }
 
 
@@ -275,29 +279,30 @@ int main(int argc, const char **argv) {
         std::string *to_print = NULL;
         std::string in(line);
         std::string out;
-        bool matched;
+        bool matched = false;
         
         if(mode == SEARCH) {
-          matched = match(in, pat, o_full_line);
+          matched = o_negate_match ^ match(in, pat, o_full_line);
           to_print = &in;
-          to_print = (matched ^ o_negate_match) ? to_print : NULL;
         } else if(mode == REPLACE) {
           // need to pick: (-o) Extract, (default) Replace, (-g)GlobalReplace
           // also, print non matching lines? (-p)
           
           if(o_print_match) {
-            matched = extract(in, pat, rep, &out, o_global) > 0;
+            matched = o_negate_match ^ (extract(in, pat, rep, &out, o_global) > 0);
             to_print = &out;
           } else {
-            matched = replace(&in, pat, rep, o_global) > 0;
+            matched = o_negate_match ^ (replace(&in, pat, rep, o_global) > 0);
             to_print = &in;
           }
-          to_print = (matched ^ o_negate_match) ? to_print : NULL;
           
-          if(o_also_print_unreplaced && !to_print && !o_count) {
+          if(o_also_print_unreplaced && !matched) {
             out = std::string(line);
             to_print = &out;
           }
+        }
+        if(!(matched || o_also_print_unreplaced)){
+          to_print = NULL;
         }
         if(to_print){
           ca_printed = 0;

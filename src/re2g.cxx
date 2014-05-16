@@ -59,7 +59,7 @@ int main(int argc, const char **argv) {
     {"global",no_argument,&o_global,'g'},
     {"invert-match",no_argument,&o_negate_match,'v'},
     {"only-matching",no_argument,&o_global,'o'},
-    {"subtitute",no_argument,&o_substitute,'s'},
+    {"subtitute",required_argument,&o_substitute,'s'},
     {"print-all",no_argument,&o_also_print_unreplaced,'p'},
     {"print-names",no_argument,&o_print_fname,'H'},
     {"no-print-names",no_argument,&o_no_print_fname,'h'},
@@ -75,8 +75,10 @@ int main(int argc, const char **argv) {
   std::string rep;
   char c;
   while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFx",
-                              (const struct option *)&options[0], NULL))!=-1){
+                         (const struct option *)&options[0], NULL))!=-1){
     switch(c) {
+    case 0:
+      break;
     case 'g':
       o_global = 1;
       break;
@@ -129,7 +131,7 @@ int main(int argc, const char **argv) {
     o_list = 1;
   }
   
-  /*  for(const struct option *o=&options[0];o->name;o++){
+  /*for(const struct option *o=&options[0];o->name;o++){
     std::cout << o->name << ':' << *(o->flag) << std::endl;
   }
   

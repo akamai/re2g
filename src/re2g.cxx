@@ -187,17 +187,14 @@ int main(int argc, const char **argv) {
 
 
   if(o_usage) {
-    std::cout << appname << " [-?ogvgpHhclLiFx][-s substitution] pattern file1..." << std::endl
+    std::cout << appname << " [-?ogvgpHhclLiFxBAC][-s substitution] pattern file1..." << std::endl
               << std:: endl
-              << "TEXT text to search" << std::endl
               << "PATTERN re2 expression to apply" << std::endl
-              << "REPLACEMENT optional replacement string, supports \\0 .. \\9 references"  << std::endl
-              << "FLAGS modifiers to operation"  << std::endl
               << std::endl
               << "   -?, --help: display help"  << std::endl
               << "   -v, --invert-match: invert match"  << std::endl
               << "   -o, --only-matching: only print matching portion"  << std::endl
-              << "   -s substitution, --sub=substitution do substitution"  << std::endl
+              << "   -s substitution, --sub=substitution optional replacement string, supports \\0 .. \\9 references"  << std::endl
               << "   -g, --global: global search/replace, default is one per line"  << std::endl
               << "   -p, --print-all: (when replacing) print lines where no replacement was made"  << std::endl
               << "   -H, --print-names: always print file name"  << std::endl
@@ -208,6 +205,11 @@ int main(int argc, const char **argv) {
               << "   -i, --ignore-case: ignore case when matching; same as (?i)"  << std::endl
               << "   -F, --fixed-strings: treat pattern argument as literal string"  << std::endl
               << "   -x, --line-regexp: match whole lines only"  << std::endl
+              << "   -B num, --before-context=num Display num lines preceding any match"  << std::endl
+              << "   -A num, --after-context=num Display num lines following any match"  << std::endl
+              << "   -C num, --context=num same as -A num -B num"  << std::endl
+
+
               << std::endl;
     return 0;
   }

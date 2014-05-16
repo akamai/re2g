@@ -51,10 +51,10 @@ void emit_line(const struct prefix *prefix,char marker, const std::string s){
   if(prefix->fname){
     std::cout << prefix->fname << marker;
   }
-  if(prefix->line_no){
+  if(prefix->line_no >= 0){
     std::cout << prefix->line_no << marker;
   }
-  if(prefix->offset){
+  if(prefix->offset >= 0){
     std::cout << prefix->offset << marker;
   }
   std::cout << s << std::endl;
@@ -85,7 +85,8 @@ int main(int argc, const char **argv) {
     o_case_insensitive = 0,
     o_full_line = 0,
     o_after_context = 0,
-    o_before_context = 0;
+    o_before_context = 0,
+    o_print_lineno = 0;
   enum {SEARCH, REPLACE} mode;
 
   const struct option options[] = {
@@ -106,13 +107,14 @@ int main(int argc, const char **argv) {
     {"after-context",optional_argument,NULL,'A'},
     {"before-context",optional_argument,NULL,'B'},
     {"context",optional_argument,NULL,'C'},
+    {"line-number",no_argument,NULL,'n'},
     { NULL, 0, NULL, 0 }
   };
 
   std::string rep;
   char c;
   int longopt=0;
-  while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFxB:C:A:",
+  while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFxB:C:A:n",
                          (const struct option *)&options[0], &longopt))!=-1){
     if(0 == c && longopt >= 0 && 
        longopt < sizeof(options) - 1){
@@ -168,6 +170,9 @@ int main(int argc, const char **argv) {
       break;
     case 'C':
       o_after_context = o_before_context = context_size(optarg);
+      break; 
+    case 'n':
+      o_print_lineno = 1;
       break; 
     default:
       o_usage = 1;
@@ -228,6 +233,7 @@ int main(int argc, const char **argv) {
               << "   -B num, --before-context=num Display num lines preceding any match"  << std::endl
               << "   -A num, --after-context=num Display num lines following any match"  << std::endl
               << "   -C num, --context=num same as -A num -B num"  << std::endl
+              << "   -n, --line-number print input line numbers, starting at 1"  << std::endl
 
 
               << std::endl;
@@ -301,17 +307,17 @@ int main(int argc, const char **argv) {
       int ca_printed = o_after_context;
       struct prefix pref = {
         o_print_fname?fname:NULL,
-        0,
-        0
+        o_print_lineno?1:-1,
+        -1
       };
-
+      
       while(std::getline(ins, line)) {
         //std::cout << before.size() << std::endl;
         std::string *to_print = NULL;
         std::string in(line);
         std::string out;
         bool matched = false;
-        
+
         if(mode == SEARCH) {
           matched = o_negate_match ^ match(in, pat, o_full_line);
           to_print = &in;
@@ -337,9 +343,13 @@ int main(int argc, const char **argv) {
         if(matched){
           count++;
           ca_printed = 0;
-          while(o_before_context && !before.empty()){
-            emit_line(&pref,'-',before.front());
-            before.pop_front();
+          if(o_before_context){
+            pref.line_no-=before.size();
+            while(!before.empty()){
+              emit_line(&pref,'-',before.front());
+              before.pop_front();
+              pref.line_no++;
+            }
           }
         }
         if(ca_printed < o_after_context && !to_print && !o_count){
@@ -357,6 +367,9 @@ int main(int argc, const char **argv) {
             }
             before.push_back(std::string(line));
           }
+        }
+        if(pref.line_no>=0){
+          pref.line_no++;
         }
       }
       if(o_count) {

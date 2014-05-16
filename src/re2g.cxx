@@ -105,8 +105,8 @@ int main(int argc, const char **argv) {
     {"ignore-case",no_argument,&o_case_insensitive,'i'},
     {"fixed-strings",no_argument,&o_literal,'F'},
     {"line-regexp",no_argument,&o_full_line,'x'},
-    {"after-context",optional_argument,NULL,'A'},
-    {"before-context",optional_argument,NULL,'B'},
+    {"after-context",required_argument,NULL,'A'},
+    {"before-context",required_argument,NULL,'B'},
     {"context",optional_argument,NULL,'C'},
     {"line-number",no_argument,NULL,'n'},
     {"max-count",required_argument,&o_max_matches,'m'},
@@ -171,7 +171,7 @@ int main(int argc, const char **argv) {
       o_before_context = str_to_size(optarg);
       break;
     case 'C':
-      o_after_context = o_before_context = str_to_size(optarg);
+      o_after_context = o_before_context = optarg?str_to_size(optarg):2;
       break; 
     case 'm':
       o_max_matches = str_to_size(optarg);
@@ -237,7 +237,7 @@ int main(int argc, const char **argv) {
               << "   -x, --line-regexp: match whole lines only"  << std::endl
               << "   -B num, --before-context=num Display num lines preceding any match"  << std::endl
               << "   -A num, --after-context=num Display num lines following any match"  << std::endl
-              << "   -C num, --context=num same as -A num -B num"  << std::endl
+              << "   -C num, --context=num same as -A num -B num, long-form defaults to 2"  << std::endl
               << "   -n, --line-number print input line numbers, starting at 1"  << std::endl
               << "   -m num, --max-count num stop reading each file after num matches"  << std::endl
 

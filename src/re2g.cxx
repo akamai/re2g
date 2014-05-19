@@ -179,14 +179,13 @@ int main(int argc, const char **argv) {
       o_max_matches = str_to_size(optarg);
       break;
     case 'X':
-      // consume until '\;'
+      // consume until arg is a single semi-colon like find -exec
       const char* oa;
       for(oa = optarg;
           optind < argc
             && oa
             && ! (oa[0] == ';' && oa[1] == 0) ;
           oa=argv[optind++]){
-        std::cout << "read: " << oa << std::endl;
         uargs.push_back(oa);
       }
       if(!(oa[0] == ';' && oa[1] == 0)){
@@ -312,21 +311,43 @@ int main(int argc, const char **argv) {
     fnames = &argv[1];
   }
 
+  const char **uargv = NULL;
+  int uargc = uargs.size();
+  int rargc = 0;
+  RE2::RE2 uarg_pat("\\{\\}");
+  if(!uargs.empty()){
+    uargv = new const char*[uargc + 2];
+    uargv[uargc] = NULL;
+    uargv[uargc + 1] = NULL;
+    for(int aidx = 0; aidx < uargc; aidx++){
+      std::string *arg = &uargs[aidx];
+      if(match(*arg, uarg_pat, false)){
+        uargv[aidx]=NULL;
+        rargc++;
+      } else {
+        uargv[aidx]=arg->c_str();
+      }
+    }
+  }
+  std::deque<std::string> rargs(rargc);
+
   for(int fidx = 0; fidx < num_files; fidx++) {
     const char* fname = fnames[fidx];
     std::ifstream ins(fname);
-    if(!uargs.empty()){
-      bool replaced_arg = false;
+    if(uargv){
+      int ridx = 0;
       std::cout << "fork: ";
-      while(!uargs.empty()){
-        std::string arg = uargs.front();
-        uargs.pop_front();
-        if(replace(&arg,"\\{\\}",fname,true)){
-          replaced_arg = true;
+      for(int aidx = 0; aidx < uargc; aidx++){
+        if(uargv[aidx] == NULL){
+          rargs[ridx]=std::string(uargs[aidx]);
+          replace(&rargs[ridx], uarg_pat, fname, true);
+          uargv[aidx]=rargs[ridx].c_str();
+          ridx++;
         }
-        std::cout << "   " << arg << ',';
+        std::cout << "   " << uargv[aidx] << ',';
       }
-      if(!replaced_arg){
+      if(!rargc){
+        uargv[uargc] = fname;
         std::cout << fname << std::endl;
       }
       std::cout << std::endl;
@@ -424,6 +445,9 @@ int main(int argc, const char **argv) {
       }
       ins.close();
     }
+  }
+  if(uargv){
+    delete[] uargv;
   }
 }
 

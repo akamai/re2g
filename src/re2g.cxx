@@ -115,7 +115,7 @@ int main(int argc, const char **argv) {
   };
 
   std::string rep;
-  std::string *util=NULL;
+  std::deque<std::string> uargs(0);
   char c;
   int longopt=0;
   while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFxB:C:A:nm:X:",
@@ -179,7 +179,19 @@ int main(int argc, const char **argv) {
       o_max_matches = str_to_size(optarg);
       break;
     case 'X':
-      util = new std::string(optarg);
+      // consume until '\;'
+      const char* oa;
+      for(oa = optarg;
+          optind < argc
+            && oa
+            && ! (oa[0] == ';' && oa[1] == 0) ;
+          oa=argv[optind++]){
+        std::cout << "read: " << oa << std::endl;
+        uargs.push_back(oa);
+      }
+      if(!(oa[0] == ';' && oa[1] == 0)){
+        o_usage = 1;
+      }
       break;
     case 'n':
       o_print_lineno = 1;
@@ -303,12 +315,21 @@ int main(int argc, const char **argv) {
   for(int fidx = 0; fidx < num_files; fidx++) {
     const char* fname = fnames[fidx];
     std::ifstream ins(fname);
-    if(util){
-      std::string command = *util;
-      if(!replace(&command,"\\{\\}",fname,true)){
-        command = command + " " + fname;
+    if(!uargs.empty()){
+      bool replaced_arg = false;
+      std::cout << "fork: ";
+      while(!uargs.empty()){
+        std::string arg = uargs.front();
+        uargs.pop_front();
+        if(replace(&arg,"\\{\\}",fname,true)){
+          replaced_arg = true;
+        }
+        std::cout << "   " << arg << ',';
       }
-      std::cout << "fork " << command << std::endl;
+      if(!replaced_arg){
+        std::cout << fname << std::endl;
+      }
+      std::cout << std::endl;
     } // else {
       //ins=...
       //}

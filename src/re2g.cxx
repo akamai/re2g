@@ -62,7 +62,7 @@ std::streambuf::int_type fdbuf::underflow(){
     int qty = read(fd_, base_, buff_sz_);
     //std::cerr << "qty: " << qty << std::endl;
     if(qty < 0){
-      std::cerr << "err: " <<  strerror(errno) << std::endl;
+      //std::cerr << "err: " <<  strerror(errno) << std::endl;
       return traits_type::eof();
     }
     if(qty == 0){
@@ -492,7 +492,7 @@ int main(int argc, const char **argv) {
       
       pb = ioexec((char *const *)uargv, fname, util_input);
       if(!pb){
-        std::cerr << appname << " DEATH " << ':' << strerror(errno) << std::endl;
+        std::cerr << appname << ": failed to use utility: " << strerror(errno) << std::endl;
         return -1;
       }
       is = new std::istream(pb);

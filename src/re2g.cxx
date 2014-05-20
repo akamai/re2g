@@ -45,16 +45,7 @@ pbuff::pbuff(int fd, std::size_t buff_sz, std::size_t put_back) :
   base_(start_ + put_back_),
   end_(start_ + full_sz_)
 {
-  /*  put_back_=std::max(put_back, size_t(1));
-  buff_sz_=std::max(buff_sz, put_back_);
-  full_sz_=buff_sz_ + put_back_;
-  start_=new char[full_sz_];
-
-  base_ = start_ + put_back_;
-  end_ = start_ + full_sz_;*/
-
   setg(end_,end_,end_);
-
 }
 
 pbuff::~pbuff() {

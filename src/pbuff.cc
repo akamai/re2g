@@ -12,6 +12,7 @@
 class pbuff : public std::streambuf {
 public:
   explicit pbuff(int fd, std::size_t buff_sz = 256, std::size_t put_back = 8);
+  ~pbuff();
   
 private:
   // overrides base class underflow()
@@ -25,26 +26,39 @@ private:
 private:
   int fd_;
   const std::size_t put_back_;
-  std::vector<char> buffer_;
+  char* base_;
+  char* start_;
+  char* end_;
+  int full_sz_;
+  int buff_sz_;
 };
 
 pbuff::pbuff(int fd, std::size_t buff_sz, std::size_t put_back) :
     fd_(fd),
     put_back_(std::max(put_back, size_t(1))),
-    buffer_(std::max(buff_sz, put_back_) + put_back_)
+    buff_sz_(std::max(buff_sz, put_back_)),
+    full_sz_(buff_sz_ + put_back_),
+    start_(new char[full_sz_])
 {
-  setg(&buffer_.back()+1,&buffer_.back()+1,&buffer_.back()+1);
+  base_ = start_ + put_back_;
+  end_ = start_ + full_sz_;
+
+  setg(end_,end_,end_);
+
+}
+
+pbuff::~pbuff() {
+  delete[] start_;
 }
 
 std::streambuf::int_type pbuff::underflow(){
   if(gptr() >= egptr()){
-    char* base = &buffer_[put_back_];
     int backed = std::min((std::size_t)(gptr() - eback()), put_back_);
     if(backed > 0){
       //std::cerr << "backed: " << backed << std::endl;
-      std::memcpy(base - backed, gptr()-backed, backed);
+      std::memcpy(base_ - backed, gptr()-backed, backed);
     }
-    int qty = read(fd_, base, buffer_.size()-put_back_);
+    int qty = read(fd_, base_, buff_sz_);
     //std::cerr << "qty: " << qty << std::endl;
     if(qty < 0){
       std::cerr << "err: " <<  strerror(errno) << std::endl;
@@ -53,7 +67,7 @@ std::streambuf::int_type pbuff::underflow(){
       //std::cerr << "EOF" <<std::endl;
       return traits_type::eof();
     }
-    setg(&buffer_.front(), base, base + qty);
+    setg(start_, base_, base_ + qty);
   }
   return traits_type::to_int_type(*gptr());
 }

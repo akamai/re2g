@@ -264,6 +264,10 @@ diff -q <(grep -m 2 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2
 
 diff -q <(grep -m 5 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -m 5 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
 
+diff -q <(rev tests/lorem | $re2g rolod)  <($re2g -X rev \; rolod tests/lorem) || fail=$(expr 1 + $fail);
+
+diff -q <(rev tests/lorem | $re2g rolod)  <($re2g -X rev \; rolod < tests/lorem) || fail=$(expr 1 + $fail);
+
 if [ $fail -gt 0 ]; then
   echo $fail Errors
   exit 1;

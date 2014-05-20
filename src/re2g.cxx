@@ -6,12 +6,86 @@
 #include <deque>
 #include <unistd.h>
 
-int insource_p::getline(std::string &line){
+#include <streambuf>
+#include <cstdlib>
+#include <cstdio>
+#include <fcntl.h>
+#include <sys/wait.h>
+
+class pbuff : public std::streambuf {
+public:
+  explicit pbuff(int fd, std::size_t buff_sz = 256, std::size_t put_back = 8);
+  ~pbuff();
+  
+private:
+  // overrides base class underflow()
+  std::streambuf::int_type underflow();
+  
+  // copy ctor and assignment not implemented;
+  // copying not allowed
+  pbuff(const pbuff &);
+  pbuff &operator= (const pbuff &);
+  
+private:
+  int fd_;
+  const std::size_t put_back_;
+  char* base_;
+  char* start_;
+  char* end_;
+  int full_sz_;
+  int buff_sz_;
+};
+
+pbuff::pbuff(int fd, std::size_t buff_sz, std::size_t put_back) :
+    fd_(fd),
+    put_back_(std::max(put_back, size_t(1))),
+    start_(new char[full_sz_]),
+    full_sz_(buff_sz_ + put_back_),
+    buff_sz_(std::max(buff_sz, put_back_))
+{
+  base_ = start_ + put_back_;
+  end_ = start_ + full_sz_;
+
+  setg(end_,end_,end_);
 
 }
 
-int insource_f::getline(std::string &line){
-  return std::getline(in, line);
+pbuff::~pbuff() {
+  delete[] start_;
+}
+
+std::streambuf::int_type pbuff::underflow(){
+  if(gptr() >= egptr()){
+    int backed = std::min((std::size_t)(gptr() - eback()), put_back_);
+    if(backed > 0){
+      //std::cerr << "backed: " << backed << std::endl;
+      std::memcpy(base_ - backed, gptr()-backed, backed);
+    }
+    int qty = read(fd_, base_, buff_sz_);
+    //std::cerr << "qty: " << qty << std::endl;
+    if(qty < 0){
+      std::cerr << "err: " <<  strerror(errno) << std::endl;
+      return traits_type::eof();
+    }
+    if(qty == 0){
+      //std::cerr << "EOF" <<std::endl;
+      return traits_type::eof();
+    }
+    setg(start_, base_, base_ + qty);
+  }
+  return traits_type::to_int_type(*gptr());
+}
+
+
+
+int test_pbuff_main (int argc, char** argv){
+  pbuff pb(0,10,5);
+  std::string line;
+  std::istream is(&pb);
+  while(std::getline(is, line)){
+    std::cout << "read: " << line << std::endl;
+  }
+  return 0;
 }
 
 int extract(const re2::StringPiece &text,
@@ -69,9 +143,43 @@ void emit_line(const struct prefix *prefix,char marker, const std::string s){
   std::cout << s << std::endl;
 }
 
-std::ifstream *ioexec(char* const* arglist){
-  execvp("echo", arglist);
-  return NULL;
+pbuff *ioexec(char* const* arglist, bool child_uses_stdin=false){
+  int plumb[2];
+  pid_t pid;
+
+  if(pipe(&plumb[0])){
+    std::cerr << " error piping for " << arglist[0] << ':'
+              << strerror(errno) << std::endl;
+    return NULL;
+  }
+  pid = fork();
+  if(pid < 0){
+    std::cerr << " error forking for  " << arglist[0] << ':'
+              << strerror(errno) << std::endl;
+    return NULL;
+  }
+  if(!pid){
+    if(!child_uses_stdin){
+      close(0);
+    }
+    close(1);
+    //    close(2);
+    close(plumb[0]);
+    if(dup2(plumb[1],1) != 1){
+      std::cerr << " error dup2ing for  " << arglist[0] << ':'
+                << strerror(errno) << std::endl;
+      return NULL;
+    }
+    execvp(arglist[0],&arglist[0]);
+    std::cerr << " error invoking  " << arglist[0] << ':'
+              << strerror(errno) << std::endl;
+    return NULL;
+  }
+  if(child_uses_stdin){
+    close(0);
+  }
+  close(plumb[1]);
+  return new pbuff(plumb[0],10,5);
 }
 
 int main(int argc, const char **argv) {
@@ -316,11 +424,13 @@ int main(int argc, const char **argv) {
 
   const char** fnames;
   const char* def_fname = "/dev/stdin";
-
+  bool using_stdin;
   if(num_files == 0) {
     num_files = 1;
+    using_stdin = true;
     fnames = &def_fname;
   } else {
+    using_stdin = false;
     fnames = &argv[1];
   }
 
@@ -346,7 +456,9 @@ int main(int argc, const char **argv) {
 
   for(int fidx = 0; fidx < num_files; fidx++) {
     const char* fname = fnames[fidx];
-    insource is;
+    std::istream *is;
+    pbuff *pb = NULL;
+    std::filebuf *fb = NULL;
     if(uargv){
       int ridx = 0;
       //      std::cout << "fork: ";
@@ -359,24 +471,31 @@ int main(int argc, const char **argv) {
         }
         //        std::cout << "   " << uargv[aidx] << ',';
       }
-      if(!rargc){
+      if(!rargc && !using_stdin){
         uargv[uargc] = fname;
-        //        std::cout << fname << std::endl;
+        //      std::cout << fname << std::endl;
       }
-      //      std::cout << std::endl;
-      is = insource_p((char* const*)uargv));
+      
+      pb = ioexec((char *const *)uargv, using_stdin);
+      if(!pb){
+        std::cerr << appname << " DEATH " << ':' << strerror(errno) << std::endl;
+        return -1;
+      }
+      is = new std::istream(pb);
     } else {
-      is = insource_f(std::ifstream(fname));
+      fb = new std::filebuf();
+      fb->open(fname, std::ios_base::in);
+      is = new std::istream(fb);
     }
 
     std::deque<std::string> before(o_before_context);
     before.clear();
-    if(fnames == &def_fname) {
+    if(using_stdin) {
       //for output compatibility with grep
       fname = "(standard input)";
     }
 
-    if(!is.ok()) {
+    if(!is) {
       std::cerr << appname << " " << fname << ':' << strerror(errno) << std::endl;
     } else {
       long long count = 0;
@@ -387,8 +506,7 @@ int main(int argc, const char **argv) {
         o_print_lineno?1:-1,
         -1
       };
-
-      while(is.getline(&line) && (!o_max_matches || count < o_max_matches)) {
+      while(std::getline(*is, line) && (!o_max_matches || count < o_max_matches)) {
         //std::cout << before.size() << std::endl;
         std::string *to_print = NULL;
         std::string in(line);
@@ -458,7 +576,15 @@ int main(int argc, const char **argv) {
       } else if(o_list && (count > 0) ^ o_neg_list) {
         std::cout << fname << std::endl;
       }
-      is.close();
+      delete is;
+    }
+    if(pb){
+      int sl;
+      wait(&sl);
+      delete pb;
+    }
+    if(fb){
+      delete fb;
     }
   }
   if(uargv){

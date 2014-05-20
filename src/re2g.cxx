@@ -149,7 +149,7 @@ pbuff *ioexec(char* const* arglist, const char* fname, enum input_type util_inpu
   }
   if(!pid){
     if(util_input != STDIN){
-      close(0);
+      close(STDIN_FILENO);
     }
 
     if(util_input == CAT){
@@ -159,16 +159,16 @@ pbuff *ioexec(char* const* arglist, const char* fname, enum input_type util_inpu
                   << strerror(errno) << std::endl;
         std::exit(-1);
       }
-      if(dup2(ifd, 0) != 0){
+      if(dup2(ifd, STDIN_FILENO) != STDIN_FILENO){
         std::cerr << "error dup2ing for input " << arglist[0] << ": "
                   << strerror(errno) << std::endl;
         std::exit(-2);
       }
     }
-    close(1);
-    fcntl(2, F_SETFD, 1);
+    close(STDOUT_FILENO);
+    fcntl(STDERR_FILENO, F_SETFD, 1);
     close(plumb[0]);
-    if(dup2(plumb[1], 1) != 1){
+    if(dup2(plumb[1], STDOUT_FILENO) != STDOUT_FILENO){
       std::cerr << "error dup2ing for output " << arglist[0] << ": "
                 << strerror(errno) << std::endl;
       std::exit(-3);
@@ -181,7 +181,7 @@ pbuff *ioexec(char* const* arglist, const char* fname, enum input_type util_inpu
   }
 
   if(util_input == STDIN){
-    close(0);
+    close(STDIN_FILENO);
   }
   close(plumb[1]);
   return new pbuff(plumb[0]);

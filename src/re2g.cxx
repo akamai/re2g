@@ -377,6 +377,7 @@ int main(int argc, const char **argv) {
               << "   -C num, --context=num same as -A num -B num, long-form defaults to 2"  << std::endl
               << "   -n, --line-number print input line numbers, starting at 1"  << std::endl
               << "   -m num, --max-count num stop reading each file after num matches"  << std::endl
+              << "   -X utility [argument ...] ; , --exec utility [argument ...] ;  Invokes utility on each input file or stdin, using syntax much like find. The invocation replaces instances of '{}' with the name of the current file. If no '{}' appears, then the filename will be the final argument to the utility. The trailing semicolon is mandatory. Uses execvep."  << std::endl
 
 
               << std::endl;

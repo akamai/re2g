@@ -27,7 +27,7 @@ function re2expect () {
 }
 
 
-if [ $($re2g -h|md5) = a9e68b8999f418cd2ce8ad7e0c1cf0e7 ]; then
+if [ $($re2g -h|md5) = 16344cdf8232f34fdee359f7ebbd440f ]; then
   echo SUCCESS "-h => USAGE";
 else
   echo FAILURE "-h => help has diverged"

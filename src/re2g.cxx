@@ -137,13 +137,13 @@ pbuff *ioexec(char* const* arglist, const char* fname, enum input_type util_inpu
   pid_t pid;
 
   if(pipe(&plumb[0])){
-    std::cerr << " error piping for " << arglist[0] << ':'
+    std::cerr << "error piping for " << arglist[0] << ": "
               << strerror(errno) << std::endl;
     return NULL;
   }
   pid = fork();
   if(pid < 0){
-    std::cerr << " error forking for  " << arglist[0] << ':'
+    std::cerr << "error forking for  " << arglist[0] << ": "
               << strerror(errno) << std::endl;
     return NULL;
   }
@@ -155,29 +155,29 @@ pbuff *ioexec(char* const* arglist, const char* fname, enum input_type util_inpu
     if(util_input == CAT){
       int ifd = open(fname, O_RDONLY);
       if(ifd <0 ){
-        std::cerr << " error opening " << fname << ':'
+        std::cerr << "error opening " << fname << ": "
                   << strerror(errno) << std::endl;
-        std::exit(1);
+        std::exit(-1);
       }
       if(dup2(ifd, 0) != 0){
-        std::cerr << " error dup2ing for input " << arglist[0] << ':'
+        std::cerr << "error dup2ing for input " << arglist[0] << ": "
                   << strerror(errno) << std::endl;
-        std::exit(1);
+        std::exit(-2);
       }
     }
     close(1);
     fcntl(2, F_SETFD, 1);
     close(plumb[0]);
     if(dup2(plumb[1], 1) != 1){
-      std::cerr << " error dup2ing for output " << arglist[0] << ':'
+      std::cerr << "error dup2ing for output " << arglist[0] << ": "
                 << strerror(errno) << std::endl;
-      std::exit(1);
+      std::exit(-3);
     }
     
     execvp(arglist[0],&arglist[0]);
-    std::cerr << " error invoking  " << arglist[0] << ':'
+    std::cerr << "error invoking  " << arglist[0] << ": "
               << strerror(errno) << std::endl;
-    std::exit(1);
+    std::exit(-4);
   }
 
   if(util_input == STDIN){
@@ -213,7 +213,8 @@ int main(int argc, const char **argv) {
     o_after_context = 0,
     o_before_context = 0,
     o_print_lineno = 0,
-    o_max_matches = 0;
+    o_max_matches = 0,
+    o_quiet_and_quick = 0;
   enum {SEARCH, REPLACE} mode;
 
   const struct option options[] = {
@@ -237,6 +238,8 @@ int main(int argc, const char **argv) {
     {"line-number",no_argument,NULL,'n'},
     {"max-count",required_argument,&o_max_matches,'m'},
     {"exec",required_argument,NULL,'X'},
+    {"quiet",no_argument,&o_quiet_and_quick,'q'},
+    {"silent",no_argument,&o_quiet_and_quick,'q'},
     { NULL, 0, NULL, 0 }
   };
 
@@ -244,7 +247,7 @@ int main(int argc, const char **argv) {
   std::deque<std::string> uargs(0);
   char c;
   int longopt=0;
-  while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFxB:C:A:nm:X:",
+  while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFxB:C:A:nm:X:q",
                          (const struct option *)&options[0], &longopt))!=-1){
     if(0 == c && longopt >= 0 && 
        longopt < sizeof(options) - 1){
@@ -320,6 +323,9 @@ int main(int argc, const char **argv) {
       break;
     case 'n':
       o_print_lineno = 1;
+      break;
+    case 'q':
+      o_quiet_and_quick = 1;
       break; 
     default:
       o_usage = 1;
@@ -359,7 +365,7 @@ int main(int argc, const char **argv) {
 
 
   if(o_usage) {
-    std::cout << appname << " [-?ogvgpHhclLiFxBACnm][-s substitution] pattern file1..." << std::endl
+    std::cout << appname << " [-?ogvgpHhclLiFxBACnmq][-X utility ...][-s substitution] pattern file1..." << std::endl
               << std:: endl
               << "PATTERN re2 expression to apply" << std::endl
               << std::endl
@@ -383,10 +389,11 @@ int main(int argc, const char **argv) {
               << "   -n, --line-number print input line numbers, starting at 1"  << std::endl
               << "   -m num, --max-count num stop reading each file after num matches"  << std::endl
               << "   -X utility [argument ...] ; , --exec utility [argument ...] ;  Invokes utility on each input file or stdin, using syntax much like find. The invocation replaces instances of '{}' with the name of the current file. If no '{}' appears, then the file contents will be passed as standard input to the utility. The trailing semicolon is mandatory. Uses execvep."  << std::endl
+              << "   -q, --quiet, --silent suppress normal output, just emit results via exit code: 0 => no match, 1 => at least one match in at least one input. Stops as soon as a match is found in any input."  << std::endl
 
 
               << std::endl;
-    return 0;
+    return -1;
   }
 
   re2::RE2::Options opts(re2::RE2::DefaultOptions);
@@ -458,10 +465,10 @@ int main(int argc, const char **argv) {
     }
   }
   std::deque<std::string> rargs(rargc);
-
+  int retval = 1;
   for(int fidx = 0; fidx < num_files; fidx++) {
     const char* fname = fnames[fidx];
-    std::istream *is;
+    std::istream *is = NULL;
     pbuff *pb = NULL;
     std::filebuf *fb = NULL;
     if(uargv){
@@ -491,8 +498,9 @@ int main(int argc, const char **argv) {
       is = new std::istream(pb);
     } else {
       fb = new std::filebuf();
-      fb->open(fname, std::ios_base::in);
-      is = new std::istream(fb);
+      if(fb->open(fname, std::ios_base::in)){
+        is = new std::istream(fb);
+      }
     }
 
     std::deque<std::string> before(o_before_context);
@@ -503,7 +511,7 @@ int main(int argc, const char **argv) {
     }
 
     if(!is) {
-      std::cerr << appname << " " << fname << ':' << strerror(errno) << std::endl;
+      std::cerr << appname << ": " << fname << ": " << strerror(errno) << std::endl;
     } else {
       long long count = 0;
       std::string line;
@@ -543,6 +551,9 @@ int main(int argc, const char **argv) {
           to_print = NULL;
         }
         if(matched){
+          if(o_quiet_and_quick){
+            return 0;
+          }
           count++;
           ca_printed = 0;
           if(o_before_context){
@@ -574,6 +585,9 @@ int main(int argc, const char **argv) {
           pref.line_no++;
         }
       }
+      if(count > 0 ){
+        retval = 0;
+      }
       if(o_count) {
         if(o_print_fname) {
           std::cout << fname << ":";
@@ -597,5 +611,6 @@ int main(int argc, const char **argv) {
   if(uargv){
     delete[] uargv;
   }
+  return retval;
 }
 

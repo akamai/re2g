@@ -14,7 +14,7 @@
 
 class pbuff : public std::streambuf {
 public:
-  explicit pbuff(int fd, std::size_t buff_sz = 256, std::size_t put_back = 8);
+  explicit pbuff(int fd, std::size_t buff_sz = 4096, std::size_t put_back = 128);
   ~pbuff();
   
 private:
@@ -76,17 +76,6 @@ std::streambuf::int_type pbuff::underflow(){
   return traits_type::to_int_type(*gptr());
 }
 
-
-
-int test_pbuff_main (int argc, char** argv){
-  pbuff pb(0,10,5);
-  std::string line;
-  std::istream is(&pb);
-  while(std::getline(is, line)){
-    std::cout << "read: " << line << std::endl;
-  }
-  return 0;
-}
 
 int extract(const re2::StringPiece &text,
             const re2::RE2& pattern,

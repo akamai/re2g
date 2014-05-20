@@ -143,7 +143,9 @@ void emit_line(const struct prefix *prefix,char marker, const std::string s){
   std::cout << s << std::endl;
 }
 
-pbuff *ioexec(char* const* arglist, bool child_uses_stdin=false){
+enum input_type {STDIN,CAT,NAME};
+
+pbuff *ioexec(char* const* arglist, const char* fname, enum input_type util_input){
   int plumb[2];
   pid_t pid;
 
@@ -159,23 +161,39 @@ pbuff *ioexec(char* const* arglist, bool child_uses_stdin=false){
     return NULL;
   }
   if(!pid){
-    if(!child_uses_stdin){
+    if(util_input != STDIN){
       close(0);
     }
-    close(1);
-    //    close(2);
-    close(plumb[0]);
-    if(dup2(plumb[1],1) != 1){
-      std::cerr << " error dup2ing for  " << arglist[0] << ':'
-                << strerror(errno) << std::endl;
-      return NULL;
+
+    if(util_input == CAT){
+      int ifd = open(fname, O_RDONLY);
+      if(ifd <0 ){
+        std::cerr << " error opening " << fname << ':'
+                  << strerror(errno) << std::endl;
+        std::exit(1);
+      }
+      if(dup2(ifd, 0) != 0){
+        std::cerr << " error dup2ing for input " << arglist[0] << ':'
+                  << strerror(errno) << std::endl;
+        std::exit(1);
+      }
     }
+    close(1);
+    fcntl(2, F_SETFD, 1);
+    close(plumb[0]);
+    if(dup2(plumb[1], 1) != 1){
+      std::cerr << " error dup2ing for output " << arglist[0] << ':'
+                << strerror(errno) << std::endl;
+      std::exit(1);
+    }
+    
     execvp(arglist[0],&arglist[0]);
     std::cerr << " error invoking  " << arglist[0] << ':'
               << strerror(errno) << std::endl;
-    return NULL;
+    std::exit(1);
   }
-  if(child_uses_stdin){
+
+  if(util_input == STDIN){
     close(0);
   }
   close(plumb[1]);
@@ -377,7 +395,7 @@ int main(int argc, const char **argv) {
               << "   -C num, --context=num same as -A num -B num, long-form defaults to 2"  << std::endl
               << "   -n, --line-number print input line numbers, starting at 1"  << std::endl
               << "   -m num, --max-count num stop reading each file after num matches"  << std::endl
-              << "   -X utility [argument ...] ; , --exec utility [argument ...] ;  Invokes utility on each input file or stdin, using syntax much like find. The invocation replaces instances of '{}' with the name of the current file. If no '{}' appears, then the filename will be the final argument to the utility. The trailing semicolon is mandatory. Uses execvep."  << std::endl
+              << "   -X utility [argument ...] ; , --exec utility [argument ...] ;  Invokes utility on each input file or stdin, using syntax much like find. The invocation replaces instances of '{}' with the name of the current file. If no '{}' appears, then the file contents will be passed as standard input to the utility. The trailing semicolon is mandatory. Uses execvep."  << std::endl
 
 
               << std::endl;
@@ -440,9 +458,8 @@ int main(int argc, const char **argv) {
   int rargc = 0;
   RE2::RE2 uarg_pat("\\{\\}");
   if(!uargs.empty()){
-    uargv = new const char*[uargc + 2];
+    uargv = new const char*[uargc + 1];
     uargv[uargc] = NULL;
-    uargv[uargc + 1] = NULL;
     for(int aidx = 0; aidx < uargc; aidx++){
       std::string *arg = &uargs[aidx];
       if(match(*arg, uarg_pat, false)){
@@ -472,12 +489,14 @@ int main(int argc, const char **argv) {
         }
         //        std::cout << "   " << uargv[aidx] << ',';
       }
-      if(!rargc && !using_stdin){
-        uargv[uargc] = fname;
-        //      std::cout << fname << std::endl;
+      enum input_type util_input;
+      if(rargc){
+        util_input = NAME;
+      } else {
+        util_input = using_stdin?STDIN:CAT;
       }
       
-      pb = ioexec((char *const *)uargv, using_stdin);
+      pb = ioexec((char *const *)uargv, fname, util_input);
       if(!pb){
         std::cerr << appname << " DEATH " << ':' << strerror(errno) << std::endl;
         return -1;

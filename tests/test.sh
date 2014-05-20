@@ -27,7 +27,7 @@ function re2expect () {
 }
 
 
-if [ $($re2g -h|md5) = 16344cdf8232f34fdee359f7ebbd440f ]; then
+if [ $($re2g -h|md5) = d12cfda23e9b8b21c63d026d382b2d08 ]; then
   echo SUCCESS "-h => USAGE";
 else
   echo FAILURE "-h => help has diverged"
@@ -270,6 +270,13 @@ diff -q <(rev tests/lorem | $re2g rolod)  <($re2g -X rev \; rolod < tests/lorem)
 
 
 diff -q <(grep -Z dolor tests/lorem.gz)  <($re2g -X gunzip -c '{}' \; dolor tests/lorem.gz) || fail=$(expr 1 + $fail);
+
+diff -q <(grep -Z dolor tests/lorem.gz)  <($re2g -X gunzip \; dolor tests/lorem.gz) || fail=$(expr 1 + $fail);
+
+if [ ! -f tests/lorem.gz ]; then
+  echo FAILED: call to gunzip deleted test file
+  fail=$(expr 1 + $fail);
+fi
 
 
 if [ $fail -gt 0 ]; then

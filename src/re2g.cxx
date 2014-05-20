@@ -4,6 +4,15 @@
 #include <errno.h>
 #include <getopt.h>
 #include <deque>
+#include <unistd.h>
+
+int insource_p::getline(std::string &line){
+
+}
+
+int insource_f::getline(std::string &line){
+  return std::getline(in, line);
+}
 
 int extract(const re2::StringPiece &text,
             const re2::RE2& pattern,
@@ -60,6 +69,10 @@ void emit_line(const struct prefix *prefix,char marker, const std::string s){
   std::cout << s << std::endl;
 }
 
+std::ifstream *ioexec(char* const* arglist){
+  execvp("echo", arglist);
+  return NULL;
+}
 
 int main(int argc, const char **argv) {
   const char *appname = argv[0];
@@ -333,10 +346,10 @@ int main(int argc, const char **argv) {
 
   for(int fidx = 0; fidx < num_files; fidx++) {
     const char* fname = fnames[fidx];
-    std::ifstream ins(fname);
+    insource is;
     if(uargv){
       int ridx = 0;
-      std::cout << "fork: ";
+      //      std::cout << "fork: ";
       for(int aidx = 0; aidx < uargc; aidx++){
         if(uargv[aidx] == NULL){
           rargs[ridx]=std::string(uargs[aidx]);
@@ -344,16 +357,18 @@ int main(int argc, const char **argv) {
           uargv[aidx]=rargs[ridx].c_str();
           ridx++;
         }
-        std::cout << "   " << uargv[aidx] << ',';
+        //        std::cout << "   " << uargv[aidx] << ',';
       }
       if(!rargc){
         uargv[uargc] = fname;
-        std::cout << fname << std::endl;
+        //        std::cout << fname << std::endl;
       }
-      std::cout << std::endl;
-    } // else {
-      //ins=...
-      //}
+      //      std::cout << std::endl;
+      is = insource_p((char* const*)uargv));
+    } else {
+      is = insource_f(std::ifstream(fname));
+    }
+
     std::deque<std::string> before(o_before_context);
     before.clear();
     if(fnames == &def_fname) {
@@ -361,7 +376,7 @@ int main(int argc, const char **argv) {
       fname = "(standard input)";
     }
 
-    if(!ins) {
+    if(!is.ok()) {
       std::cerr << appname << " " << fname << ':' << strerror(errno) << std::endl;
     } else {
       long long count = 0;
@@ -373,7 +388,7 @@ int main(int argc, const char **argv) {
         -1
       };
 
-      while(std::getline(ins, line) && (!o_max_matches || count < o_max_matches)) {
+      while(is.getline(&line) && (!o_max_matches || count < o_max_matches)) {
         //std::cout << before.size() << std::endl;
         std::string *to_print = NULL;
         std::string in(line);
@@ -443,7 +458,7 @@ int main(int argc, const char **argv) {
       } else if(o_list && (count > 0) ^ o_neg_list) {
         std::cout << fname << std::endl;
       }
-      ins.close();
+      is.close();
     }
   }
   if(uargv){

@@ -12,10 +12,10 @@
 #include <fcntl.h>
 #include <sys/wait.h>
 
-class pbuff : public std::streambuf {
+class fdbuf : public std::streambuf {
 public:
-  explicit pbuff(int fd, std::size_t buff_sz = 4096, std::size_t put_back = 128);
-  ~pbuff();
+  explicit fdbuf(int fd, std::size_t buff_sz = 4096, std::size_t put_back = 128);
+  ~fdbuf();
   
 private:
   // overrides base class underflow()
@@ -23,8 +23,8 @@ private:
   
   // copy ctor and assignment not implemented;
   // copying not allowed
-  pbuff(const pbuff &);
-  pbuff &operator= (const pbuff &);
+  fdbuf(const fdbuf &);
+  fdbuf &operator= (const fdbuf &);
   
 private:
   int fd_;
@@ -36,7 +36,7 @@ private:
   char* end_;
 };
 
-pbuff::pbuff(int fd, std::size_t buff_sz, std::size_t put_back) :
+fdbuf::fdbuf(int fd, std::size_t buff_sz, std::size_t put_back) :
   fd_(fd),
   put_back_(std::max(put_back, size_t(1))),
   buff_sz_(std::max(buff_sz, put_back_)),
@@ -48,11 +48,11 @@ pbuff::pbuff(int fd, std::size_t buff_sz, std::size_t put_back) :
   setg(end_,end_,end_);
 }
 
-pbuff::~pbuff() {
+fdbuf::~fdbuf() {
   delete[] start_;
 }
 
-std::streambuf::int_type pbuff::underflow(){
+std::streambuf::int_type fdbuf::underflow(){
   if(gptr() >= egptr()){
     int backed = std::min((std::size_t)(gptr() - eback()), put_back_);
     if(backed > 0){
@@ -132,7 +132,7 @@ void emit_line(const struct prefix *prefix,char marker, const std::string s){
 
 enum input_type {STDIN,CAT,NAME};
 
-pbuff *ioexec(char* const* arglist, const char* fname, enum input_type util_input){
+fdbuf *ioexec(char* const* arglist, const char* fname, enum input_type util_input){
   int plumb[2];
   pid_t pid;
 
@@ -184,7 +184,7 @@ pbuff *ioexec(char* const* arglist, const char* fname, enum input_type util_inpu
     close(STDIN_FILENO);
   }
   close(plumb[1]);
-  return new pbuff(plumb[0]);
+  return new fdbuf(plumb[0]);
 }
 
 int main(int argc, const char **argv) {
@@ -469,7 +469,7 @@ int main(int argc, const char **argv) {
   for(int fidx = 0; fidx < num_files; fidx++) {
     const char* fname = fnames[fidx];
     std::istream *is = NULL;
-    pbuff *pb = NULL;
+    fdbuf *pb = NULL;
     std::filebuf *fb = NULL;
     if(uargv){
       int ridx = 0;

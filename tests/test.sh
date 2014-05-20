@@ -268,6 +268,10 @@ diff -q <(rev tests/lorem | $re2g rolod)  <($re2g -X rev \; rolod tests/lorem) |
 
 diff -q <(rev tests/lorem | $re2g rolod)  <($re2g -X rev \; rolod < tests/lorem) || fail=$(expr 1 + $fail);
 
+
+diff -q <(grep -Z dolor tests/lorem.gz)  <($re2g -X gunzip -c '{}' \; dolor tests/lorem.gz) || fail=$(expr 1 + $fail);
+
+
 if [ $fail -gt 0 ]; then
   echo $fail Errors
   exit 1;

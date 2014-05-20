@@ -28,23 +28,30 @@ private:
   
 private:
   int fd_;
-  const std::size_t put_back_;
-  char* base_;
-  char* start_;
-  char* end_;
-  int full_sz_;
+  std::size_t put_back_;
   int buff_sz_;
+  int full_sz_;
+  char* start_;
+  char* base_;
+  char* end_;
 };
 
 pbuff::pbuff(int fd, std::size_t buff_sz, std::size_t put_back) :
-    fd_(fd),
-    put_back_(std::max(put_back, size_t(1))),
-    start_(new char[full_sz_]),
-    full_sz_(buff_sz_ + put_back_),
-    buff_sz_(std::max(buff_sz, put_back_))
+  fd_(fd),
+  put_back_(std::max(put_back, size_t(1))),
+  buff_sz_(std::max(buff_sz, put_back_)),
+  full_sz_(buff_sz_ + put_back_),
+  start_(new char[full_sz_]),
+  base_(start_ + put_back_),
+  end_(start_ + full_sz_)
 {
+  /*  put_back_=std::max(put_back, size_t(1));
+  buff_sz_=std::max(buff_sz, put_back_);
+  full_sz_=buff_sz_ + put_back_;
+  start_=new char[full_sz_];
+
   base_ = start_ + put_back_;
-  end_ = start_ + full_sz_;
+  end_ = start_ + full_sz_;*/
 
   setg(end_,end_,end_);
 
@@ -186,7 +193,7 @@ pbuff *ioexec(char* const* arglist, const char* fname, enum input_type util_inpu
     close(0);
   }
   close(plumb[1]);
-  return new pbuff(plumb[0],10,5);
+  return new pbuff(plumb[0]);
 }
 
 int main(int argc, const char **argv) {

@@ -221,6 +221,7 @@ int main(int argc, const char **argv) {
     o_quiet_and_quick = 0,
     o_special_delimiter = 0,
     o_posix_extended_syntax = 0,
+    o_pat_str = 0,
     o_line_buffered = isatty(STDOUT_FILENO);
   enum {SEARCH, REPLACE} mode;
 
@@ -253,15 +254,17 @@ int main(int argc, const char **argv) {
     {"gzdecompress",no_argument,&o_line_buffered,'z'},
     {"bz2decompress",no_argument,&o_line_buffered,'J'},
     {"extended-regexp",no_argument,&o_posix_extended_syntax,'E'},
+    {"regexp",required_argument,&o_pat_str,'e'},
     { NULL, 0, NULL, 0 }
   };
 
   std::string rep;
+  std::string pat_str;
   std::string eol("\n");
   std::deque<std::string> uargs(0);
   char c;
   int longopt = 0;
-  while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFxB:C:A:nm:X:qN0zZJE",
+  while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFxB:C:A:nm:X:qN0zZJEe:",
                          (const struct option *)&options[0], &longopt))!=-1){
     if(0 == c && longopt >= 0 && 
        longopt < sizeof(options) - 1){
@@ -368,6 +371,10 @@ int main(int argc, const char **argv) {
     case 'E':
       o_posix_extended_syntax = 1;
       break; 
+    case 'e':
+      o_pat_str = 1;
+      pat_str = std::string(optarg);
+      break;
     default:
       o_usage = 1;
     }
@@ -398,7 +405,7 @@ int main(int argc, const char **argv) {
   }
   std::cout   << std::endl;
   */
-  if(argc >= 1){
+  if(argc >= 1 || o_pat_str){
     mode=o_substitute?REPLACE:SEARCH;
   } else {
     o_usage = 1;
@@ -411,7 +418,7 @@ Missing: -e, -s, -f, ENV use;
    */
 
   if(o_usage) {
-    std::cout << appname << " [-?ogvgpHhclLiFxBACnmq0NzZJE] [-X utility ...] [-s substitution] pattern file1..." << std::endl
+    std::cout << appname << " [-?ogvgpHhclLiFxBACnmq0NzZJE] [-X utility ...] [-s substitution] [-e] pattern file1..." << std::endl
               << std:: endl
               << "PATTERN re2 expression to apply" << std::endl
               << std::endl
@@ -442,6 +449,7 @@ Missing: -e, -s, -f, ENV use;
               << "   -z, --gzdecompress  same as -X gzcat \\; NOTE: gzcat must be in $PATH"  << std::endl
               << "   -J, --bz2decompress  same as -X bzcat \\; NOTE: bzcat must be in $PATH"  << std::endl
               << "   -E, --extended-regexp  Use Posix Extended Syntax like egrep, this is actually less powerful than the default RE2 expression language"  << std::endl
+              << "   -e pattern, --regexp=pattern  Use pattern as regular expression, useful if pattern could be confused with flags. NOTE: differs from POSIX grep in that the last -e pattern is used. Multiple patterns are not supported at this time, construct compound patterns using '|' instead"  << std::endl
 
               << std::endl;
     return -1;
@@ -458,8 +466,13 @@ Missing: -e, -s, -f, ENV use;
   if(o_posix_extended_syntax) {
     opts.set_posix_syntax(true);
   }
-  
-  RE2::RE2 pat(argv[0], opts);
+
+  if(!o_pat_str){
+    pat_str = std::string(argv[0]);
+    argv++;
+    argc--;
+  }  
+  RE2::RE2 pat(pat_str, opts);
 
   //rationalize flags
   if(o_negate_match) {
@@ -483,7 +496,7 @@ Missing: -e, -s, -f, ENV use;
     mode = REPLACE;
   }
 
-  int num_files = argc - 1;
+  int num_files = argc;
 
   if(num_files > 1 && !o_no_print_fname) {
     o_print_fname = 1;
@@ -498,7 +511,7 @@ Missing: -e, -s, -f, ENV use;
     fnames = &def_fname;
   } else {
     using_stdin = false;
-    fnames = &argv[1];
+    fnames = &argv[0];
   }
 
   const char **uargv = NULL;

@@ -28,8 +28,8 @@ function re2expect () {
 }
 
 
-if [ $($re2g -h|md5) = b06b3203ad3753975d88db6d7cf5554b ]; then
-  echo SUCCESS "-h => USAGE";
+if [ $($re2g -?|md5) = 49c1b2b9c0fe8ce1ae381ebb55f56a96 ]; then
+  echo SUCCESS "-? => USAGE";
 else
   echo FAILURE "-h => help has diverged"
   fail=1;
@@ -40,6 +40,10 @@ re2expect 0 fred fred f
 re2expect 1 "" fred b 
 
 re2expect 0 re fred -o r.  
+
+re2expect 0 re fred -oe r.  
+
+re2expect 0 re fred -oe q -e r.  
 
 re2expect 1 "" fred -v r.  
 

@@ -383,6 +383,11 @@ int main(int argc, const char **argv) {
     o_usage = 1;
   }
 
+  /*
+
+Missing: -E, -e, -s, -f, ENV use; nonstandard: zZj
+
+   */
 
   if(o_usage) {
     std::cout << appname << " [-?ogvgpHhclLiFxBACnmq0N] [-X utility ...] [-s substitution] pattern file1..." << std::endl

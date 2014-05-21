@@ -28,7 +28,7 @@ function re2expect () {
 }
 
 
-if [ $($re2g -h|md5) = c2b9e3d6f570b3526994759ecf51deb1 ]; then
+if [ $($re2g -h|md5) = b06b3203ad3753975d88db6d7cf5554b ]; then
   echo SUCCESS "-h => USAGE";
 else
   echo FAILURE "-h => help has diverged"
@@ -332,6 +332,11 @@ diff -q <(grep dolor tests/lorem; echo $?)  <($re2g dolor tests/lorem; echo $?) 
 diff -q <(grep -q dolor tests/lorem; echo $?)  <($re2g -q dolor tests/lorem; echo $?) || fail=$(expr 1 + $fail);
 
 diff -q <(grep -q dolr tests/lorem; echo $?)  <($re2g -q dolr tests/lorem; echo $?) || fail=$(expr 1 + $fail);
+
+
+diff -q <(grep -E 'ipsum|ex' tests/lorem; echo $?)  <($re2g -E 'ipsum|ex' tests/lorem; echo $?) || fail=$(expr 1 + $fail);
+#todo add a test where \b is tested on platforms where grep isn't crazy
+
 
 if $re2g -l  fred tests/bad*|xargs  stat -qf '' ;then
   echo 'FAILURE: unable to detect newline in filename';

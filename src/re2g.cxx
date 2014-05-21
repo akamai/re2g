@@ -220,6 +220,7 @@ int main(int argc, const char **argv) {
     o_max_matches = 0,
     o_quiet_and_quick = 0,
     o_special_delimiter = 0,
+    o_posix_extended_syntax = 0,
     o_line_buffered = isatty(STDOUT_FILENO);
   enum {SEARCH, REPLACE} mode;
 
@@ -251,6 +252,7 @@ int main(int argc, const char **argv) {
     {"decompress",no_argument,&o_line_buffered,'Z'},
     {"gzdecompress",no_argument,&o_line_buffered,'z'},
     {"bz2decompress",no_argument,&o_line_buffered,'J'},
+    {"extended-regexp",no_argument,&o_posix_extended_syntax,'E'},
     { NULL, 0, NULL, 0 }
   };
 
@@ -259,7 +261,7 @@ int main(int argc, const char **argv) {
   std::deque<std::string> uargs(0);
   char c;
   int longopt = 0;
-  while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFxB:C:A:nm:X:qN0zZJ",
+  while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFxB:C:A:nm:X:qN0zZJE",
                          (const struct option *)&options[0], &longopt))!=-1){
     if(0 == c && longopt >= 0 && 
        longopt < sizeof(options) - 1){
@@ -363,6 +365,9 @@ int main(int argc, const char **argv) {
     case 'q':
       o_quiet_and_quick = 1;
       break; 
+    case 'E':
+      o_posix_extended_syntax = 1;
+      break; 
     default:
       o_usage = 1;
     }
@@ -401,12 +406,12 @@ int main(int argc, const char **argv) {
 
   /*
 
-Missing: -E, -e, -s, -f, ENV use;
+Missing: -e, -s, -f, ENV use;
 
    */
 
   if(o_usage) {
-    std::cout << appname << " [-?ogvgpHhclLiFxBACnmq0NzZJ] [-X utility ...] [-s substitution] pattern file1..." << std::endl
+    std::cout << appname << " [-?ogvgpHhclLiFxBACnmq0NzZJE] [-X utility ...] [-s substitution] pattern file1..." << std::endl
               << std:: endl
               << "PATTERN re2 expression to apply" << std::endl
               << std::endl
@@ -436,6 +441,7 @@ Missing: -E, -e, -s, -f, ENV use;
               << "   -Z, --decompress  same as -X zcat \\; NOTE: zcat must be in $PATH"  << std::endl
               << "   -z, --gzdecompress  same as -X gzcat \\; NOTE: gzcat must be in $PATH"  << std::endl
               << "   -J, --bz2decompress  same as -X bzcat \\; NOTE: bzcat must be in $PATH"  << std::endl
+              << "   -E, --extended-regexp  Use Posix Extended Syntax like egrep, this is actually less powerful than the default RE2 expression language"  << std::endl
 
               << std::endl;
     return -1;
@@ -448,6 +454,9 @@ Missing: -E, -e, -s, -f, ENV use;
   }
   if(o_literal) {
     opts.set_literal(true);
+  }
+  if(o_posix_extended_syntax) {
+    opts.set_posix_syntax(true);
   }
   
   RE2::RE2 pat(argv[0], opts);

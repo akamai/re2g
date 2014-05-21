@@ -658,7 +658,7 @@ Missing: -s, ENV use;
             num_pats_matched++;
             if(mode == REPLACE) {
               if(!obuf.empty()){
-                obuf += '\n';
+                obuf += '\n'; //TODO: use configurable line ending
               }
               obuf += *to_print;
             }

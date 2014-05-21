@@ -248,6 +248,9 @@ int main(int argc, const char **argv) {
     {"silent",no_argument,&o_quiet_and_quick,'q'},
     {"null",no_argument,&o_special_delimiter,'0'},
     {"line-buffered",no_argument,&o_line_buffered,'N'},
+    {"decompress",no_argument,&o_line_buffered,'Z'},
+    {"gzdecompress",no_argument,&o_line_buffered,'z'},
+    {"bz2decompress",no_argument,&o_line_buffered,'J'},
     { NULL, 0, NULL, 0 }
   };
 
@@ -256,7 +259,7 @@ int main(int argc, const char **argv) {
   std::deque<std::string> uargs(0);
   char c;
   int longopt = 0;
-  while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFxB:C:A:nm:X:qN0",
+  while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFxB:C:A:nm:X:qN0zZJ",
                          (const struct option *)&options[0], &longopt))!=-1){
     if(0 == c && longopt >= 0 && 
        longopt < sizeof(options) - 1){
@@ -327,7 +330,20 @@ int main(int argc, const char **argv) {
     case 'm':
       o_max_matches = str_to_size(optarg);
       break;
+    case 'Z':
+      uargs.clear();
+      uargs.push_back("zcat");
+      break;
+    case 'z':
+      uargs.clear();
+      uargs.push_back("gzcat");
+      break;
+    case 'J':
+      uargs.clear();
+      uargs.push_back("bzcat");
+      break;
     case 'X':
+      uargs.clear();
       // consume until arg is a single semi-colon like find -exec
       const char* oa;
       for(oa = optarg;
@@ -385,12 +401,12 @@ int main(int argc, const char **argv) {
 
   /*
 
-Missing: -E, -e, -s, -f, ENV use; nonstandard: zZj
+Missing: -E, -e, -s, -f, ENV use;
 
    */
 
   if(o_usage) {
-    std::cout << appname << " [-?ogvgpHhclLiFxBACnmq0N] [-X utility ...] [-s substitution] pattern file1..." << std::endl
+    std::cout << appname << " [-?ogvgpHhclLiFxBACnmq0NzZJ] [-X utility ...] [-s substitution] pattern file1..." << std::endl
               << std:: endl
               << "PATTERN re2 expression to apply" << std::endl
               << std::endl
@@ -417,6 +433,9 @@ Missing: -E, -e, -s, -f, ENV use; nonstandard: zZj
               << "   -q, --quiet, --silent suppress normal output, just emit results via exit code: 0 => no match, 1 => at least one match in at least one input. Stops as soon as a match is found in any input."  << std::endl
               << "   -0, --null [other] separate lines of output with the null character or specified other string, useful with -l and pipes to xargs"  << std::endl
               << "   -N, --line-buffered  flush after each line, even if stdout is not a tty"  << std::endl
+              << "   -Z, --decompress  same as -X zcat \\; NOTE: zcat must be in $PATH"  << std::endl
+              << "   -z, --gzdecompress  same as -X gzcat \\; NOTE: gzcat must be in $PATH"  << std::endl
+              << "   -J, --bz2decompress  same as -X bzcat \\; NOTE: bzcat must be in $PATH"  << std::endl
 
               << std::endl;
     return -1;

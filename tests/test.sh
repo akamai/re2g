@@ -28,7 +28,7 @@ function re2expect () {
 }
 
 
-if [ $($re2g -h|md5) = a8acffc20a830de264e46568d430564c ]; then
+if [ $($re2g -h|md5) = 73cb1428315c2afbba0f6cf3925e5735 ]; then
   echo SUCCESS "-h => USAGE";
 else
   echo FAILURE "-h => help has diverged"
@@ -269,15 +269,63 @@ diff -q <(rev tests/lorem | $re2g rolod)  <($re2g -X rev \; rolod tests/lorem) |
 
 diff -q <(rev tests/lorem | $re2g rolod)  <($re2g -X rev \; rolod < tests/lorem) || fail=$(expr 1 + $fail);
 
+if [ -x `which gzip` ]; then
+  gzip -c < tests/lorem > tests/lorem.gz
+  if grep -qz dolor tests/lorem.gz 2>/dev/null; then
+    gzflag=z
+  else
+    echo 'grep on this platform is broken, does not support -z, trying with -Z';
+    grep -qZ dolor tests/lorem.gz && gzflag=Z
+  fi
+  if [ -s $gzflag ]; then
+    diff -q <(grep -$gzflag dolor tests/lorem.gz)  <($re2g -X gunzip -c '{}' \; dolor tests/lorem.gz) || fail=$(expr 1 + $fail);
+    diff -q <(grep -$gzflag dolor tests/lorem.gz)  <($re2g -z dolor tests/lorem.gz) || fail=$(expr 1 + $fail);
+    diff -q <(grep -$gzflag dolor tests/lorem.gz)  <($re2g -X gunzip \; dolor tests/lorem.gz) || fail=$(expr 1 + $fail);
 
-diff -q <(grep -Z dolor tests/lorem.gz)  <($re2g -X gunzip -c '{}' \; dolor tests/lorem.gz) || fail=$(expr 1 + $fail);
-
-diff -q <(grep -Z dolor tests/lorem.gz)  <($re2g -X gunzip \; dolor tests/lorem.gz) || fail=$(expr 1 + $fail);
-
-if [ ! -f tests/lorem.gz ]; then
-  echo FAILED: call to gunzip deleted test file
-  fail=$(expr 1 + $fail);
+    if [ ! -f tests/lorem.gz ]; then
+      echo FAILED: call to gunzip deleted test file
+      fail=$(expr 1 + $fail);
+    fi
+  fi
+else
+  echo 'Unable to find gzip, skipping -z tests'
 fi
+
+if [ -x `which zcat` ]; then
+  compress -c < tests/lorem > tests/lorem_c.Z
+  if diff -q <(grep -Z dolor tests/lorem_c.Z) <(uncompress -c tests/lorem_c.Z | grep dolor) >/dev/null; then
+    diff -q <(grep -Z dolor tests/lorem_c.Z)  <($re2g -X uncompress -c '{}' \; dolor tests/lorem_c.Z) || fail=$(expr 1 + $fail);
+    diff -q <(grep -Z dolor tests/lorem_c.Z)  <($re2g -X zcat '{}' \; dolor tests/lorem_c.Z) || fail=$(expr 1 + $fail);
+    diff -q <(grep -Z dolor tests/lorem_c.Z)  <($re2g -Z dolor tests/lorem_c.Z) || fail=$(expr 1 + $fail);
+    diff -q <(grep -Z dolor tests/lorem_c.Z)  <($re2g -X uncompress \; dolor tests/lorem_c.Z) || fail=$(expr 1 + $fail);
+
+    if [ ! -f tests/lorem_c.Z ]; then
+      echo FAILED: call to uncompress deleted test file
+      fail=$(expr 1 + $fail);
+    fi
+  else
+    echo 'grep on this platform is broken, -Z can'\''t uncompress .Z files' 
+  fi
+else
+  echo 'Unable to find zcat, skipping -Z tests'
+fi
+
+
+
+if [ -x `which bzip2` ]; then
+  bzip2 -c < tests/lorem > tests/lorem.bz2
+  diff -q <(grep -J dolor tests/lorem.bz2)  <($re2g -X bunzip2 -c '{}' \; dolor tests/lorem.bz2) || fail=$(expr 1 + $fail);
+  diff -q <(grep -J dolor tests/lorem.bz2)  <($re2g -J dolor tests/lorem.bz2) || fail=$(expr 1 + $fail);
+  diff -q <(grep -J dolor tests/lorem.bz2)  <($re2g -X bunzip2 \; dolor tests/lorem.bz2) || fail=$(expr 1 + $fail);
+
+  if [ ! -f tests/lorem.bz2 ]; then
+    echo FAILED: call to bunzip2 deleted test file
+    fail=$(expr 1 + $fail);
+  fi
+else
+  echo 'Unable to find bzip, skipping -J tests'
+fi
+
 
 diff -q <(grep dolor tests/lorem; echo $?)  <($re2g dolor tests/lorem; echo $?) || fail=$(expr 1 + $fail);
 

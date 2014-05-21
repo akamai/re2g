@@ -1,3 +1,46 @@
+ /* 
+    Hello code reader. Welcome to my re2-based grep-alike
+    
+    I've been wanting to experiment with RE2 so that I could better speak
+    about it when discussing things like PCRE usage in other software. I
+    didn't quickly find a grep-like tool.
+
+    So I wrote one.
+
+    Then I got carried away matching the grep options listed in the man page
+
+    This is the state of this project:
+
+    Known issues:
+      1) This depends on my patch to RE2 to enable GlobalExtract;
+         see: https://groups.google.com/d/msg/re2-dev/uI-9maDcUVw/TiRXXNpsEZwJ
+      2) Error reporting is haphazard. Sorry. Patches welcome.
+      3) There are probably be memory leaks, etc. It's C++ code
+         and I don't usually write C++.
+      4) The test suite stinks. It's a crummy shell script.
+
+     Differences from grep:
+      1) Locale environment variables are ignored, as are GREP_*
+      2) Our -s is substitution, not silence. It's a good character for s///.
+         There is no option for silence. Redirectind stderr is close.
+      3) Multiple patterns via -e or -f differs:
+          Ordering of output is different
+          Combining with -o: output is different from grep, arguably better
+          Combining with -n: output is different from grep, arguably better
+      4) Every long option has a short version and vice-versa
+      5) -C must take a parameter. This differs from grep's
+         documentation, but not behavior.
+      6) The -Z, -z, -J options are implemented via the -X option, we do not
+         link against any of the compression libraries.
+      7) There is no BRE support
+      8) POSIX mode in RE2 seems stricter than in grep
+      9) Byte-offset reporting is not supported
+     10) directory recursion is not supported, nor are the associated options.
+         If you need recursion, please use find and xargs.
+     11) No fancy color options. You can try to use -s and ANSI sequences.
+   */
+
+
 #include <re2/re2.h>
 #include <iostream>
 #include <fstream>
@@ -417,12 +460,6 @@ int main(int argc, const char **argv) {
   } else {
     o_usage = 1;
   }
-
-  /*
-
-Missing: -s, ENV use;
-
-   */
 
   if(o_usage) {
     std::cout << appname << " [-?ogvgpHhclLiFxBACnmq0NzZJE] [-f file][-X utility ...] [-s substitution] [-e] pattern file1..." << std::endl

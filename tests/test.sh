@@ -28,7 +28,7 @@ function re2expect () {
 }
 
 
-if [ $($re2g -h|md5) = 20177069ce0c6e089344f1d504077825 ]; then
+if [ $($re2g -h|md5) = a8acffc20a830de264e46568d430564c ]; then
   echo SUCCESS "-h => USAGE";
 else
   echo FAILURE "-h => help has diverged"
@@ -285,6 +285,22 @@ diff -q <(grep -q dolor tests/lorem; echo $?)  <($re2g -q dolor tests/lorem; ech
 
 diff -q <(grep -q dolr tests/lorem; echo $?)  <($re2g -q dolr tests/lorem; echo $?) || fail=$(expr 1 + $fail);
 
+if $re2g -l  fred tests/bad*|xargs  stat -qf '' ;then
+  echo 'FAILURE: unable to detect newline in filename';
+  fail=$(expr 1 + $fail);
+else
+  echo 'SUCCESS: newline in filename breaks xargs'
+fi
+
+
+if $re2g -l0  fred tests/bad*|xargs -0 stat -qf '' ;then
+  echo 'SUCCESS: able to defeat newline in filename';
+else
+  echo 'FAILURE: unable to defeat newline in filename';
+  fail=$(expr 1 + $fail);
+fi
+
+#not yet testing for line-buffering
 
 
 if [ $fail -gt 0 ]; then

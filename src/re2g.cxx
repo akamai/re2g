@@ -117,7 +117,8 @@ int str_to_size(const char* str){
   return v;
 }
 
-void emit_line(const struct prefix *prefix,char marker, const std::string s){
+void emit_line(const struct prefix *prefix, char marker, const std::string s,
+               const std::string eol, bool flush_after){
   if(prefix->fname){
     std::cout << prefix->fname << marker;
   }
@@ -127,7 +128,10 @@ void emit_line(const struct prefix *prefix,char marker, const std::string s){
   if(prefix->offset >= 0){
     std::cout << prefix->offset << marker;
   }
-  std::cout << s << std::endl;
+  std::cout << s << eol;
+  if(flush_after){
+    std::cout.flush();
+  }
 }
 
 enum input_type {STDIN,CAT,NAME};
@@ -214,7 +218,9 @@ int main(int argc, const char **argv) {
     o_before_context = 0,
     o_print_lineno = 0,
     o_max_matches = 0,
-    o_quiet_and_quick = 0;
+    o_quiet_and_quick = 0,
+    o_special_delimiter = 0,
+    o_line_buffered = isatty(STDOUT_FILENO);
   enum {SEARCH, REPLACE} mode;
 
   const struct option options[] = {
@@ -240,20 +246,34 @@ int main(int argc, const char **argv) {
     {"exec",required_argument,NULL,'X'},
     {"quiet",no_argument,&o_quiet_and_quick,'q'},
     {"silent",no_argument,&o_quiet_and_quick,'q'},
+    {"null",no_argument,&o_special_delimiter,'0'},
+    {"line-buffered",no_argument,&o_line_buffered,'N'},
     { NULL, 0, NULL, 0 }
   };
 
   std::string rep;
+  std::string eol("\n");
   std::deque<std::string> uargs(0);
   char c;
-  int longopt=0;
-  while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFxB:C:A:nm:X:q",
+  int longopt = 0;
+  while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFxB:C:A:nm:X:qN0",
                          (const struct option *)&options[0], &longopt))!=-1){
     if(0 == c && longopt >= 0 && 
        longopt < sizeof(options) - 1){
       c = options[longopt].val;
     }
     switch(c) {
+    case '0':
+      o_special_delimiter = 1;
+      if(optarg){
+        eol = std::string(optarg);
+      } else {
+        eol = std::string("\0");
+      }
+      break;
+    case 'N':
+      o_line_buffered = 1;
+      break;
     case 'g':
       o_global = 1;
       break;
@@ -365,7 +385,7 @@ int main(int argc, const char **argv) {
 
 
   if(o_usage) {
-    std::cout << appname << " [-?ogvgpHhclLiFxBACnmq][-X utility ...][-s substitution] pattern file1..." << std::endl
+    std::cout << appname << " [-?ogvgpHhclLiFxBACnmq0N] [-X utility ...] [-s substitution] pattern file1..." << std::endl
               << std:: endl
               << "PATTERN re2 expression to apply" << std::endl
               << std::endl
@@ -390,7 +410,8 @@ int main(int argc, const char **argv) {
               << "   -m num, --max-count num stop reading each file after num matches"  << std::endl
               << "   -X utility [argument ...] ; , --exec utility [argument ...] ;  Invokes utility on each input file or stdin, using syntax much like find. The invocation replaces instances of '{}' with the name of the current file. If no '{}' appears, then the file contents will be passed as standard input to the utility. The trailing semicolon is mandatory. Uses execvep."  << std::endl
               << "   -q, --quiet, --silent suppress normal output, just emit results via exit code: 0 => no match, 1 => at least one match in at least one input. Stops as soon as a match is found in any input."  << std::endl
-
+              << "   -0, --null [other] separate lines of output with the null character or specified other string, useful with -l and pipes to xargs"  << std::endl
+              << "   -N, --line-buffered  flush after each line, even if stdout is not a tty"  << std::endl
 
               << std::endl;
     return -1;
@@ -559,7 +580,7 @@ int main(int argc, const char **argv) {
           if(o_before_context){
             pref.line_no-=before.size();
             while(!before.empty()){
-              emit_line(&pref,'-',before.front());
+              emit_line(&pref,'-',before.front(),eol,o_line_buffered);
               before.pop_front();
               pref.line_no++;
             }
@@ -571,7 +592,7 @@ int main(int argc, const char **argv) {
         }
         if(to_print) {
           if(!o_count && !o_list) {
-            emit_line(&pref,matched?':':'-',*to_print);
+            emit_line(&pref,matched?':':'-',*to_print,eol,o_line_buffered);
           }
         } else {
           if(o_before_context > 0){
@@ -592,10 +613,15 @@ int main(int argc, const char **argv) {
         if(o_print_fname) {
           std::cout << fname << ":";
         }
-        std::cout << count << std::endl;
-        
+        std::cout << count << eol;
+        if(o_line_buffered){
+          std::cout.flush();
+        }
       } else if(o_list && (count > 0) ^ o_neg_list) {
-        std::cout << fname << std::endl;
+        std::cout << fname << eol;
+        if(o_line_buffered){
+          std::cout.flush();
+        }
       }
       delete is;
     }

@@ -426,12 +426,12 @@ Missing: -E, -e, -s, -f, ENV use;
               << "   -x, --line-regexp: match whole lines only"  << std::endl
               << "   -B num, --before-context=num Display num lines preceding any match"  << std::endl
               << "   -A num, --after-context=num Display num lines following any match"  << std::endl
-              << "   -C num, --context=num same as -A num -B num, long-form defaults to 2"  << std::endl
+              << "   -C num, --context[=num] same as -A num -B num, long-form defaults to 2"  << std::endl
               << "   -n, --line-number print input line numbers, starting at 1"  << std::endl
               << "   -m num, --max-count num stop reading each file after num matches"  << std::endl
-              << "   -X utility [argument ...] ; , --exec utility [argument ...] ;  Invokes utility on each input file or stdin, using syntax much like find. The invocation replaces instances of '{}' with the name of the current file. If no '{}' appears, then the file contents will be passed as standard input to the utility. The trailing semicolon is mandatory. Uses execvep."  << std::endl
+              << "   -X utility [argument ...] ; , --exec=utility [argument ...] ;  Invokes utility on each input file or stdin, using syntax much like find. The invocation replaces instances of '{}' with the name of the current file. If no '{}' appears, then the file contents will be passed as standard input to the utility. The trailing semicolon is mandatory. Uses execvep."  << std::endl
               << "   -q, --quiet, --silent suppress normal output, just emit results via exit code: 0 => no match, 1 => at least one match in at least one input. Stops as soon as a match is found in any input."  << std::endl
-              << "   -0, --null [other] separate lines of output with the null character or specified other string, useful with -l and pipes to xargs"  << std::endl
+              << "   -0, --null=[other] separate lines of output with the null character or specified other string, useful with -l and pipes to xargs"  << std::endl
               << "   -N, --line-buffered  flush after each line, even if stdout is not a tty"  << std::endl
               << "   -Z, --decompress  same as -X zcat \\; NOTE: zcat must be in $PATH"  << std::endl
               << "   -z, --gzdecompress  same as -X gzcat \\; NOTE: gzcat must be in $PATH"  << std::endl

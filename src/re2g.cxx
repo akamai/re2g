@@ -1,5 +1,6 @@
- /* 
-    Hello code reader. Welcome to my re2-based grep-alike
+ /* author: Eric Kobrin <ekobrin@akamai.com>
+
+    Hello code reader. Welcome to my re2-based grep-alike.
     
     I've been wanting to experiment with RE2 so that I could better speak
     about it when discussing things like PCRE usage in other software. I
@@ -9,6 +10,9 @@
 
     Then I got carried away matching the grep options listed in the man page
 
+    This tool supports behavior like sed's s/// via -s in addition to find-like
+    support for running utilities using -X.
+
     This is the state of this project:
 
     Known issues:
@@ -17,10 +21,13 @@
       2) Error reporting is haphazard. Sorry. Patches welcome.
       3) There are probably be memory leaks, etc. It's C++ code
          and I don't usually write C++.
-      4) The test suite stinks. It's a crummy shell script.
+      4) The test suite stinks. It's a crummy shell script that reports all
+         failures but is silent for many successes. It also compares its
+         behavior to the local grep.
 
      Differences from grep:
-      1) Locale environment variables are ignored, as are GREP_*
+      1) Environment variables are ignored, including the Locale ones in the
+         POSIX standard and the GREP_* ones from GNU.
       2) Our -s is substitution, not silence. It's a good character for s///.
          There is no option for silence. Redirectind stderr is close.
       3) Multiple patterns via -e or -f differs:

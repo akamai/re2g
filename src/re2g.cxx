@@ -626,8 +626,9 @@ Missing: -s, ENV use;
         std::string *to_print = NULL;
         std::string in(line);
         std::string out;
+        std::string obuf;
         int num_pats_matched = 0;
-
+        obuf.clear();
         for(std::deque<RE2::RE2*>::iterator pat = pats.begin();
             pat != pats.end();
             ++pat){
@@ -655,9 +656,18 @@ Missing: -s, ENV use;
           }
           if(this_pat_matched){
             num_pats_matched++;
+            if(mode == REPLACE) {
+              if(!obuf.empty()){
+                obuf += '\n';
+              }
+              obuf += *to_print;
+            }
           }
         }
         bool any_pat_matched = num_pats_matched > 0;
+        if(any_pat_matched && mode == REPLACE){
+          to_print = &obuf;
+        }
         if(!(any_pat_matched || o_also_print_unreplaced)){
           to_print = NULL;
         }

@@ -363,6 +363,13 @@ fi
 
 diff -q <(grep -f tests/pats tests/lorem)  <($re2g -f tests/pats tests/lorem) || fail=$(expr 1 + $fail);
 
+#grep -o with multiple patterns is a mess.
+#let's just store the previous result and look for changes
+#diff -q <(grep -of tests/pats tests/lorem)  <($re2g -of tests/pats tests/lorem) || fail=$(expr 1 + $fail);
+
+diff -q tests/nof_pats_lorem <($re2g -nof tests/pats tests/lorem) || fail=$(expr 1 + $fail);
+
+diff -q tests/of_pats_lorem <($re2g -of tests/pats tests/lorem) || fail=$(expr 1 + $fail);
 
 
 if [ $fail -gt 0 ]; then

@@ -420,7 +420,7 @@ int main(int argc, const char **argv) {
 
   /*
 
-Missing: -s, -f, ENV use;
+Missing: -s, ENV use;
 
    */
 

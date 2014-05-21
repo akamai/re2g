@@ -222,6 +222,7 @@ int main(int argc, const char **argv) {
     o_special_delimiter = 0,
     o_posix_extended_syntax = 0,
     o_pat_str = 0,
+    o_pat_file = 0,
     o_line_buffered = isatty(STDOUT_FILENO);
   enum {SEARCH, REPLACE} mode;
 
@@ -255,16 +256,18 @@ int main(int argc, const char **argv) {
     {"bz2decompress",no_argument,&o_line_buffered,'J'},
     {"extended-regexp",no_argument,&o_posix_extended_syntax,'E'},
     {"regexp",required_argument,&o_pat_str,'e'},
+    {"file",required_argument,&o_pat_file,'f'},
     { NULL, 0, NULL, 0 }
   };
 
   std::string rep;
   std::string pat_str;
+  std::string pat_file;
   std::string eol("\n");
   std::deque<std::string> uargs(0);
   char c;
   int longopt = 0;
-  while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFxB:C:A:nm:X:qN0zZJEe:",
+  while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFxB:C:A:nm:X:qN0zZJEe:f:",
                          (const struct option *)&options[0], &longopt))!=-1){
     if(0 == c && longopt >= 0 && 
        longopt < sizeof(options) - 1){
@@ -375,6 +378,10 @@ int main(int argc, const char **argv) {
       o_pat_str = 1;
       pat_str = std::string(optarg);
       break;
+    case 'f':
+      o_pat_file = 1;
+      pat_file = std::string(optarg);
+      break;
     default:
       o_usage = 1;
     }
@@ -418,7 +425,7 @@ Missing: -s, -f, ENV use;
    */
 
   if(o_usage) {
-    std::cout << appname << " [-?ogvgpHhclLiFxBACnmq0NzZJE] [-X utility ...] [-s substitution] [-e] pattern file1..." << std::endl
+    std::cout << appname << " [-?ogvgpHhclLiFxBACnmq0NzZJE] [-f file][-X utility ...] [-s substitution] [-e] pattern file1..." << std::endl
               << std:: endl
               << "PATTERN re2 expression to apply" << std::endl
               << std::endl
@@ -450,6 +457,7 @@ Missing: -s, -f, ENV use;
               << "   -J, --bz2decompress  same as -X bzcat \\; NOTE: bzcat must be in $PATH"  << std::endl
               << "   -E, --extended-regexp  Use Posix Extended Syntax like egrep, this is actually less powerful than the default RE2 expression language"  << std::endl
               << "   -e pattern, --regexp=pattern  Use pattern as regular expression, useful if pattern could be confused with flags. NOTE: differs from POSIX grep in that the last -e pattern is used. Multiple patterns are not supported at this time, construct compound patterns using '|' instead"  << std::endl
+              << "   -f file, -file=file Acts as if eachline in 'file' were passed as an argument to the -e option. In other words, the last line of the file will supply the search pattern, until multiple -e options are supported."  << std::endl
 
               << std::endl;
     return -1;
@@ -467,7 +475,16 @@ Missing: -s, -f, ENV use;
     opts.set_posix_syntax(true);
   }
 
-  if(!o_pat_str){
+  if(o_pat_str){
+    // nothing to do
+  } else if(o_pat_file){
+    std::ifstream patf(pat_file.c_str());
+    if(!patf){
+      std::cerr << appname << ": " << pat_file << ": " << strerror(errno) << std::endl;
+      return -1;
+    }
+    while(std::getline(patf, pat_str)) {}
+  } else {
     pat_str = std::string(argv[0]);
     argv++;
     argc--;

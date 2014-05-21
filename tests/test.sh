@@ -28,7 +28,7 @@ function re2expect () {
 }
 
 
-if [ $($re2g -?|md5) = 49c1b2b9c0fe8ce1ae381ebb55f56a96 ]; then
+if [ $($re2g -?|md5) = 51fd57e693c91ffd6b82486dd3f48e60 ]; then
   echo SUCCESS "-? => USAGE";
 else
   echo FAILURE "-h => help has diverged"
@@ -333,6 +333,7 @@ fi
 
 diff -q <(grep dolor tests/lorem; echo $?)  <($re2g dolor tests/lorem; echo $?) || fail=$(expr 1 + $fail);
 
+
 diff -q <(grep -q dolor tests/lorem; echo $?)  <($re2g -q dolor tests/lorem; echo $?) || fail=$(expr 1 + $fail);
 
 diff -q <(grep -q dolr tests/lorem; echo $?)  <($re2g -q dolr tests/lorem; echo $?) || fail=$(expr 1 + $fail);
@@ -358,6 +359,11 @@ else
 fi
 
 #not yet testing for line-buffering
+
+
+#testing for non-compliant, but expected, behavior from -f
+diff -q <(grep -f <(tail -1 tests/pats) tests/lorem)  <($re2g -f tests/pats tests/lorem) || fail=$(expr 1 + $fail);
+
 
 
 if [ $fail -gt 0 ]; then

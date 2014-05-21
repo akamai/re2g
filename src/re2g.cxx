@@ -501,8 +501,6 @@ Missing: -s, ENV use;
   }
 
 
-  RE2::RE2 *pat = pats.back();
-
   //rationalize flags
   if(o_negate_match) {
     o_print_match = 0;
@@ -628,31 +626,42 @@ Missing: -s, ENV use;
         std::string *to_print = NULL;
         std::string in(line);
         std::string out;
-        bool matched = false;
+        int num_pats_matched = 0;
 
-        if(mode == SEARCH) {
-          matched = o_negate_match ^ match(in, *pat, o_full_line);
-          to_print = &in;
-        } else if(mode == REPLACE) {
-          // need to pick: (-o) Extract, (default) Replace, (-g)GlobalReplace
-          // also, print non matching lines? (-p)
-          
-          if(o_print_match) {
-            matched = o_negate_match ^ (extract(in, *pat, rep, &out, o_global) > 0);
-            to_print = &out;
-          } else {
-            matched = o_negate_match ^ (replace(&in, *pat, rep, o_global) > 0);
+        for(std::deque<RE2::RE2*>::iterator pat = pats.begin();
+            pat != pats.end();
+            ++pat){
+
+          bool this_pat_matched = false;
+
+          if(mode == SEARCH) {
+            this_pat_matched = o_negate_match ^ match(in, **pat, o_full_line);
             to_print = &in;
+          } else if(mode == REPLACE) {
+            // need to pick: (-o) Extract, (default) Replace, (-g)GlobalReplace
+            // also, print non matching lines? (-p)
+            
+            if(o_print_match) {
+              this_pat_matched = o_negate_match ^ (extract(in, **pat, rep, &out, o_global) > 0);
+              to_print = &out;
+            } else {
+              this_pat_matched = o_negate_match ^ (replace(&in, **pat, rep, o_global) > 0);
+              to_print = &in;
+            }
+            
+            if(o_also_print_unreplaced && !this_pat_matched) {
+              to_print = &line;
+            }
           }
-          
-          if(o_also_print_unreplaced && !matched) {
-            to_print = &line;
+          if(this_pat_matched){
+            num_pats_matched++;
           }
         }
-        if(!(matched || o_also_print_unreplaced)){
+        bool any_pat_matched = num_pats_matched > 0;
+        if(!(any_pat_matched || o_also_print_unreplaced)){
           to_print = NULL;
         }
-        if(matched){
+        if(any_pat_matched){
           if(o_quiet_and_quick){
             return 0;
           }
@@ -673,7 +682,7 @@ Missing: -s, ENV use;
         }
         if(to_print) {
           if(!o_count && !o_list) {
-            emit_line(&pref,matched?':':'-',*to_print,eol,o_line_buffered);
+            emit_line(&pref,any_pat_matched?':':'-',*to_print,eol,o_line_buffered);
           }
         } else {
           if(o_before_context > 0){

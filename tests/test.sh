@@ -361,8 +361,7 @@ fi
 #not yet testing for line-buffering
 
 
-#testing for non-compliant, but expected, behavior from -f
-diff -q <(grep -f <(tail -1 tests/pats) tests/lorem)  <($re2g -f tests/pats tests/lorem) || fail=$(expr 1 + $fail);
+diff -q <(grep -f tests/pats tests/lorem)  <($re2g -f tests/pats tests/lorem) || fail=$(expr 1 + $fail);
 
 
 

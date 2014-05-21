@@ -413,7 +413,7 @@ int main(int argc, const char **argv) {
 
   /*
 
-Missing: -e, -s, -f, ENV use;
+Missing: -s, -f, ENV use;
 
    */
 

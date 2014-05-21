@@ -551,7 +551,14 @@ Missing: -s, ENV use;
   std::deque<std::string> rargs(rargc);
   int retval = 1;
   for(int fidx = 0; fidx < num_files; fidx++) {
+    if(using_stdin && num_files > 0){
+      using_stdin = false; // clean up after "-" file is read.
+    }
     const char* fname = fnames[fidx];
+    if(fname[0]=='-' && fname[1] == 0){
+      fname = def_fname;
+      using_stdin = 1;
+    }
     std::istream *is = NULL;
     fdbuf *pb = NULL;
     std::filebuf *fb = NULL;

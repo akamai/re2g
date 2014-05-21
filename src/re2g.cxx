@@ -261,8 +261,8 @@ int main(int argc, const char **argv) {
   };
 
   std::string rep;
-  std::string pat_str;
-  std::string pat_file;
+  std::deque<std::string> pat_strs;
+  std::deque<std::string> pat_files;
   std::string eol("\n");
   std::deque<std::string> uargs(0);
   char c;
@@ -375,12 +375,12 @@ int main(int argc, const char **argv) {
       o_posix_extended_syntax = 1;
       break; 
     case 'e':
-      o_pat_str = 1;
-      pat_str = std::string(optarg);
+      o_pat_str++;
+      pat_strs.push_back(std::string(optarg));
       break;
     case 'f':
-      o_pat_file = 1;
-      pat_file = std::string(optarg);
+      o_pat_file++;
+      pat_files.push_back(std::string(optarg));
       break;
     default:
       o_usage = 1;
@@ -412,7 +412,7 @@ int main(int argc, const char **argv) {
   }
   std::cout   << std::endl;
   */
-  if(argc >= 1 || o_pat_str){
+  if(argc >= 1 || o_pat_str || o_pat_file){
     mode=o_substitute?REPLACE:SEARCH;
   } else {
     o_usage = 1;
@@ -475,21 +475,33 @@ Missing: -s, ENV use;
     opts.set_posix_syntax(true);
   }
 
-  if(o_pat_str){
-    // nothing to do
-  } else if(o_pat_file){
-    std::ifstream patf(pat_file.c_str());
+  std::deque<RE2::RE2*> pats;
+
+  while(!pat_files.empty()){
+    std::ifstream patf(pat_files.front().c_str());
     if(!patf){
-      std::cerr << appname << ": " << pat_file << ": " << strerror(errno) << std::endl;
+      std::cerr << appname << ": " << pat_files.front() << ": " << strerror(errno) << std::endl;
       return -1;
     }
-    while(std::getline(patf, pat_str)) {}
-  } else {
-    pat_str = std::string(argv[0]);
+    std::string pat_str;
+    while(std::getline(patf, pat_str)) {
+      pat_strs.push_back(pat_str);
+    }
+    pat_files.pop_front();
+  }
+  if(!o_pat_str && !o_pat_file){
+    pat_strs.push_back(argv[0]);
     argv++;
     argc--;
-  }  
-  RE2::RE2 pat(pat_str, opts);
+  }
+
+  while(!pat_strs.empty()){
+    pats.push_back(new RE2::RE2(pat_strs.front(),opts));
+    pat_strs.pop_front();
+  }
+
+
+  RE2::RE2 *pat = pats.back();
 
   //rationalize flags
   if(o_negate_match) {
@@ -520,7 +532,7 @@ Missing: -s, ENV use;
   }
 
   const char** fnames;
-  const char* def_fname = "/dev/stdin";
+  const char* def_fname = "-";
   bool using_stdin;
   if(num_files == 0) {
     num_files = 1;
@@ -551,13 +563,10 @@ Missing: -s, ENV use;
   std::deque<std::string> rargs(rargc);
   int retval = 1;
   for(int fidx = 0; fidx < num_files; fidx++) {
-    if(using_stdin && num_files > 0){
-      using_stdin = false; // clean up after "-" file is read.
-    }
     const char* fname = fnames[fidx];
     if(fname[0]=='-' && fname[1] == 0){
       fname = def_fname;
-      using_stdin = 1;
+      using_stdin = true;
     }
     std::istream *is = NULL;
     fdbuf *pb = NULL;
@@ -587,6 +596,8 @@ Missing: -s, ENV use;
         return -1;
       }
       is = new std::istream(pb);
+    } else if(using_stdin){
+      is = &std::cin;
     } else {
       fb = new std::filebuf();
       if(fb->open(fname, std::ios_base::in)){
@@ -620,17 +631,17 @@ Missing: -s, ENV use;
         bool matched = false;
 
         if(mode == SEARCH) {
-          matched = o_negate_match ^ match(in, pat, o_full_line);
+          matched = o_negate_match ^ match(in, *pat, o_full_line);
           to_print = &in;
         } else if(mode == REPLACE) {
           // need to pick: (-o) Extract, (default) Replace, (-g)GlobalReplace
           // also, print non matching lines? (-p)
           
           if(o_print_match) {
-            matched = o_negate_match ^ (extract(in, pat, rep, &out, o_global) > 0);
+            matched = o_negate_match ^ (extract(in, *pat, rep, &out, o_global) > 0);
             to_print = &out;
           } else {
-            matched = o_negate_match ^ (replace(&in, pat, rep, o_global) > 0);
+            matched = o_negate_match ^ (replace(&in, *pat, rep, o_global) > 0);
             to_print = &in;
           }
           
@@ -693,7 +704,11 @@ Missing: -s, ENV use;
           std::cout.flush();
         }
       }
-      delete is;
+      if(using_stdin){
+        using_stdin = false;
+      } else {
+        delete is;
+      }
     }
     if(pb){
       int sl;
@@ -704,6 +719,12 @@ Missing: -s, ENV use;
       delete fb;
     }
   }
+
+  while(!pats.empty()) {
+    delete pats.back();
+    pats.pop_back();
+  }
+
   if(uargv){
     delete[] uargv;
   }

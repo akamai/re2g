@@ -471,7 +471,7 @@ int main(int argc, const char **argv) {
   }
 
   if(o_usage) {
-    std::cout << appname << " [-?ogvgpHhclLiFxBACnmq0NzZJE] [-f file][-X utility ...] [-s substitution] [-e] pattern file1..." << std::endl
+    std::cout << appname << " [-?ogvgpHhclLiFxnqN0zZJE][-X utility ...][-s substitution][-B num][-A num][-C num][-m num][pattern|-e pattern|-f file] file1..." << std::endl
               << std:: endl
               << "PATTERN re2 expression to apply" << std::endl
               << std::endl

@@ -47,5 +47,5 @@ Miscellaneous:
    -m num, --max-count num stop reading each file after num matches
    -N, --line-buffered  flush after each line, even if stdout is not a tty
 
-
 See Also: 
+  https://code.google.com/p/re2/wiki/Syntax

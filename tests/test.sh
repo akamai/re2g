@@ -28,7 +28,7 @@ function re2expect () {
 }
 
 
-if [ $($re2g -?|md5) = d24ed96f6293e1824a717419d6435f95 ]; then
+if diff <($re2g -?) <(sed 's/%1\$s/'`basename $re2g`'/g' src/usage); then
   echo SUCCESS "-? => USAGE";
 else
   echo FAILURE "-h => help has diverged"

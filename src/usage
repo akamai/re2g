@@ -1,0 +1,51 @@
+Usage: %1$s [-?ogvgpHhclLiFxnqN0zZJE][-X UTILITY ...][-s SUBSTITUTION][-B NUM][-A NUM][-C NUM][-m NUM] PATTERN|[-e PATTERN|-f PATFILE] [FILE1 FILE2...]
+
+Search for PATTERN in each FILE or standard input
+PATTERN is an RE2 expression
+Output may have SUBSTITUTION applied
+
+Exmple: %1$s -oi '<a[^>]+href="([^"]+)"' s '\1' file1.html file2.html
+
+One of PATTERN,-e PATTERN, or -f PATFILE is required.
+
+Regexp definition/modification:
+   -e PATTERN, --regexp=PATTERN  Use pattern as regular expression, useful if pattern could be confused with flags.
+   -f PATFILE, -file=PATFILE Acts as if each line in PATFILE were passed as an argument to the -e option.
+   -i, --ignore-case: ignore case when matching; same as (?i)
+   -F, --fixed-strings: treat each PATTERN as literal string
+   -x, --line-regexp: match whole lines only, same as `^PATTERN$'
+   -E, --extended-regexp  Use Posix Extended Syntax like egrep, this is actually less powerful than the default RE2 expression language
+
+Output modes: (default is to print matching lines after optional SUBSTITUTION)
+   -c, --count: print match count instead of normal output
+   -l, --files-with-matches: list matching files instead of normal output
+   -L, --files-without-match: list nonmatching files instead of normal output
+
+Output Modification:
+   -s substitution, --sub=substitution optional replacement string, supports \0 .. \9 references
+   -o, --only-matching: only print matching or substituted portion
+   -v, --invert-match: select only lines which match no PATTERNs
+   -g, --global: global search/replace in each line, default is one match per line
+   -p, --print-all: (when replacing) print lines where no replacement was made
+   -H, --print-names: always print file name (default if more than one FILE)
+   -h, --no-print-names: never print file name
+   -n, --line-number print input line numbers, starting at 1
+   -B num, --before-context=num Display num lines preceding any match
+   -A num, --after-context=num Display num lines following any match
+   -C num, --context[=num] same as -A num -B num, long-form defaults to 2
+   -q, --quiet, --silent suppress normal output, just emit results via exit code: 0 => no match, 1 => at least one match in at least one input. Stops as soon as a match is found in any input.
+   -0, --null[=other] separate lines of output with the null character or specified other string, useful with -l and pipes to `xargs -0'
+
+Utility invocation:
+   -X utility [argument ...] ; , --exec=utility [argument ...] ;  Invokes utility on each input file or stdin, using syntax much like find. The invocation replaces instances of '{}' with the name of the current file. If no '{}' appears, then the file contents will be passed as standard input to the utility. The trailing semicolon is mandatory. Uses execvep.
+   -Z, --decompress  same as -X zcat \; NOTE: zcat must be in $PATH
+   -z, --gzdecompress  same as -X gzcat \; NOTE: gzcat must be in $PATH
+   -J, --bz2decompress  same as -X bzcat \; NOTE: bzcat must be in $PATH
+
+Miscellaneous:
+   -?, --help: display help
+   -m num, --max-count num stop reading each file after num matches
+   -N, --line-buffered  flush after each line, even if stdout is not a tty
+
+
+See Also: 

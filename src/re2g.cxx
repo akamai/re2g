@@ -88,6 +88,8 @@ private:
   char* end_;
 };
 
+char USAGE[]=RE2G_USAGE_STR;
+
 fdbuf::fdbuf(int fd, std::size_t buff_sz, std::size_t put_back) :
   fd_(fd),
   put_back_(std::max(put_back, size_t(1))),
@@ -471,41 +473,7 @@ int main(int argc, const char **argv) {
   }
 
   if(o_usage) {
-    std::cout << appname << " [-?ogvgpHhclLiFxnqN0zZJE][-X utility ...][-s substitution][-B num][-A num][-C num][-m num][pattern|-e pattern|-f file] file1..." << std::endl
-              << std:: endl
-              << "PATTERN re2 expression to apply" << std::endl
-              << std::endl
-              << "   -?, --help: display help"  << std::endl
-              << "   -v, --invert-match: invert match"  << std::endl
-              << "   -o, --only-matching: only print matching portion"  << std::endl
-              << "   -s substitution, --sub=substitution optional replacement string, supports \\0 .. \\9 references"  << std::endl
-              << "   -g, --global: global search/replace, default is one per line"  << std::endl
-              << "   -p, --print-all: (when replacing) print lines where no replacement was made"  << std::endl
-              << "   -H, --print-names: always print file name"  << std::endl
-              << "   -h, --no-print-names: never print file name"  << std::endl
-              << "   -c, --count: print match count instead of normal output"  << std::endl
-              << "   -l, --files-with-matches: list matching files instead of normal output"  << std::endl
-              << "   -L, --files-without-match: list nonmatching files instead of normal output"  << std::endl
-              << "   -i, --ignore-case: ignore case when matching; same as (?i)"  << std::endl
-              << "   -F, --fixed-strings: treat pattern argument as literal string"  << std::endl
-              << "   -x, --line-regexp: match whole lines only"  << std::endl
-              << "   -B num, --before-context=num Display num lines preceding any match"  << std::endl
-              << "   -A num, --after-context=num Display num lines following any match"  << std::endl
-              << "   -C num, --context[=num] same as -A num -B num, long-form defaults to 2"  << std::endl
-              << "   -n, --line-number print input line numbers, starting at 1"  << std::endl
-              << "   -m num, --max-count num stop reading each file after num matches"  << std::endl
-              << "   -X utility [argument ...] ; , --exec=utility [argument ...] ;  Invokes utility on each input file or stdin, using syntax much like find. The invocation replaces instances of '{}' with the name of the current file. If no '{}' appears, then the file contents will be passed as standard input to the utility. The trailing semicolon is mandatory. Uses execvep."  << std::endl
-              << "   -q, --quiet, --silent suppress normal output, just emit results via exit code: 0 => no match, 1 => at least one match in at least one input. Stops as soon as a match is found in any input."  << std::endl
-              << "   -0, --null=[other] separate lines of output with the null character or specified other string, useful with -l and pipes to xargs"  << std::endl
-              << "   -N, --line-buffered  flush after each line, even if stdout is not a tty"  << std::endl
-              << "   -Z, --decompress  same as -X zcat \\; NOTE: zcat must be in $PATH"  << std::endl
-              << "   -z, --gzdecompress  same as -X gzcat \\; NOTE: gzcat must be in $PATH"  << std::endl
-              << "   -J, --bz2decompress  same as -X bzcat \\; NOTE: bzcat must be in $PATH"  << std::endl
-              << "   -E, --extended-regexp  Use Posix Extended Syntax like egrep, this is actually less powerful than the default RE2 expression language"  << std::endl
-              << "   -e pattern, --regexp=pattern  Use pattern as regular expression, useful if pattern could be confused with flags. NOTE: differs from POSIX grep in that the last -e pattern is used. Multiple patterns are not supported at this time, construct compound patterns using '|' instead"  << std::endl
-              << "   -f file, -file=file Acts as if eachline in 'file' were passed as an argument to the -e option. In other words, the last line of the file will supply the search pattern, until multiple -e options are supported."  << std::endl
-
-              << std::endl;
+    printf(&USAGE[1], appname);
     return -1;
   }
 

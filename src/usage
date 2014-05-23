@@ -1,4 +1,4 @@
-Usage: %1$s [-?ogvgpHhclLiFxnqN0zZJE][-X UTILITY ...][-s SUBSTITUTION][-B NUM][-A NUM][-C NUM][-m NUM] PATTERN|[-e PATTERN|-f PATFILE] [FILE1 FILE2...]
+usage: %1$s [-?ogvgpHhclLiFxnqN0zZJE][-X UTILITY ...][-s SUBSTITUTION][-B NUM][-A NUM][-C NUM][-m NUM] PATTERN|[-e PATTERN|-f PATFILE] [FILE1 FILE2...]
 
 Search for PATTERN in each FILE or standard input
 PATTERN is an RE2 expression

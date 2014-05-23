@@ -473,7 +473,7 @@ int main(int argc, const char **argv) {
   }
 
   if(o_usage) {
-    printf(&USAGE[1], appname);
+    printf(USAGE, appname);
     return -1;
   }
 

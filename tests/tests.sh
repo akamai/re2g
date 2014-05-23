@@ -210,13 +210,13 @@ re2expect 0 "theteststring" theteststring -vopg '(q.)'
 re2expect 1 "theteststring" theteststring -vopgs '\1z' 't(.)' 
 re2expect 0 "theteststring" theteststring -vopgs '\1z' 'q(.)' 
 
-diff -q <(grep q tests/test.sh)  <($re2g q tests/test.sh) || fail=$(expr 1 + $fail);
+diff -q <(grep q tests/tests.sh)  <($re2g q tests/tests.sh) || fail=$(expr 1 + $fail);
 
-diff -q <(grep -v q tests/test.sh)  <($re2g -v q tests/test.sh) || fail=$(expr 1 + $fail);
+diff -q <(grep -v q tests/tests.sh)  <($re2g -v q tests/tests.sh) || fail=$(expr 1 + $fail);
 
-diff -q <(grep -h q tests/test.sh)  <($re2g -h q tests/test.sh) || fail=$(expr 1 + $fail);
+diff -q <(grep -h q tests/tests.sh)  <($re2g -h q tests/tests.sh) || fail=$(expr 1 + $fail);
 
-diff -q <(grep -H q tests/test.sh)  <($re2g -H q tests/test.sh) || fail=$(expr 1 + $fail);
+diff -q <(grep -H q tests/tests.sh)  <($re2g -H q tests/tests.sh) || fail=$(expr 1 + $fail);
 
 
 diff -q <(grep red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g red /usr/share/dict/propernames /usr/share/dict/words) || fail=$(expr 1 + $fail);

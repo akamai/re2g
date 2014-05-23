@@ -7,8 +7,8 @@ build/re2g: src/re2g.cxx build/re2g_usage.h
 build/re2g_usage.h: src/usage
 	echo "#define RE2G_USAGE_STR {0$(shell echo `od -b -A n src/usage`|sed 's/ /,0/g')}" > $@
 
-test: build/re2g tests/test.sh
-	tests/test.sh build/re2g
+test: build/re2g tests/tests.sh
+	tests/tests.sh build/re2g
 
 clean:
 	$(RM) build/*

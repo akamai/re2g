@@ -64,6 +64,8 @@
 #include <fcntl.h>
 #include <sys/wait.h>
 
+#include "re2g_usage.h"
+
 class fdbuf : public std::streambuf {
 public:
   explicit fdbuf(int fd, std::size_t buff_sz = 4096, std::size_t put_back = 128);

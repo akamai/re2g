@@ -64,6 +64,7 @@ re2expect 0 fxdxb fredrob r. -gs x
 
 re2expect 0 fexdoxb fredrob 'r(.)' -gs '\1x'  
 
+re2expect 1 "" foo tests #directory should fail
 
 # NONE
 

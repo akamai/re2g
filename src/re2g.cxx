@@ -62,8 +62,11 @@
 #include <cstdio>
 #include <fcntl.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
+
 
 #include "re2g_usage.h"
+
 
 class fdbuf : public std::streambuf {
 public:
@@ -191,7 +194,7 @@ void emit_line(const struct prefix *prefix, char marker, const std::string s,
 
 enum input_type {STDIN,CAT,NAME};
 
-fdbuf *ioexec(char* const* arglist, const char* fname, enum input_type util_input){
+fdbuf *ioexec(char* const* arglist, const char* fname, enum input_type util_input, int blksize=0){
   int plumb[2];
   pid_t pid;
 
@@ -243,7 +246,11 @@ fdbuf *ioexec(char* const* arglist, const char* fname, enum input_type util_inpu
     close(STDIN_FILENO);
   }
   close(plumb[1]);
-  return new fdbuf(plumb[0]);
+  if(blksize>0){
+    return new fdbuf(plumb[0],blksize);
+  } else {
+    return new fdbuf(plumb[0]);
+  }
 }
 
 int main(int argc, const char **argv) {
@@ -577,180 +584,200 @@ int main(int argc, const char **argv) {
   int retval = 1;
   for(int fidx = 0; fidx < num_files; fidx++) {
     const char* fname = fnames[fidx];
+    const char* file_err = NULL;
+    int blksize = 0;
     if(fname[0]=='-' && fname[1] == 0){
       fname = def_fname;
       using_stdin = true;
-    }
-    std::istream *is = NULL;
-    fdbuf *pb = NULL;
-    std::filebuf *fb = NULL;
-    if(uargv){
-      int ridx = 0;
-      //      std::cout << "fork: ";
-      for(int aidx = 0; aidx < uargc; aidx++){
-        if(uargv[aidx] == NULL){
-          rargs[ridx]=std::string(uargs[aidx]);
-          replace(&rargs[ridx], uarg_pat, fname, true);
-          uargv[aidx]=rargs[ridx].c_str();
-          ridx++;
-        }
-        //        std::cout << "   " << uargv[aidx] << ',';
-      }
-      enum input_type util_input;
-      if(rargc){
-        util_input = NAME;
+    } else {
+      struct stat sout;
+      if(stat(fname,&sout) != 0){
+        file_err = strerror(errno);
       } else {
-        util_input = using_stdin?STDIN:CAT;
+        blksize = sout.st_blksize;
+        if(! (sout.st_mode & (S_IFIFO | S_IFREG ))){
+          if(sout.st_mode & S_IFDIR){
+            file_err = "is a directory";
+          } else {
+            file_err = "is not a regular file or a pipe";
+          }
+        }
+      }
+    }
+    if(file_err){
+      std::cerr << appname << ": " << fname << ": " << file_err << std::endl;
+    } else {
+      std::istream *is = NULL;
+      fdbuf *pb = NULL;
+      std::filebuf *fb = NULL;
+      if(uargv){
+        int ridx = 0;
+        //      std::cout << "fork: ";
+        for(int aidx = 0; aidx < uargc; aidx++){
+          if(uargv[aidx] == NULL){
+            rargs[ridx]=std::string(uargs[aidx]);
+            replace(&rargs[ridx], uarg_pat, fname, true);
+            uargv[aidx]=rargs[ridx].c_str();
+            ridx++;
+          }
+          //        std::cout << "   " << uargv[aidx] << ',';
+        }
+        enum input_type util_input;
+        if(rargc){
+          util_input = NAME;
+        } else {
+          util_input = using_stdin?STDIN:CAT;
+        }
+        
+        pb = ioexec((char *const *)uargv, fname, util_input, blksize);
+        if(!pb){
+          std::cerr << appname << ": failed to use utility: " << strerror(errno) << std::endl;
+          return -1;
+        }
+        is = new std::istream(pb);
+      } else if(using_stdin){
+        is = &std::cin;
+      } else {
+        fb = new std::filebuf();
+        if(fb->open(fname, std::ios_base::in)){
+          is = new std::istream(fb);
+        }
       }
       
-      pb = ioexec((char *const *)uargv, fname, util_input);
-      if(!pb){
-        std::cerr << appname << ": failed to use utility: " << strerror(errno) << std::endl;
-        return -1;
+      std::deque<std::string> before(o_before_context);
+      before.clear();
+      if(using_stdin) {
+        //for output compatibility with grep
+        fname = "(standard input)";
       }
-      is = new std::istream(pb);
-    } else if(using_stdin){
-      is = &std::cin;
-    } else {
-      fb = new std::filebuf();
-      if(fb->open(fname, std::ios_base::in)){
-        is = new std::istream(fb);
-      }
-    }
-
-    std::deque<std::string> before(o_before_context);
-    before.clear();
-    if(using_stdin) {
-      //for output compatibility with grep
-      fname = "(standard input)";
-    }
-
-    if(!is) {
-      std::cerr << appname << ": " << fname << ": " << strerror(errno) << std::endl;
-    } else {
-      long long count = 0;
-      std::string line;
-      int ca_printed = o_after_context;
-      struct prefix pref = {
-        o_print_fname?fname:NULL,
-        o_print_lineno?1:-1,
-        -1
-      };
-      while(std::getline(*is, line) && (!o_max_matches || count < o_max_matches)) {
-        //std::cout << before.size() << std::endl;
-        std::string *to_print = NULL;
-        std::string in(line);
-        std::string out;
-        std::string obuf;
-        int num_pats_matched = 0;
-        obuf.clear();
-        for(std::deque<RE2::RE2*>::iterator pat = pats.begin();
-            pat != pats.end();
-            ++pat){
-
-          bool this_pat_matched = false;
-
-          if(mode == SEARCH) {
-            this_pat_matched = o_negate_match ^ match(in, **pat, o_full_line);
-            to_print = &in;
-          } else if(mode == REPLACE) {
-            // need to pick: (-o) Extract, (default) Replace, (-g)GlobalReplace
-            // also, print non matching lines? (-p)
+      
+      if(!is) {
+        std::cerr << appname << ": " << fname << ": " << strerror(errno) << std::endl;
+      } else {
+        long long count = 0;
+        std::string line;
+        int ca_printed = o_after_context;
+        struct prefix pref = {
+          o_print_fname?fname:NULL,
+          o_print_lineno?1:-1,
+          -1
+        };
+        while(std::getline(*is, line) && (!o_max_matches || count < o_max_matches)) {
+          //std::cout << before.size() << std::endl;
+          std::string *to_print = NULL;
+          std::string in(line);
+          std::string out;
+          std::string obuf;
+          int num_pats_matched = 0;
+          obuf.clear();
+          for(std::deque<RE2::RE2*>::iterator pat = pats.begin();
+              pat != pats.end();
+              ++pat){
             
-            if(o_print_match) {
-              this_pat_matched = o_negate_match ^ (extract(in, **pat, rep, &out, o_global) > 0);
-              to_print = &out;
-            } else {
-              this_pat_matched = o_negate_match ^ (replace(&in, **pat, rep, o_global) > 0);
+            bool this_pat_matched = false;
+            
+            if(mode == SEARCH) {
+              this_pat_matched = o_negate_match ^ match(in, **pat, o_full_line);
               to_print = &in;
-            }
-            
-            if(o_also_print_unreplaced && !this_pat_matched) {
-              to_print = &line;
-            }
-          }
-          if(this_pat_matched){
-            num_pats_matched++;
-            if(mode == REPLACE) {
-              if(!obuf.empty()){
-                obuf += '\n'; //TODO: use configurable line ending
+            } else if(mode == REPLACE) {
+              // need to pick: (-o) Extract, (default) Replace, (-g)GlobalReplace
+              // also, print non matching lines? (-p)
+              
+              if(o_print_match) {
+                this_pat_matched = o_negate_match ^ (extract(in, **pat, rep, &out, o_global) > 0);
+                to_print = &out;
+              } else {
+                this_pat_matched = o_negate_match ^ (replace(&in, **pat, rep, o_global) > 0);
+                to_print = &in;
               }
-              obuf += *to_print;
+              
+              if(o_also_print_unreplaced && !this_pat_matched) {
+                to_print = &line;
+              }
+            }
+            if(this_pat_matched){
+              num_pats_matched++;
+              if(mode == REPLACE) {
+                if(!obuf.empty()){
+                  obuf += '\n'; //TODO: use configurable line ending
+                }
+                obuf += *to_print;
+              }
             }
           }
-        }
-        bool any_pat_matched = num_pats_matched > 0;
-        if(any_pat_matched && mode == REPLACE){
-          to_print = &obuf;
-        }
-        if(!(any_pat_matched || o_also_print_unreplaced)){
-          to_print = NULL;
-        }
-        if(any_pat_matched){
-          if(o_quiet_and_quick){
-            return 0;
+          bool any_pat_matched = num_pats_matched > 0;
+          if(any_pat_matched && mode == REPLACE){
+            to_print = &obuf;
           }
-          count++;
-          ca_printed = 0;
-          if(o_before_context){
-            pref.line_no-=before.size();
-            while(!before.empty()){
-              emit_line(&pref,'-',before.front(),eol,o_line_buffered);
-              before.pop_front();
-              pref.line_no++;
+          if(!(any_pat_matched || o_also_print_unreplaced)){
+            to_print = NULL;
+          }
+          if(any_pat_matched){
+            if(o_quiet_and_quick){
+              return 0;
+            }
+            count++;
+            ca_printed = 0;
+            if(o_before_context){
+              pref.line_no-=before.size();
+              while(!before.empty()){
+                emit_line(&pref,'-',before.front(),eol,o_line_buffered);
+                before.pop_front();
+                pref.line_no++;
+              }
             }
           }
-        }
-        if(ca_printed < o_after_context && !to_print && !o_count){
+          if(ca_printed < o_after_context && !to_print && !o_count){
             to_print = &line;
             ca_printed ++;
-        }
-        if(to_print) {
-          if(!o_count && !o_list) {
-            emit_line(&pref,any_pat_matched?':':'-',*to_print,eol,o_line_buffered);
           }
-        } else {
-          if(o_before_context > 0){
-            if(before.size() >= o_before_context){
-              before.pop_front();
+          if(to_print) {
+            if(!o_count && !o_list) {
+              emit_line(&pref,any_pat_matched?':':'-',*to_print,eol,o_line_buffered);
             }
-            before.push_back(std::string(line));
+          } else {
+            if(o_before_context > 0){
+              if(before.size() >= o_before_context){
+                before.pop_front();
+              }
+              before.push_back(std::string(line));
+            }
+          }
+          if(pref.line_no>=0){
+            pref.line_no++;
           }
         }
-        if(pref.line_no>=0){
-          pref.line_no++;
+        if(count > 0 ){
+          retval = 0;
+        }
+        if(o_count) {
+          if(o_print_fname) {
+            std::cout << fname << ":";
+          }
+          std::cout << count << eol;
+          if(o_line_buffered){
+            std::cout.flush();
+          }
+        } else if(o_list && (count > 0) ^ o_neg_list) {
+          std::cout << fname << eol;
+          if(o_line_buffered){
+            std::cout.flush();
+          }
+        }
+        if(using_stdin){
+          using_stdin = false;
+        } else {
+          delete is;
         }
       }
-      if(count > 0 ){
-        retval = 0;
+      if(pb){
+        int sl;
+        wait(&sl);
+        delete pb;
       }
-      if(o_count) {
-        if(o_print_fname) {
-          std::cout << fname << ":";
-        }
-        std::cout << count << eol;
-        if(o_line_buffered){
-          std::cout.flush();
-        }
-      } else if(o_list && (count > 0) ^ o_neg_list) {
-        std::cout << fname << eol;
-        if(o_line_buffered){
-          std::cout.flush();
-        }
+      if(fb){
+        delete fb;
       }
-      if(using_stdin){
-        using_stdin = false;
-      } else {
-        delete is;
-      }
-    }
-    if(pb){
-      int sl;
-      wait(&sl);
-      delete pb;
-    }
-    if(fb){
-      delete fb;
     }
   }
 

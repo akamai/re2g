@@ -274,19 +274,19 @@ diff -q <(rev tests/lorem | $re2g rolod)  <($re2g -X rev \; rolod tests/lorem) |
 diff -q <(rev tests/lorem | $re2g rolod)  <($re2g -X rev \; rolod < tests/lorem) || fail=$(expr 1 + $fail);
 
 if [ -x `which gzip` ]; then
-  gzip -c < tests/lorem > tests/lorem.gz
-  if grep -qz dolor tests/lorem.gz 2>/dev/null; then
+  gzip -c < tests/lorem > build/lorem.gz
+  if grep -qz dolor build/lorem.gz 2>/dev/null; then
     gzflag=z
   else
     echo 'grep on this platform is broken, does not support -z, trying with -Z';
-    grep -qZ dolor tests/lorem.gz && gzflag=Z
+    grep -qZ dolor build/lorem.gz && gzflag=Z
   fi
   if [ -s $gzflag ]; then
-    diff -q <(grep -$gzflag dolor tests/lorem.gz)  <($re2g -X gunzip -c '{}' \; dolor tests/lorem.gz) || fail=$(expr 1 + $fail);
-    diff -q <(grep -$gzflag dolor tests/lorem.gz)  <($re2g -z dolor tests/lorem.gz) || fail=$(expr 1 + $fail);
-    diff -q <(grep -$gzflag dolor tests/lorem.gz)  <($re2g -X gunzip \; dolor tests/lorem.gz) || fail=$(expr 1 + $fail);
+    diff -q <(grep -$gzflag dolor build/lorem.gz)  <($re2g -X gunzip -c '{}' \; dolor build/lorem.gz) || fail=$(expr 1 + $fail);
+    diff -q <(grep -$gzflag dolor build/lorem.gz)  <($re2g -z dolor build/lorem.gz) || fail=$(expr 1 + $fail);
+    diff -q <(grep -$gzflag dolor build/lorem.gz)  <($re2g -X gunzip \; dolor build/lorem.gz) || fail=$(expr 1 + $fail);
 
-    if [ ! -f tests/lorem.gz ]; then
+    if [ ! -f build/lorem.gz ]; then
       echo FAILED: call to gunzip deleted test file
       fail=$(expr 1 + $fail);
     fi
@@ -296,14 +296,14 @@ else
 fi
 
 if [ -x `which zcat` ]; then
-  compress -c < tests/lorem > tests/lorem_c.Z
-  if diff -q <(grep -Z dolor tests/lorem_c.Z) <(uncompress -c tests/lorem_c.Z | grep dolor) >/dev/null; then
-    diff -q <(grep -Z dolor tests/lorem_c.Z)  <($re2g -X uncompress -c '{}' \; dolor tests/lorem_c.Z) || fail=$(expr 1 + $fail);
-    diff -q <(grep -Z dolor tests/lorem_c.Z)  <($re2g -X zcat '{}' \; dolor tests/lorem_c.Z) || fail=$(expr 1 + $fail);
-    diff -q <(grep -Z dolor tests/lorem_c.Z)  <($re2g -Z dolor tests/lorem_c.Z) || fail=$(expr 1 + $fail);
-    diff -q <(grep -Z dolor tests/lorem_c.Z)  <($re2g -X uncompress \; dolor tests/lorem_c.Z) || fail=$(expr 1 + $fail);
+  compress -c < tests/lorem > build/lorem_c.Z
+  if diff -q <(grep -Z dolor build/lorem_c.Z) <(uncompress -c build/lorem_c.Z | grep dolor) >/dev/null; then
+    diff -q <(grep -Z dolor build/lorem_c.Z)  <($re2g -X uncompress -c '{}' \; dolor build/lorem_c.Z) || fail=$(expr 1 + $fail);
+    diff -q <(grep -Z dolor build/lorem_c.Z)  <($re2g -X zcat '{}' \; dolor build/lorem_c.Z) || fail=$(expr 1 + $fail);
+    diff -q <(grep -Z dolor build/lorem_c.Z)  <($re2g -Z dolor build/lorem_c.Z) || fail=$(expr 1 + $fail);
+    diff -q <(grep -Z dolor build/lorem_c.Z)  <($re2g -X uncompress \; dolor build/lorem_c.Z) || fail=$(expr 1 + $fail);
 
-    if [ ! -f tests/lorem_c.Z ]; then
+    if [ ! -f build/lorem_c.Z ]; then
       echo FAILED: call to uncompress deleted test file
       fail=$(expr 1 + $fail);
     fi
@@ -317,12 +317,12 @@ fi
 
 
 if [ -x `which bzip2` ]; then
-  bzip2 -c < tests/lorem > tests/lorem.bz2
-  diff -q <(grep -J dolor tests/lorem.bz2)  <($re2g -X bunzip2 -c '{}' \; dolor tests/lorem.bz2) || fail=$(expr 1 + $fail);
-  diff -q <(grep -J dolor tests/lorem.bz2)  <($re2g -J dolor tests/lorem.bz2) || fail=$(expr 1 + $fail);
-  diff -q <(grep -J dolor tests/lorem.bz2)  <($re2g -X bunzip2 \; dolor tests/lorem.bz2) || fail=$(expr 1 + $fail);
+  bzip2 -c < tests/lorem > build/lorem.bz2
+  diff -q <(grep -J dolor build/lorem.bz2)  <($re2g -X bunzip2 -c '{}' \; dolor build/lorem.bz2) || fail=$(expr 1 + $fail);
+  diff -q <(grep -J dolor build/lorem.bz2)  <($re2g -J dolor build/lorem.bz2) || fail=$(expr 1 + $fail);
+  diff -q <(grep -J dolor build/lorem.bz2)  <($re2g -X bunzip2 \; dolor build/lorem.bz2) || fail=$(expr 1 + $fail);
 
-  if [ ! -f tests/lorem.bz2 ]; then
+  if [ ! -f build/lorem.bz2 ]; then
     echo FAILED: call to bunzip2 deleted test file
     fail=$(expr 1 + $fail);
   fi

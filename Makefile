@@ -10,4 +10,5 @@ build/re2g_usage.h: src/usage
 test: re2g tests/test.sh
 	tests/test.sh ./re2g
 
-
+clean:
+	$(RM) build/* ./re2g

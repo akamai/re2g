@@ -597,9 +597,9 @@ int main(int argc, const char **argv) {
         blksize = sout.st_blksize;
         if(! (sout.st_mode & (S_IFIFO | S_IFREG ))){
           if(sout.st_mode & S_IFDIR){
-            file_err = "is a directory";
+            file_err = "Is a directory";
           } else {
-            file_err = "is not a regular file or a pipe";
+            file_err = "Is not a regular file or a pipe";
           }
         }
       }

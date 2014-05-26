@@ -240,14 +240,14 @@ diff -q <(echo "fred" | grep -F f.)  <(echo "fred" | $re2g -F f.) || fail=$(expr
 
 diff -q <(echo "f.red" | grep -F f.)  <(echo "f.red" | $re2g -F f.) || fail=$(expr 1 + $fail);
 
-diff -q <(grep -l re2e src/*.cxx tests/*.sh) <($re2g -l re2e src/*.cxx tests/*.sh) || fail=$(expr 1 + $fail);
+diff -q <(grep -l re2e src/*.cc tests/*.sh) <($re2g -l re2e src/*.cc tests/*.sh) || fail=$(expr 1 + $fail);
 
-diff -q <(grep -vl re2e src/*.cxx tests/*.sh) <($re2g -vl re2e src/*.cxx tests/*.sh) || fail=$(expr 1 + $fail);
+diff -q <(grep -vl re2e src/*.cc tests/*.sh) <($re2g -vl re2e src/*.cc tests/*.sh) || fail=$(expr 1 + $fail);
 
 
-diff -q <(grep -L re2e src/*.cxx tests/*.sh) <($re2g -L re2e src/*.cxx tests/*.sh) || fail=$(expr 1 + $fail);
+diff -q <(grep -L re2e src/*.cc tests/*.sh) <($re2g -L re2e src/*.cc tests/*.sh) || fail=$(expr 1 + $fail);
 
-diff -q <(grep -vL re2e src/*.cxx tests/*.sh) <($re2g -vL re2e src/*.cxx tests/*.sh) || fail=$(expr 1 + $fail);
+diff -q <(grep -vL re2e src/*.cc tests/*.sh) <($re2g -vL re2e src/*.cc tests/*.sh) || fail=$(expr 1 + $fail);
 
 
 diff -q <(grep --context '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g --context '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);

@@ -6,7 +6,7 @@ RE2_INC?=-I/opt/re2/include
 RE2_LIB?=-L/opt/re2/lib
 CXXFLAGS?=-I$(src) -I$(build) -L$(build) -Wall -lre2 $(RE2_INC) $(RE2_LIB)
 
-$(build)/re2g: src/re2g.cxx build/re2g_usage.h build/gext.test
+$(build)/re2g: src/re2g.cc build/re2g_usage.h build/gext.test
 	$(CXX) $(CXXFLAGS) -D HAVE_GLOBAL_EXTRACT=$(shell build/gext.test) $< -o $@
 
 $(build)/gext.test: src/gext.cc src/gextbad.sh

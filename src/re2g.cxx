@@ -133,13 +133,22 @@ std::streambuf::int_type fdbuf::underflow(){
 }
 
 
+
 int extract(const re2::StringPiece &text,
             const re2::RE2& pattern,
             const re2::StringPiece &rewrite,
             std::string *out,
             bool global) {
-  return global ? RE2::GlobalExtract(text, pattern, rewrite, out) :
-    RE2::Extract(text, pattern, rewrite, out) ? 1 : 0;
+  if(global){
+#if HAVE_GLOBAL_EXTRACT
+    return  RE2::GlobalExtract(text, pattern, rewrite, out);
+#else
+    std::cerr << "Compiled against libre2 which lacks the GlobalExtract patch, don't use -g with -o" << std::endl;
+    exit(-9);
+#endif
+  } else {
+    return RE2::Extract(text, pattern, rewrite, out) ? 1 : 0;
+  }
 }
 
 

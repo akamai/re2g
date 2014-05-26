@@ -13,10 +13,7 @@ $(build)/gext.test: src/gext.cc src/gextbad.sh
 	$(CXX) $(CXXFLAGS) $< -o $@ || cp src/gextbad.sh $@
 
 $(build)/re2g_usage.h: src/usage
-	/bin/echo -n	'#define RE2G_USAGE_STR {0' > $@
-	od -b -A n src/usage|xargs -J % echo %  "}"|sed 's/ /,0/g' >> $@
-#echo "#define RE2G_USAGE_STR {0$(shell echo `od -b -A n src/usage`|sed 's/ /,0/g')}" > $@
-
+	od -b -A n src/usage|xargs -J % echo '#define RE2G_USAGE_STR {' % '0}'|sed 's/\([0-9]\{1,\}\) /0\1, /g' > $@
 
 test: $(build)/re2g tests/tests.sh
 	tests/tests.sh build/re2g

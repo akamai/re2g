@@ -30,7 +30,6 @@ run Make without setting vars on the command line.
 Run `make clean' when changing these variables or Makefile.local.
 
 
-
 # Testing
 
 `make test' will invoke a shell script for testing your built version of re2g. It's a bit noisy. I tend to run `make test | grep -v SUCCESS' to find out what's not working.

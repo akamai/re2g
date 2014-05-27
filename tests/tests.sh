@@ -260,6 +260,8 @@ test_same 'list neg files' <(grep -L re2e src/*.cc tests/*.sh) <($re2g -L re2e s
 
 test_same 'neg list neg files' <(grep -vL re2e src/*.cc tests/*.sh) <($re2g -vL re2e src/*.cc tests/*.sh)
 
+#uniq is used in the context test to remuve duplicated lines containing just '--'
+#because my local OS X grep and Linux grep differ. re2g operates more like the linux grep
 
 test_same 'context' <(grep --context '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g --context '[Aa]la' /usr/share/dict/propernames)
 

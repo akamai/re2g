@@ -165,7 +165,7 @@ struct prefix {
   const char* fname;
   int line_no;
   int offset;
-  bool needs_context_sep;
+  std::string *separator;
 };
 
 bool match(const re2::StringPiece &text,
@@ -188,9 +188,9 @@ int str_to_size(const char* str){
 
 void emit_line(struct prefix *prefix, char marker, const std::string s,
                const std::string eol, bool flush_after){
-  if(prefix->needs_context_sep){
-    std::cout << "--" << eol;
-    prefix->needs_context_sep = false;
+  if(prefix->separator){
+    std::cout << *prefix->separator << eol;
+    prefix->separator = NULL;
   }
   if(prefix->fname){
     std::cout << prefix->fname << marker;
@@ -300,7 +300,9 @@ int main(int argc, const char **argv) {
     o_posix_extended_syntax = 0,
     o_pat_str = 0,
     o_pat_file = 0,
-    o_line_buffered = isatty(STDOUT_FILENO);
+    o_line_buffered = isatty(STDOUT_FILENO),
+    o_no_group_separator = 0,
+    o_group_separator = 0;
   enum {SEARCH, REPLACE} mode;
 
   const struct option options[] = {
@@ -334,17 +336,20 @@ int main(int argc, const char **argv) {
     {"extended-regexp",no_argument,&o_posix_extended_syntax,'E'},
     {"regexp",required_argument,&o_pat_str,'e'},
     {"file",required_argument,&o_pat_file,'f'},
+    {"no-group-separator",no_argument,&o_no_group_separator,'W'},
+    {"group-separator",required_argument,&o_group_separator,'w'},
     { NULL, 0, NULL, 0 }
   };
 
   std::string rep;
+  std::string *group_separator = NULL;
   std::deque<std::string> pat_strs;
   std::deque<std::string> pat_files;
   std::string eol("\n");
   std::deque<std::string> uargs(0);
   char c;
   int longopt = 0;
-  while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFxB:C:A:nm:X:qN0zZJEe:f:",
+  while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFxB:C:A:nm:X:qN0zZJEe:f:Ww:",
                          (const struct option *)&options[0], &longopt))!=-1){
     if(0 == c && longopt >= 0 && 
        longopt < sizeof(options) - 1){
@@ -459,6 +464,22 @@ int main(int argc, const char **argv) {
       o_pat_file++;
       pat_files.push_back(std::string(optarg));
       break;
+    case 'w':
+      o_group_separator = 1;
+      if(group_separator){
+        *group_separator = optarg;
+      } else {
+        group_separator = new std::string(optarg);
+      }
+      break;
+    case 'W':
+      o_no_group_separator = 1;
+      o_group_separator = 0;
+      if(group_separator){
+        delete group_separator;
+      }
+      group_separator = NULL;
+      break;
     default:
       o_usage = 1;
     }
@@ -551,6 +572,12 @@ int main(int argc, const char **argv) {
     o_before_context = 0;
     o_after_context = 0;
   }
+
+  if((o_after_context >0 || o_before_context >0) &&
+     (!o_no_group_separator && !o_group_separator)) {
+    group_separator = new std::string("--");
+  }
+
 
 
   if(mode == SEARCH && o_print_match) {
@@ -676,7 +703,7 @@ int main(int argc, const char **argv) {
           o_print_fname?fname:NULL,
           o_print_lineno?1:-1,
           -1,
-          false
+          NULL
         };
         int line_no = 1;
         int last_line_no = -1;
@@ -737,10 +764,8 @@ int main(int argc, const char **argv) {
             ca_printed = 0;
             if(o_before_context){
               line_no-=before.size();
-              pref.needs_context_sep = count >1 &&
-                (o_after_context >0 ||
-                 o_before_context >0) &&
-                line_no - last_line_no > 1;
+              pref.separator = (count >1 &&
+                                line_no - last_line_no > 1)?group_separator:NULL;
               while(!before.empty()){
                 pref.line_no=(pref.line_no>=0)?line_no:-1;
                 emit_line(&pref,'-',before.front(),eol,o_line_buffered);
@@ -757,10 +782,8 @@ int main(int argc, const char **argv) {
           if(to_print) {
             if(!o_count && !o_list) {
               pref.line_no=(pref.line_no>=0)?line_no:-1;
-              pref.needs_context_sep = count > 1 &&
-                (o_after_context >0 ||
-                 o_before_context >0) &&
-                line_no - last_line_no > 1;
+              pref.separator = (count >1 &&
+                                line_no - last_line_no > 1)?group_separator:NULL;
               emit_line(&pref,any_pat_matched?':':'-',*to_print,eol,o_line_buffered);
               last_line_no = line_no;
             }
@@ -809,7 +832,9 @@ int main(int argc, const char **argv) {
       }
     }
   }
-
+  if(group_separator){
+    delete group_separator;
+  }
   while(!pats.empty()) {
     delete pats.back();
     pats.pop_back();

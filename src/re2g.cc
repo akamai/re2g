@@ -335,8 +335,8 @@ int main(int argc, const char **argv) {
     {"extended-regexp", no_argument, &o_posix_extended_syntax, 'E'}, 
     {"regexp", required_argument, &o_pat_str, 'e'}, 
     {"file", required_argument, &o_pat_file, 'f'}, 
-    {"no-group-separator", no_argument, &o_no_group_separator, 'W'}, 
-    {"group-separator", required_argument, &o_group_separator, 'w'},
+    {"no-group-separator", no_argument, &o_no_group_separator, 'T'}, 
+    {"group-separator", required_argument, &o_group_separator, 't'},
     { NULL, 0, NULL, 0 }
   };
 
@@ -349,7 +349,7 @@ int main(int argc, const char **argv) {
   char c;
   int longopt = 0;
   while((c = getopt_long(argc, (char * const *)argv,
-                         "?ogvgs:pHhclLiFxB:C:A:nm:X:qN0zZJEe:f:Ww:",
+                         "?ogvgs:pHhclLiFxB:C:A:nm:X:qN0zZJEe:f:Tt:",
                          (const struct option *)&options[0], &longopt)) != -1) {
     if(0 == c && longopt >= 0 && 
        longopt < sizeof(options) - 1) {
@@ -464,7 +464,7 @@ int main(int argc, const char **argv) {
       o_pat_file++;
       pat_files.push_back(std::string(optarg));
       break;
-    case 'w':
+    case 't':
       o_group_separator = 1;
       if(group_separator) {
         *group_separator = optarg;
@@ -472,7 +472,7 @@ int main(int argc, const char **argv) {
         group_separator = new std::string(optarg);
       }
       break;
-    case 'W':
+    case 'T':
       o_no_group_separator = 1;
       o_group_separator = 0;
       if(group_separator) {

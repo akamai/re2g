@@ -331,9 +331,9 @@ test_same 'max 5' <($grep -m 5 '[Aa]la' tests/word.list| uniq)  <($re2g -m 5 '[A
 
 test_same 'multi-file-context' <($grep --context=2 '[Aa]la' tests/word.list tests/lorem| uniq)  <($re2g --context=2 '[Aa]la' tests/word.list tests/lorem)
 
-test_same 'changing group-separator' <($grep --context=2 '[Aa]la' tests/word.list| uniq |sed 's/^--$/QQ/')  <($re2g --context=2 -w QQ '[Aa]la' tests/word.list)
+test_same 'changing group-separator' <($grep --context=2 '[Aa]la' tests/word.list| uniq |sed 's/^--$/QQ/')  <($re2g --context=2 -t QQ '[Aa]la' tests/word.list)
 
-test_same 'no group-separator' <($grep --context=2 '[Aa]la' tests/word.list| grep -v '^--$')  <($re2g --context=2 -W '[Aa]la' tests/word.list)
+test_same 'no group-separator' <($grep --context=2 '[Aa]la' tests/word.list| grep -v '^--$')  <($re2g --context=2 -T '[Aa]la' tests/word.list)
 
 test_same 'util rev' <(rev tests/lorem | $re2g rolod)  <($re2g -X rev \; rolod tests/lorem)
 

@@ -236,19 +236,19 @@ test_same 'noflist' <($grep -h q tests/tests.sh)  <($re2g -h q tests/tests.sh)
 test_same 'flist' <($grep -H q tests/tests.sh)  <($re2g -H q tests/tests.sh)
 
 
-test_same 'multi-file' <($grep red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g red /usr/share/dict/propernames /usr/share/dict/words)
+test_same 'multi-file' <($grep red tests/word.list tests/sigword.list)  <($re2g red tests/word.list tests/sigword.list)
 
-test_same 'multi-file noflist' <($grep -h red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -h red /usr/share/dict/propernames /usr/share/dict/words)
+test_same 'multi-file noflist' <($grep -h red tests/word.list tests/sigword.list)  <($re2g -h red tests/word.list tests/sigword.list)
 
-test_same 'multi-file flist' <($grep -H red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -H red /usr/share/dict/propernames /usr/share/dict/words)
+test_same 'multi-file flist' <($grep -H red tests/word.list tests/sigword.list)  <($re2g -H red tests/word.list tests/sigword.list)
 
-test_same 'multi-file count' <($grep -c red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -c red /usr/share/dict/propernames /usr/share/dict/words)
+test_same 'multi-file count' <($grep -c red tests/word.list tests/sigword.list)  <($re2g -c red tests/word.list tests/sigword.list)
 
-test_same 'multi-file neg-count' <($grep -vc red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -vc red /usr/share/dict/propernames /usr/share/dict/words)
+test_same 'multi-file neg-count' <($grep -vc red tests/word.list tests/sigword.list)  <($re2g -vc red tests/word.list tests/sigword.list)
 
-test_same 'whole-line' <($grep -x Fred /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -x Fred /usr/share/dict/propernames /usr/share/dict/words)
+test_same 'whole-line' <($grep -x Fred tests/word.list tests/sigword.list)  <($re2g -x Fred tests/word.list tests/sigword.list)
 
-test_same 'case-insensitive' <($grep -i Fred /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -i Fred /usr/share/dict/propernames /usr/share/dict/words)
+test_same 'case-insensitive' <($grep -i Fred tests/word.list tests/sigword.list)  <($re2g -i Fred tests/word.list tests/sigword.list)
 
 test_same 'stdin default' <(echo "food" | grep -H foo)  <(echo "food" | $re2g -H foo)
 
@@ -268,27 +268,27 @@ test_same 'neg list neg files' <($grep -vL re2e src/*.cc tests/*.sh) <($re2g -vL
 #uniq is used in the context test to remuve duplicated lines containing just '--'
 #because my local OS X grep and Linux grep differ. re2g operates more like the linux grep
 
-test_same 'context' <($grep --context=2 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g --context=2 '[Aa]la' /usr/share/dict/propernames)
+test_same 'context' <($grep --context=2 '[Aa]la' tests/word.list| uniq)  <($re2g --context=2 '[Aa]la' tests/word.list)
 
-test_same '-C 9' <($grep -C 9 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -C 9 '[Aa]la' /usr/share/dict/propernames)
+test_same '-C 9' <($grep -C 9 '[Aa]la' tests/word.list| uniq)  <($re2g -C 9 '[Aa]la' tests/word.list)
 
-test_same '-B 7' <($grep -B 7 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -B 7 '[Aa]la' /usr/share/dict/propernames)
+test_same '-B 7' <($grep -B 7 '[Aa]la' tests/word.list| uniq)  <($re2g -B 7 '[Aa]la' tests/word.list)
 
-test_same '-A 12' <($grep -A 12 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -A 12 '[Aa]la' /usr/share/dict/propernames)
-
-
-test_same '-HC 9' <($grep -HC 9 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -HC 9 '[Aa]la' /usr/share/dict/propernames)
-
-test_same '-HB 7' <($grep -HB 7 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -HB 7 '[Aa]la' /usr/share/dict/propernames)
-
-test_same '-HA 12' <($grep -HA 12 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -HA 12 '[Aa]la' /usr/share/dict/propernames)
+test_same '-A 12' <($grep -A 12 '[Aa]la' tests/word.list| uniq)  <($re2g -A 12 '[Aa]la' tests/word.list)
 
 
-test_same 'max 2' <($grep -m 2 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -m 2 '[Aa]la' /usr/share/dict/propernames)
+test_same '-HC 9' <($grep -HC 9 '[Aa]la' tests/word.list| uniq)  <($re2g -HC 9 '[Aa]la' tests/word.list)
 
-test_same 'max 5' <($grep -m 5 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -m 5 '[Aa]la' /usr/share/dict/propernames)
+test_same '-HB 7' <($grep -HB 7 '[Aa]la' tests/word.list| uniq)  <($re2g -HB 7 '[Aa]la' tests/word.list)
 
-#wanted to test against /usr/share/dict/* but local grep is borked wrt context
+test_same '-HA 12' <($grep -HA 12 '[Aa]la' tests/word.list| uniq)  <($re2g -HA 12 '[Aa]la' tests/word.list)
+
+
+test_same 'max 2' <($grep -m 2 '[Aa]la' tests/word.list| uniq)  <($re2g -m 2 '[Aa]la' tests/word.list)
+
+test_same 'max 5' <($grep -m 5 '[Aa]la' tests/word.list| uniq)  <($re2g -m 5 '[Aa]la' tests/word.list)
+
+#wanted to test against bigger dictionaries, but local grep is borked wrt context
 #and is repeating lines!
 #
 #15063-ateuchi
@@ -302,11 +302,11 @@ test_same 'max 5' <($grep -m 5 '[Aa]la' /usr/share/dict/propernames| uniq)  <($r
 #15068:athalamous
 #15069-athalline
 
-test_same 'multi-file-context' <($grep --context=2 '[Aa]la' /usr/share/dict/propernames tests/lorem| uniq)  <($re2g --context=2 '[Aa]la' /usr/share/dict/propernames tests/lorem)
+test_same 'multi-file-context' <($grep --context=2 '[Aa]la' tests/word.list tests/lorem| uniq)  <($re2g --context=2 '[Aa]la' tests/word.list tests/lorem)
 
-test_same 'changing group-separator' <($grep --context=2 '[Aa]la' /usr/share/dict/propernames| uniq |sed 's/^--$/QQ/')  <($re2g --context=2 -w QQ '[Aa]la' /usr/share/dict/propernames)
+test_same 'changing group-separator' <($grep --context=2 '[Aa]la' tests/word.list| uniq |sed 's/^--$/QQ/')  <($re2g --context=2 -w QQ '[Aa]la' tests/word.list)
 
-test_same 'no group-separator' <($grep --context=2 '[Aa]la' /usr/share/dict/propernames| grep -v '^--$')  <($re2g --context=2 -W '[Aa]la' /usr/share/dict/propernames)
+test_same 'no group-separator' <($grep --context=2 '[Aa]la' tests/word.list| grep -v '^--$')  <($re2g --context=2 -W '[Aa]la' tests/word.list)
 
 test_same 'util rev' <(rev tests/lorem | $re2g rolod)  <($re2g -X rev \; rolod tests/lorem)
 

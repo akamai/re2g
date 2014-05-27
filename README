@@ -36,3 +36,10 @@ run Make without setting vars on the command line.
 # Installing
 
 There is no "make install" target. Just copy build/re2g to wherever you want it.
+
+
+
+# Notes
+
+tests/word.list and tests/sigwords.list are from the public
+domain YAWL from http://www.cs.duke.edu/csed/data/yawl-0.3.2/

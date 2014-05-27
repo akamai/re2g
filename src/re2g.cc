@@ -1,7 +1,7 @@
 /*  author: Eric Kobrin <ekobrin@akamai.com>
 
     Hello code reader. Welcome to my re2-based grep-alike.
-    
+
     I've been wanting to experiment with RE2 so that I could better speak
     about it when discussing things like PCRE usage in other software. I
     didn't quickly find a grep-like tool which I could use for testing.
@@ -74,16 +74,16 @@ class fdbuf : public std::streambuf {
 public:
   explicit fdbuf(int fd, std::size_t buff_sz = 4096, std::size_t put_back = 128);
   ~fdbuf();
-  
+
 private:
   // overrides base class underflow()
   std::streambuf::int_type underflow();
-  
+
   // copy ctor and assignment not implemented;
   // copying not allowed
   fdbuf(const fdbuf &);
   fdbuf &operator= (const fdbuf &);
-  
+
 private:
   int fd_;
   std::size_t put_back_;
@@ -250,7 +250,7 @@ fdbuf *ioexec(char* const* arglist, const char* fname, enum input_type util_inpu
                 << strerror(errno) << std::endl;
       std::exit(-3);
     }
-    
+
     execvp(arglist[0], &arglist[0]);
     std::cerr << "error invoking  " << arglist[0] << ": "
               << strerror(errno) << std::endl;
@@ -489,7 +489,7 @@ int main(int argc, const char **argv) {
   }
   argc -= optind;
   argv += optind;
-  
+
   if(o_neg_list) {
     o_list = 1;
   }
@@ -504,7 +504,7 @@ int main(int argc, const char **argv) {
     }
     std::cout << std::endl;
   }
-  
+
   std::cout << "C: [" << o_after_context << ',' << o_before_context << ']' << std::endl;
 
   std::cout << "ARGC: " << argc << std::endl;
@@ -673,7 +673,7 @@ int main(int argc, const char **argv) {
         } else {
           util_input = using_stdin ? re2g::STDIN : re2g::CAT;
         }
-        
+
         pb = ioexec((char * const *)uargv, fname, util_input, blksize);
         if(!pb) {
           std::cerr << appname << ": failed to use utility: " << strerror(errno) << std::endl;
@@ -688,14 +688,14 @@ int main(int argc, const char **argv) {
           is = new std::istream(fb);
         }
       }
-      
+
       std::deque<std::string> before(o_before_context);
       before.clear();
       if(using_stdin) {
         //for output compatibility with grep
         fname = "(standard input)";
       }
-      
+
       if(!is) {
         std::cerr << appname << ": " << fname << ": " << strerror(errno) << std::endl;
       } else {
@@ -722,14 +722,14 @@ int main(int argc, const char **argv) {
               pat != pats.end();
               ++pat) {
             bool this_pat_matched = false;
-            
+
             if(mode == SEARCH) {
               this_pat_matched = o_negate_match ^ re2g::match(in, **pat, o_full_line);
               to_print = &in;
             } else if(mode == REPLACE) {
               // need to pick: (-o) Extract, (default) Replace, (-g)GlobalReplace
               // also, print non matching lines? (-p)
-              
+
               if(o_print_match) {
                 this_pat_matched = o_negate_match ^ (re2g::extract(in, **pat, rep, &out, o_global) > 0);
                 to_print = &out;
@@ -737,7 +737,7 @@ int main(int argc, const char **argv) {
                 this_pat_matched = o_negate_match ^ (re2g::replace(&in, **pat, rep, o_global) > 0);
                 to_print = &in;
               }
-              
+
               if(o_also_print_unreplaced && !this_pat_matched) {
                 to_print = &line;
               }

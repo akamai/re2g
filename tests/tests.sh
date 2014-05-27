@@ -27,6 +27,17 @@ function re2expect () {
   fi
 }
 
+function test_same () {
+  t="$1";
+  shift;
+  if diff -q $1 $2; then
+    echo "SUCCESS: $t";
+  else
+    echo "FAULURE: $t";
+    fail=`expr $fail + 1`;
+  fi
+}
+
 
 if diff <($re2g -?) <(sed 's/%1\$s/'`basename $re2g`'/g' src/usage); then
   echo SUCCESS "-? => USAGE";
@@ -211,137 +222,136 @@ re2expect 0 "theteststring" theteststring -vopg '(q.)'
 re2expect 1 "theteststring" theteststring -vopgs '\1z' 't(.)' 
 re2expect 0 "theteststring" theteststring -vopgs '\1z' 'q(.)' 
 
-diff -q <(grep q tests/tests.sh)  <($re2g q tests/tests.sh) || fail=$(expr 1 + $fail);
+test_same 'char search' <(grep q tests/tests.sh)  <($re2g q tests/tests.sh)
 
-diff -q <(grep -v q tests/tests.sh)  <($re2g -v q tests/tests.sh) || fail=$(expr 1 + $fail);
+test_same 'neg char-search' <(grep -v q tests/tests.sh)  <($re2g -v q tests/tests.sh)
 
-diff -q <(grep -h q tests/tests.sh)  <($re2g -h q tests/tests.sh) || fail=$(expr 1 + $fail);
+test_same 'noflist' <(grep -h q tests/tests.sh)  <($re2g -h q tests/tests.sh)
 
-diff -q <(grep -H q tests/tests.sh)  <($re2g -H q tests/tests.sh) || fail=$(expr 1 + $fail);
-
-
-diff -q <(grep red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g red /usr/share/dict/propernames /usr/share/dict/words) || fail=$(expr 1 + $fail);
-
-diff -q <(grep -h red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -h red /usr/share/dict/propernames /usr/share/dict/words) || fail=$(expr 1 + $fail);
-
-diff -q <(grep -H red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -H red /usr/share/dict/propernames /usr/share/dict/words) || fail=$(expr 1 + $fail);
-
-diff -q <(grep -c red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -c red /usr/share/dict/propernames /usr/share/dict/words) || fail=$(expr 1 + $fail);
-
-diff -q <(grep -vc red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -vc red /usr/share/dict/propernames /usr/share/dict/words) || fail=$(expr 1 + $fail);
-
-diff -q <(grep -x Fred /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -x Fred /usr/share/dict/propernames /usr/share/dict/words) || fail=$(expr 1 + $fail);
-
-diff -q <(grep -i Fred /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -i Fred /usr/share/dict/propernames /usr/share/dict/words) || fail=$(expr 1 + $fail);
-
-diff -q <(echo "food" | grep -H foo)  <(echo "food" | $re2g -H foo) || fail=$(expr 1 + $fail);
-
-diff -q <(echo "fred" | grep -F f.)  <(echo "fred" | $re2g -F f.) || fail=$(expr 1 + $fail);
-
-diff -q <(echo "f.red" | grep -F f.)  <(echo "f.red" | $re2g -F f.) || fail=$(expr 1 + $fail);
-
-diff -q <(grep -l re2e src/*.cc tests/*.sh) <($re2g -l re2e src/*.cc tests/*.sh) || fail=$(expr 1 + $fail);
-
-diff -q <(grep -vl re2e src/*.cc tests/*.sh) <($re2g -vl re2e src/*.cc tests/*.sh) || fail=$(expr 1 + $fail);
+test_same 'flist' <(grep -H q tests/tests.sh)  <($re2g -H q tests/tests.sh)
 
 
-diff -q <(grep -L re2e src/*.cc tests/*.sh) <($re2g -L re2e src/*.cc tests/*.sh) || fail=$(expr 1 + $fail);
+test_same 'multi-file' <(grep red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g red /usr/share/dict/propernames /usr/share/dict/words)
 
-diff -q <(grep -vL re2e src/*.cc tests/*.sh) <($re2g -vL re2e src/*.cc tests/*.sh) || fail=$(expr 1 + $fail);
+test_same 'multi-file noflist' <(grep -h red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -h red /usr/share/dict/propernames /usr/share/dict/words)
 
-echo dd1;
-diff -q <(grep --context '[Aa]la' /usr/share/dict/propernames)  <($re2g --context '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
+test_same 'multi-file flist' <(grep -H red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -H red /usr/share/dict/propernames /usr/share/dict/words)
 
-echo dd2;
-diff -q <(grep -C 9 '[Aa]la' /usr/share/dict/propernames)  <($re2g -C 9 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
+test_same 'multi-file count' <(grep -c red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -c red /usr/share/dict/propernames /usr/share/dict/words)
 
-diff -q <(grep -B 7 '[Aa]la' /usr/share/dict/propernames)  <($re2g -B 7 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
+test_same 'multi-file neg-count' <(grep -vc red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -vc red /usr/share/dict/propernames /usr/share/dict/words)
 
-diff -q <(grep -A 12 '[Aa]la' /usr/share/dict/propernames)  <($re2g -A 12 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
+test_same 'whole-line' <(grep -x Fred /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -x Fred /usr/share/dict/propernames /usr/share/dict/words)
 
-echo dd3;
-diff -q <(grep -HC 9 '[Aa]la' /usr/share/dict/propernames)  <($re2g -HC 9 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
+test_same 'case-insensitive' <(grep -i Fred /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -i Fred /usr/share/dict/propernames /usr/share/dict/words)
 
-diff -q <(grep -HB 7 '[Aa]la' /usr/share/dict/propernames)  <($re2g -HB 7 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
+test_same 'stdin default' <(echo "food" | grep -H foo)  <(echo "food" | $re2g -H foo)
 
-diff -q <(grep -HA 12 '[Aa]la' /usr/share/dict/propernames)  <($re2g -HA 12 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
+test_same 'fixed' <(echo "fred" | grep -F f.)  <(echo "fred" | $re2g -F f.)
 
-echo dd4;
-diff -q <(grep -m 2 '[Aa]la' /usr/share/dict/propernames)  <($re2g -m 2 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
+test_same 'fixed with dot' <(echo "f.red" | grep -F f.)  <(echo "f.red" | $re2g -F f.)
 
-diff -q <(grep -m 5 '[Aa]la' /usr/share/dict/propernames)  <($re2g -m 5 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
+test_same 'list files' <(grep -l re2e src/*.cc tests/*.sh) <($re2g -l re2e src/*.cc tests/*.sh)
 
-diff -q <(rev tests/lorem | $re2g rolod)  <($re2g -X rev \; rolod tests/lorem) || fail=$(expr 1 + $fail);
+test_same 'neg list files' <(grep -vl re2e src/*.cc tests/*.sh) <($re2g -vl re2e src/*.cc tests/*.sh)
 
-diff -q <(rev tests/lorem | $re2g rolod)  <($re2g -X rev \; rolod < tests/lorem) || fail=$(expr 1 + $fail);
+
+test_same 'list neg files' <(grep -L re2e src/*.cc tests/*.sh) <($re2g -L re2e src/*.cc tests/*.sh)
+
+test_same 'neg list neg files' <(grep -vL re2e src/*.cc tests/*.sh) <($re2g -vL re2e src/*.cc tests/*.sh)
+
+
+test_same 'context' <(grep --context '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g --context '[Aa]la' /usr/share/dict/propernames)
+
+test_same '-C 9' <(grep -C 9 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -C 9 '[Aa]la' /usr/share/dict/propernames)
+
+test_same '-B 7' <(grep -B 7 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -B 7 '[Aa]la' /usr/share/dict/propernames)
+
+test_same '-A 12' <(grep -A 12 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -A 12 '[Aa]la' /usr/share/dict/propernames)
+
+
+test_same '-HC 9' <(grep -HC 9 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -HC 9 '[Aa]la' /usr/share/dict/propernames)
+
+test_same '-HB 7' <(grep -HB 7 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -HB 7 '[Aa]la' /usr/share/dict/propernames)
+
+test_same '-HA 12' <(grep -HA 12 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -HA 12 '[Aa]la' /usr/share/dict/propernames)
+
+
+test_same 'max 2' <(grep -m 2 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -m 2 '[Aa]la' /usr/share/dict/propernames)
+
+test_same 'max 5' <(grep -m 5 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -m 5 '[Aa]la' /usr/share/dict/propernames)
+
+test_same 'util rev' <(rev tests/lorem | $re2g rolod)  <($re2g -X rev \; rolod tests/lorem)
+
+test_same 'util rev sharing stdin' <(rev tests/lorem | $re2g rolod)  <($re2g -X rev \; rolod < tests/lorem)
 
 if [ -x `which gzip` ]; then
   gzip -c < tests/lorem > build/lorem.gz
   if grep -qz dolor build/lorem.gz 2>/dev/null; then
     gzflag=z
   else
-    echo 'grep on this platform is broken, does not support -z, trying with -Z';
+    echo 'WARNING: grep on this platform is broken, does not support -z, trying with -Z';
     grep -qZ dolor build/lorem.gz && gzflag=Z
   fi
   if [ -s $gzflag ]; then
-    diff -q <(grep -$gzflag dolor build/lorem.gz)  <($re2g -X gunzip -c '{}' \; dolor build/lorem.gz) || fail=$(expr 1 + $fail);
-    diff -q <(grep -$gzflag dolor build/lorem.gz)  <($re2g -z dolor build/lorem.gz) || fail=$(expr 1 + $fail);
-    diff -q <(grep -$gzflag dolor build/lorem.gz)  <($re2g -X gunzip \; dolor build/lorem.gz) || fail=$(expr 1 + $fail);
+    test_same "unzip with $gzflag vs -X {}" <(grep -$gzflag dolor build/lorem.gz)  <($re2g -X gunzip -c '{}' \; dolor build/lorem.gz)
+    test_same "unzip with $gzflag" <(grep -$gzflag dolor build/lorem.gz)  <($re2g -z dolor build/lorem.gz)
+    test_same "unzip with $gzflag vs -X ;" <(grep -$gzflag dolor build/lorem.gz)  <($re2g -X gunzip \; dolor build/lorem.gz)
 
     if [ ! -f build/lorem.gz ]; then
-      echo FAILED: call to gunzip deleted test file
+      echo 'FAILED: call to gunzip deleted test file'
       fail=$(expr 1 + $fail);
     fi
   fi
 else
-  echo 'Unable to find gzip, skipping -z tests'
+  echo 'WARNING: Unable to find gzip, skipping -z tests'
 fi
 
 if [ -x `which zcat` ]; then
   compress -c < tests/lorem > build/lorem_c.Z
   if diff -q <(grep -Z dolor build/lorem_c.Z) <(uncompress -c build/lorem_c.Z | grep dolor) >/dev/null; then
-    diff -q <(grep -Z dolor build/lorem_c.Z)  <($re2g -X uncompress -c '{}' \; dolor build/lorem_c.Z) || fail=$(expr 1 + $fail);
-    diff -q <(grep -Z dolor build/lorem_c.Z)  <($re2g -X zcat '{}' \; dolor build/lorem_c.Z) || fail=$(expr 1 + $fail);
-    diff -q <(grep -Z dolor build/lorem_c.Z)  <($re2g -Z dolor build/lorem_c.Z) || fail=$(expr 1 + $fail);
-    diff -q <(grep -Z dolor build/lorem_c.Z)  <($re2g -X uncompress \; dolor build/lorem_c.Z) || fail=$(expr 1 + $fail);
+    test_same 'unzip with -Z vs -X uncompress {}' <(grep -Z dolor build/lorem_c.Z)  <($re2g -X uncompress -c '{}' \; dolor build/lorem_c.Z)
+    test_same 'unzip with -Z vs -x zcat' <(grep -Z dolor build/lorem_c.Z)  <($re2g -X zcat '{}' \; dolor build/lorem_c.Z)
+    test_same 'unzip with -Z for both' <(grep -Z dolor build/lorem_c.Z)  <($re2g -Z dolor build/lorem_c.Z)
+    test_same 'unzip with -Z vs -X uncompress ;' <(grep -Z dolor build/lorem_c.Z)  <($re2g -X uncompress \; dolor build/lorem_c.Z)
 
     if [ ! -f build/lorem_c.Z ]; then
       echo FAILED: call to uncompress deleted test file
       fail=$(expr 1 + $fail);
     fi
   else
-    echo 'grep on this platform is broken, -Z can'\''t uncompress .Z files' 
+    echo 'WARNING: grep on this platform is broken, -Z can'\''t uncompress .Z files' 
   fi
 else
-  echo 'Unable to find zcat, skipping -Z tests'
+  echo 'WARNING: Unable to find zcat, skipping -Z tests'
 fi
 
 
 
 if [ -x `which bzip2` ]; then
   bzip2 -c < tests/lorem > build/lorem.bz2
-  diff -q <(grep -J dolor build/lorem.bz2)  <($re2g -X bunzip2 -c '{}' \; dolor build/lorem.bz2) || fail=$(expr 1 + $fail);
-  diff -q <(grep -J dolor build/lorem.bz2)  <($re2g -J dolor build/lorem.bz2) || fail=$(expr 1 + $fail);
-  diff -q <(grep -J dolor build/lorem.bz2)  <($re2g -X bunzip2 \; dolor build/lorem.bz2) || fail=$(expr 1 + $fail);
+  test_same '-J vs -X bunzip2 -c {}' <(grep -J dolor build/lorem.bz2)  <($re2g -X bunzip2 -c '{}' \; dolor build/lorem.bz2)
+  test_same '-J vs -J' <(grep -J dolor build/lorem.bz2)  <($re2g -J dolor build/lorem.bz2)
+  test_same '-J vs -X bunzip2 ;' <(grep -J dolor build/lorem.bz2)  <($re2g -X bunzip2 \; dolor build/lorem.bz2)
 
   if [ ! -f build/lorem.bz2 ]; then
     echo FAILED: call to bunzip2 deleted test file
     fail=$(expr 1 + $fail);
   fi
 else
-  echo 'Unable to find bzip, skipping -J tests'
+  echo 'WARNING: Unable to find bzip, skipping -J tests'
 fi
 
 
-diff -q <(grep dolor tests/lorem; echo $?)  <($re2g dolor tests/lorem; echo $?) || fail=$(expr 1 + $fail);
+test_same 'exit code test without -q' <(grep dolor tests/lorem; echo $?)  <($re2g dolor tests/lorem; echo $?)
 
 
-diff -q <(grep -q dolor tests/lorem; echo $?)  <($re2g -q dolor tests/lorem; echo $?) || fail=$(expr 1 + $fail);
+test_same '1 exit code test with -q' <(grep -q dolor tests/lorem; echo $?)  <($re2g -q dolor tests/lorem; echo $?)
 
-diff -q <(grep -q dolr tests/lorem; echo $?)  <($re2g -q dolr tests/lorem; echo $?) || fail=$(expr 1 + $fail);
+test_same '0 exit code test with -q' <(grep -q dolr tests/lorem; echo $?)  <($re2g -q dolr tests/lorem; echo $?)
 
 
-diff -q <(grep -E 'ipsum|ex' tests/lorem; echo $?)  <($re2g -E 'ipsum|ex' tests/lorem; echo $?) || fail=$(expr 1 + $fail);
+test_same '-E and exit code' <(grep -E 'ipsum|ex' tests/lorem; echo $?)  <($re2g -E 'ipsum|ex' tests/lorem; echo $?)
 #todo add a test where \b is tested on platforms where grep isn't crazy
 
 
@@ -363,15 +373,25 @@ fi
 #not yet testing for line-buffering
 
 
-diff -q <(grep -f tests/pats tests/lorem)  <($re2g -f tests/pats tests/lorem) || fail=$(expr 1 + $fail);
+test_same 'pattern-file' <(grep -f tests/pats tests/lorem)  <($re2g -f tests/pats tests/lorem)
 
 #grep -o with multiple patterns is a mess.
 #let's just store the previous result and look for changes
-#diff -q <(grep -of tests/pats tests/lorem)  <($re2g -of tests/pats tests/lorem) || fail=$(expr 1 + $fail);
+#test_same '' <(grep -of tests/pats tests/lorem)  <($re2g -of tests/pats tests/lorem)
 
-diff -q tests/nof_pats_lorem <($re2g -nof tests/pats tests/lorem) || fail=$(expr 1 + $fail);
+if diff -q tests/nof_pats_lorem <($re2g -nof tests/pats tests/lorem); then
+  echo 'SUCCESS: patfile -nof'
+else 
+  echo 'FAILURE: patfile -nof'
+  fail=$(expr 1 + $fail);
+fi
 
-diff -q tests/of_pats_lorem <($re2g -of tests/pats tests/lorem) || fail=$(expr 1 + $fail);
+if diff -q tests/of_pats_lorem <($re2g -of tests/pats tests/lorem); then
+  echo 'SUCCESS: patfile -of'
+else 
+  echo 'FAILURE: patfile -of'
+  fail=$(expr 1 + $fail);
+fi
 
 
 if [ $fail -gt 0 ]; then

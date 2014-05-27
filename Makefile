@@ -2,13 +2,7 @@ src=src
 build=build
 tests=tests
 
-#If RE2 is installed at /opt/re2
-#RE2_LIB=-L/opt/re2/lib/
-#RE2_INC=-I/opt/re2/include
-
-#If RE2 is built in ../re2
-#RE2_LIB=-L../re2/obj
-#RE2_INC=-I../re2
+-include Makefile.local
 
 CXX?=g++
 CXXFLAGS?=-I$(src) -I$(build) -L$(build) -Wall -lre2 $(RE2_INC) $(RE2_LIB)

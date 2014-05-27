@@ -4,11 +4,11 @@
     
     I've been wanting to experiment with RE2 so that I could better speak
     about it when discussing things like PCRE usage in other software. I
-    didn't quickly find a grep-like tool.
+    didn't quickly find a grep-like tool which I could use for testing.
 
     So I wrote one.
 
-    Then I got carried away matching the grep options listed in the man page
+    Then I got carried away matching the grep options listed in the man page.
 
     This tool supports behavior like sed's s/// via -s in addition to find-like
     support for running utilities using -X.
@@ -16,36 +16,37 @@
     This is the state of this project:
 
     Known issues:
-      1) This depends on my patch to RE2 to enable GlobalExtract;
+      1) Full functionality depends on my patch to RE2 to enable GlobalExtract;
          see: https://groups.google.com/d/msg/re2-dev/uI-9maDcUVw/TiRXXNpsEZwJ
       2) Error reporting is haphazard. Sorry. Patches welcome.
       3) There are probably be memory leaks, etc. It's C++ code
          and I don't usually write C++.
-      4) The test suite stinks. It's a crummy shell script that reports all
-         failures but is silent for many successes. It also compares its
-         behavior to the local grep.
+      4) The test suite stinks. It's a crummy shell script that is hard to
+         maintain. It also compares this program's behavior to the local grep.
 
      Differences from grep:
       1) Environment variables are ignored, including the Locale ones in the
          POSIX standard and the GREP_* ones from GNU.
       2) Our -s is substitution, not silence. It's a good character for s///.
-         There is no option for silence. Redirectind stderr is close.
+         There is no option for silence. Redirecting stderr is close.
       3) Multiple patterns via -e or -f differs:
           Ordering of output is different
           Combining with -o: output is different from grep, arguably better
           Combining with -n: output is different from grep, arguably better
       4) Every long option has a short version and vice-versa
-      5) -C must take a parameter. This differs from grep's
-         documentation, but not behavior.
+      5) -C must take a parameter. This differs from my local grep's
+         documentation, but not its behavior.
       6) The -Z, -z, -J options are implemented via the -X option, we do not
          link against any of the compression libraries.
       7) There is no BRE support
       8) POSIX mode in RE2 seems stricter than in grep
       9) Byte-offset reporting is not supported
-     10) directory recursion is not supported, nor are the associated options.
+     10) Directory recursion is not supported, nor are the associated options.
          If you need recursion, please use find and xargs.
      11) No fancy color options. You can try to use -s and ANSI sequences.
      12) Binary files aren't treated specially, it's like running `grep -a'
+     13) When using context, noncontiguous groups of results are not separated
+         by lines containing only a pair of dashes.
    */
 
 

@@ -43,15 +43,29 @@ function test_same () {
   fi
 }
 
-# -o and -g can only be combined if build/gext.test prints "01"
-HAVE_GLOBALEXTRACT=`build/gext.test`
-
 if diff <($re2g -?) <(sed 's/%1\$s/'`basename $re2g`'/g' src/usage); then
   echo SUCCESS "-? => USAGE";
 else
   echo FAILURE "-h => help has diverged"
   fail=1;
 fi 
+
+
+
+# -o and -g can only be combined if build/gext.test prints "01"
+HAVE_GLOBALEXTRACT=`build/gext.test`
+
+if [ "01" == "$HAVE_GLOBALEXTRACT" ]; then
+  echo "WARNING: built the good version (GlobalExtract), so unable to test error from using unsupported flags. This is a good thing."
+else
+  if [ "`$re2g -og foo <<<foo 2>&1`" = "Compiled against libre2 which lacks the GlobalExtract patch, don't use -g with -o" ]; then
+    echo "SUCCESS: warned that this is the version which can't combine -o and -g flags";
+  else
+    echo "FAILURE: didn't warn about problems combing -o and -g, but this libre2 doesn't support GlobalExtract"
+    fail=`expr $fail + 1`;
+  fi
+fi
+
 
 re2expect 0 fred fred f 
 
@@ -166,7 +180,7 @@ re2expect 0 "hz" theteststring -ops '\1z' 't(.)'
 re2expect 1 "theteststring" theteststring -ops '\1z' 'q(.)' 
 
 # og
-if [ "01" == "$HAVE_GLOBALEXTRACT" ]; then
+if [ "01" = "$HAVE_GLOBALEXTRACT" ]; then
   re2expect 1 "" theteststring -og q 
   re2expect 0 "tttt" theteststring -og t 
   re2expect 0 "thtetstr" theteststring -og '(t.)' 
@@ -216,7 +230,7 @@ re2expect 0 "theteststring" theteststring -vpgs '\1z' 'q(.)'
 
 # opg
 
-if [ "01" == "$HAVE_GLOBALEXTRACT" ]; then
+if [ "01" = "$HAVE_GLOBALEXTRACT" ]; then
   re2expect 1 "" theteststring -opg q 
   re2expect 0 "tttt" theteststring -opg t 
   re2expect 0 "thtetstr" theteststring -opg '(t.)' 
@@ -229,7 +243,7 @@ fi;
 
 # vopg
 
-if [ "01" == "$HAVE_GLOBALEXTRACT" ]; then
+if [ "01" = "$HAVE_GLOBALEXTRACT" ]; then
   re2expect 0 "theteststring" theteststring -vopg q 
   re2expect 1 "" theteststring -vopg t 
   re2expect 1 "" theteststring -vopg '(t.)' 
@@ -441,4 +455,8 @@ fi
 if [ $fail -gt 0 ]; then
   echo $fail Errors
   exit 1;
+else
+  echo "No Errors"
+  exit 0;
 fi
+

@@ -35,6 +35,8 @@ run Make without setting vars on the command line.
 Since the tests compare output to grep, you may want to use a specific grep. The tests pass against gnu grep 2.5.4. You can use a specific grep by setting the USE_GREP make variable:
 make test USE_GREP=../grep-2.5.4/src/grep
 
+There is an example in Makefile.local.example for this as well.
+
 # Installing
 
 There is no "make install" target. Just copy build/re2g to wherever you want it.

@@ -678,6 +678,8 @@ int main(int argc, const char **argv) {
           -1,
           false
         };
+        int line_no = 1;
+        int last_line_no = -1;
         while(std::getline(*is, line) && (!o_max_matches || count < o_max_matches)) {
           //std::cout << before.size() << std::endl;
           std::string *to_print = NULL;
@@ -734,27 +736,35 @@ int main(int argc, const char **argv) {
             count++;
             ca_printed = 0;
             if(o_before_context){
-              pref.line_no-=before.size();
+              line_no-=before.size();
+              pref.needs_context_sep = count >1 &&
+                (o_after_context >0 ||
+                 o_before_context >0) &&
+                line_no - last_line_no > 1;
               while(!before.empty()){
+                pref.line_no=(pref.line_no>=0)?line_no:-1;
                 emit_line(&pref,'-',before.front(),eol,o_line_buffered);
                 before.pop_front();
-                pref.line_no++;
+                line_no++;
               }
+              last_line_no = line_no;
             }
           }
           if(ca_printed < o_after_context && !to_print && !o_count){
             to_print = &line;
             ca_printed ++;
-            if(ca_printed == o_after_context){
-              pref.needs_context_sep = true;
-            }
           }
           if(to_print) {
             if(!o_count && !o_list) {
+              pref.line_no=(pref.line_no>=0)?line_no:-1;
+              pref.needs_context_sep = count > 1 &&
+                (o_after_context >0 ||
+                 o_before_context >0) &&
+                line_no - last_line_no > 1;
               emit_line(&pref,any_pat_matched?':':'-',*to_print,eol,o_line_buffered);
+              last_line_no = line_no;
             }
           } else {
-            pref.needs_context_sep = count > 0;
             if(o_before_context > 0){
               if(before.size() >= o_before_context){
                 before.pop_front();
@@ -762,8 +772,8 @@ int main(int argc, const char **argv) {
               before.push_back(std::string(line));
             }
           }
-          if(pref.line_no>=0){
-            pref.line_no++;
+          if(line_no>=0){
+            line_no++;
           }
         }
         if(count > 0 ){

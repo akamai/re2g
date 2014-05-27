@@ -261,25 +261,25 @@ test_same 'list neg files' <(grep -L re2e src/*.cc tests/*.sh) <($re2g -L re2e s
 test_same 'neg list neg files' <(grep -vL re2e src/*.cc tests/*.sh) <($re2g -vL re2e src/*.cc tests/*.sh)
 
 
-test_same 'context' <(grep --context '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g --context '[Aa]la' /usr/share/dict/propernames)
+test_same 'context' <(grep --context '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g --context '[Aa]la' /usr/share/dict/propernames)
 
-test_same '-C 9' <(grep -C 9 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -C 9 '[Aa]la' /usr/share/dict/propernames)
+test_same '-C 9' <(grep -C 9 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -C 9 '[Aa]la' /usr/share/dict/propernames)
 
-test_same '-B 7' <(grep -B 7 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -B 7 '[Aa]la' /usr/share/dict/propernames)
+test_same '-B 7' <(grep -B 7 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -B 7 '[Aa]la' /usr/share/dict/propernames)
 
-test_same '-A 12' <(grep -A 12 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -A 12 '[Aa]la' /usr/share/dict/propernames)
-
-
-test_same '-HC 9' <(grep -HC 9 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -HC 9 '[Aa]la' /usr/share/dict/propernames)
-
-test_same '-HB 7' <(grep -HB 7 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -HB 7 '[Aa]la' /usr/share/dict/propernames)
-
-test_same '-HA 12' <(grep -HA 12 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -HA 12 '[Aa]la' /usr/share/dict/propernames)
+test_same '-A 12' <(grep -A 12 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -A 12 '[Aa]la' /usr/share/dict/propernames)
 
 
-test_same 'max 2' <(grep -m 2 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -m 2 '[Aa]la' /usr/share/dict/propernames)
+test_same '-HC 9' <(grep -HC 9 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -HC 9 '[Aa]la' /usr/share/dict/propernames)
 
-test_same 'max 5' <(grep -m 5 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -m 5 '[Aa]la' /usr/share/dict/propernames)
+test_same '-HB 7' <(grep -HB 7 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -HB 7 '[Aa]la' /usr/share/dict/propernames)
+
+test_same '-HA 12' <(grep -HA 12 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -HA 12 '[Aa]la' /usr/share/dict/propernames)
+
+
+test_same 'max 2' <(grep -m 2 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -m 2 '[Aa]la' /usr/share/dict/propernames)
+
+test_same 'max 5' <(grep -m 5 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -m 5 '[Aa]la' /usr/share/dict/propernames)
 
 test_same 'util rev' <(rev tests/lorem | $re2g rolod)  <($re2g -X rev \; rolod tests/lorem)
 

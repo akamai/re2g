@@ -43,6 +43,8 @@ function test_same () {
   fi
 }
 
+# -o and -g can only be combined if build/gext.test prints "01"
+HAVE_GLOBALEXTRACT=`build/gext.test`
 
 if diff <($re2g -?) <(sed 's/%1\$s/'`basename $re2g`'/g' src/usage); then
   echo SUCCESS "-? => USAGE";
@@ -164,13 +166,16 @@ re2expect 0 "hz" theteststring -ops '\1z' 't(.)'
 re2expect 1 "theteststring" theteststring -ops '\1z' 'q(.)' 
 
 # og
-
-re2expect 1 "" theteststring -og q 
-re2expect 0 "tttt" theteststring -og t 
-re2expect 0 "thtetstr" theteststring -og '(t.)' 
-re2expect 1 "" theteststring -og '(q.)' 
-re2expect 0 "hzezszrz" theteststring -ogs '\1z' 't(.)' 
-re2expect 1 "" theteststring -ogs '\1z' 'q(.)' 
+if [ "01" == "$HAVE_GLOBALEXTRACT" ]; then
+  re2expect 1 "" theteststring -og q 
+  re2expect 0 "tttt" theteststring -og t 
+  re2expect 0 "thtetstr" theteststring -og '(t.)' 
+  re2expect 1 "" theteststring -og '(q.)' 
+  re2expect 0 "hzezszrz" theteststring -ogs '\1z' 't(.)' 
+  re2expect 1 "" theteststring -ogs '\1z' 'q(.)' 
+else
+  echo "WARNING: built without support for GlobalExtract, skipping tests which combine -o and -g";
+fi;
 
 # pg
 
@@ -211,21 +216,29 @@ re2expect 0 "theteststring" theteststring -vpgs '\1z' 'q(.)'
 
 # opg
 
-re2expect 1 "" theteststring -opg q 
-re2expect 0 "tttt" theteststring -opg t 
-re2expect 0 "thtetstr" theteststring -opg '(t.)' 
-re2expect 1 "" theteststring -opg '(q.)' 
-re2expect 0 "hzezszrz" theteststring -opgs '\1z' 't(.)' 
-re2expect 1 "theteststring" theteststring -opgs '\1z' 'q(.)' 
+if [ "01" == "$HAVE_GLOBALEXTRACT" ]; then
+  re2expect 1 "" theteststring -opg q 
+  re2expect 0 "tttt" theteststring -opg t 
+  re2expect 0 "thtetstr" theteststring -opg '(t.)' 
+  re2expect 1 "" theteststring -opg '(q.)' 
+  re2expect 0 "hzezszrz" theteststring -opgs '\1z' 't(.)' 
+  re2expect 1 "theteststring" theteststring -opgs '\1z' 'q(.)'
+else
+  echo "WARNING: built without support for GlobalExtract, skipping tests which combine -o and -g";
+fi;
 
 # vopg
 
-re2expect 0 "theteststring" theteststring -vopg q 
-re2expect 1 "" theteststring -vopg t 
-re2expect 1 "" theteststring -vopg '(t.)' 
-re2expect 0 "theteststring" theteststring -vopg '(q.)' 
-re2expect 1 "theteststring" theteststring -vopgs '\1z' 't(.)' 
-re2expect 0 "theteststring" theteststring -vopgs '\1z' 'q(.)' 
+if [ "01" == "$HAVE_GLOBALEXTRACT" ]; then
+  re2expect 0 "theteststring" theteststring -vopg q 
+  re2expect 1 "" theteststring -vopg t 
+  re2expect 1 "" theteststring -vopg '(t.)' 
+  re2expect 0 "theteststring" theteststring -vopg '(q.)' 
+  re2expect 1 "theteststring" theteststring -vopgs '\1z' 't(.)' 
+  re2expect 0 "theteststring" theteststring -vopgs '\1z' 'q(.)' 
+else
+  echo "WARNING: built without support for GlobalExtract, skipping tests which combine -o and -g";
+fi;
 
 test_same 'char search' <($grep q tests/tests.sh)  <($re2g q tests/tests.sh)
 

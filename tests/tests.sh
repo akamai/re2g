@@ -36,9 +36,9 @@ function test_same () {
   t="$1";
   shift;
   if diff -q $1 $2; then
-    echo "SUCCESS: $t";
+    echo "SUCCESS: $grep ($t)";
   else
-    echo "FAULURE: $t";
+    echo "FAULURE: $grep ($t)";
     fail=`expr $fail + 1`;
   fi
 }

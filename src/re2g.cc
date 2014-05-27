@@ -68,6 +68,7 @@
 
 #include "re2g_usage.h"
 
+namespace re2g {
 
 class fdbuf : public std::streambuf {
 public:
@@ -261,11 +262,13 @@ fdbuf *ioexec(char* const* arglist, const char* fname, enum input_type util_inpu
   }
   close(plumb[1]);
   if(blksize > 0) {
-    return new fdbuf(plumb[0], blksize);
+    return new re2g::fdbuf(plumb[0], blksize);
   } else {
-    return new fdbuf(plumb[0]);
+    return new re2g::fdbuf(plumb[0]);
   }
 }
+
+};
 
 int main(int argc, const char **argv) {
   const char *appname = argv[0];
@@ -409,16 +412,16 @@ int main(int argc, const char **argv) {
       o_full_line = 1;
       break;
     case 'A':
-      o_after_context = str_to_size(optarg);
+      o_after_context = re2g::str_to_size(optarg);
       break;
     case 'B':
-      o_before_context = str_to_size(optarg);
+      o_before_context = re2g::str_to_size(optarg);
       break;
     case 'C':
-      o_after_context = o_before_context = optarg ? str_to_size(optarg) : 2;
+      o_after_context = o_before_context = optarg ? re2g::str_to_size(optarg) : 2;
       break; 
     case 'm':
-      o_max_matches = str_to_size(optarg);
+      o_max_matches = re2g::str_to_size(optarg);
       break;
     case 'Z':
       uargs.clear();
@@ -517,7 +520,7 @@ int main(int argc, const char **argv) {
   }
 
   if(o_usage) {
-    printf(USAGE, appname);
+    printf(re2g::USAGE, appname);
     return -1;
   }
 
@@ -614,7 +617,7 @@ int main(int argc, const char **argv) {
     uargv[uargc] = NULL;
     for(int aidx = 0; aidx < uargc; aidx++) {
       std::string *arg = &uargs[aidx];
-      if(match(*arg, uarg_pat, false)) {
+      if(re2g::match(*arg, uarg_pat, false)) {
         uargv[aidx] = NULL;
         rargc++;
       } else {
@@ -650,7 +653,7 @@ int main(int argc, const char **argv) {
       std::cerr << appname << ": " << fname << ": " << file_err << std::endl;
     } else {
       std::istream *is = NULL;
-      fdbuf *pb = NULL;
+      re2g::fdbuf *pb = NULL;
       std::filebuf *fb = NULL;
       if(uargv) {
         int ridx = 0;
@@ -658,17 +661,17 @@ int main(int argc, const char **argv) {
         for(int aidx = 0; aidx < uargc; aidx++) {
           if(uargv[aidx] == NULL) {
             rargs[ridx] = std::string(uargs[aidx]);
-            replace(&rargs[ridx], uarg_pat, fname, true);
+            re2g::replace(&rargs[ridx], uarg_pat, fname, true);
             uargv[aidx] = rargs[ridx].c_str();
             ridx++;
           }
           //        std::cout << "   " << uargv[aidx] << ',';
         }
-        enum input_type util_input;
+        enum re2g::input_type util_input;
         if(rargc) {
-          util_input = NAME;
+          util_input = re2g::NAME;
         } else {
-          util_input = using_stdin ? STDIN : CAT;
+          util_input = using_stdin ? re2g::STDIN : re2g::CAT;
         }
         
         pb = ioexec((char * const *)uargv, fname, util_input, blksize);
@@ -699,7 +702,7 @@ int main(int argc, const char **argv) {
         long long count = 0;
         std::string line;
         int ca_printed = o_after_context;
-        struct prefix pref = {
+        struct re2g::prefix pref = {
           o_print_fname ? fname : NULL,
           o_print_lineno ? 1 : -1,
           -1,
@@ -721,17 +724,17 @@ int main(int argc, const char **argv) {
             bool this_pat_matched = false;
             
             if(mode == SEARCH) {
-              this_pat_matched = o_negate_match ^ match(in, **pat, o_full_line);
+              this_pat_matched = o_negate_match ^ re2g::match(in, **pat, o_full_line);
               to_print = &in;
             } else if(mode == REPLACE) {
               // need to pick: (-o) Extract, (default) Replace, (-g)GlobalReplace
               // also, print non matching lines? (-p)
               
               if(o_print_match) {
-                this_pat_matched = o_negate_match ^ (extract(in, **pat, rep, &out, o_global) > 0);
+                this_pat_matched = o_negate_match ^ (re2g::extract(in, **pat, rep, &out, o_global) > 0);
                 to_print = &out;
               } else {
-                this_pat_matched = o_negate_match ^ (replace(&in, **pat, rep, o_global) > 0);
+                this_pat_matched = o_negate_match ^ (re2g::replace(&in, **pat, rep, o_global) > 0);
                 to_print = &in;
               }
               
@@ -768,7 +771,7 @@ int main(int argc, const char **argv) {
                                 line_no - last_line_no > 1) ? group_separator : NULL;
               while(!before.empty()) {
                 pref.line_no = (pref.line_no >= 0) ? line_no : -1;
-                emit_line(&pref, '-', before.front(), eol, o_line_buffered);
+                re2g::emit_line(&pref, '-', before.front(), eol, o_line_buffered);
                 before.pop_front();
                 line_no++;
               }
@@ -784,7 +787,7 @@ int main(int argc, const char **argv) {
               pref.line_no = (pref.line_no >= 0) ? line_no : -1;
               pref.separator = (count > 1 &&
                                 line_no - last_line_no > 1) ? group_separator : NULL;
-              emit_line(&pref, any_pat_matched ? ':' : '-', *to_print, eol, o_line_buffered);
+              re2g::emit_line(&pref, any_pat_matched ? ':' : '-', *to_print, eol, o_line_buffered);
               last_line_no = line_no;
             }
           } else {
@@ -845,4 +848,3 @@ int main(int argc, const char **argv) {
   }
   return retval;
 }
-

@@ -40,10 +40,10 @@ There is an example in Makefile.local.example for this as well.
 
 Run `make clean' when changing these variables or Makefile.local.
 
+
 # Installing
 
 There is no "make install" target. Just copy build/re2g to wherever you want it.
-
 
 
 # Notes

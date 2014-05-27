@@ -283,6 +283,26 @@ test_same 'max 2' <(grep -m 2 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re
 
 test_same 'max 5' <(grep -m 5 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -m 5 '[Aa]la' /usr/share/dict/propernames)
 
+#wanted to test against /usr/share/dict/* but local grep is borked wrt context
+#and is repeating lines!
+#
+#15063-ateuchi
+#15064-ateuchus
+#15065:Atfalati
+#15066-Athabasca
+#15067-Athabascan
+#--
+#15066-Athabasca
+#15067-Athabascan
+#15068:athalamous
+#15069-athalline
+
+test_same 'multi-file-context' <(grep --context '[Aa]la' /usr/share/dict/propernames tests/lorem| uniq)  <($re2g --context '[Aa]la' /usr/share/dict/propernames tests/lorem)
+
+test_same 'changing group-separator' <(grep --context '[Aa]la' /usr/share/dict/propernames| uniq |sed 's/^--$/QQ/')  <($re2g --context -w QQ '[Aa]la' /usr/share/dict/propernames)
+
+test_same 'no group-separator' <(grep --context '[Aa]la' /usr/share/dict/propernames| grep -v '^--$')  <($re2g --context -W '[Aa]la' /usr/share/dict/propernames)
+
 test_same 'util rev' <(rev tests/lorem | $re2g rolod)  <($re2g -X rev \; rolod tests/lorem)
 
 test_same 'util rev sharing stdin' <(rev tests/lorem | $re2g rolod)  <($re2g -X rev \; rolod < tests/lorem)

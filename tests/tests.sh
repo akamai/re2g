@@ -50,6 +50,14 @@ else
   fail=1;
 fi 
 
+V=`$re2g --version`
+if echo $V | $grep -q "^`basename re2g` z[0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}$"; then
+  echo SUCCESS "--version => $V";
+else
+  echo FAILURE "--version => $V"
+  fail=1;
+fi 
+
 
 
 # -o and -g can only be combined if build/gext.test prints "01"

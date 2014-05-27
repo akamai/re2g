@@ -45,6 +45,7 @@ Utility invocation:
    -J, --bz2decompress  same as -X bzcat \; NOTE: bzcat must be in $PATH
 
 Miscellaneous:
+   --version Display version information
    -?, --help: display help
    -m num, --max-count num stop reading each file after num matches
    -N, --line-buffered  flush after each line, even if stdout is not a tty

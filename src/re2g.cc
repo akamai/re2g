@@ -26,14 +26,14 @@
 
      Differences from grep:
       1) Environment variables are ignored, including the Locale ones in the
-         POSIX standard and the GREP_* ones from GNU.
+         POSIX standard and the GREP_* ones from GNU or BSD.
       2) Our -s is substitution, not silence. It's a good character for s///.
          There is no option for silence. Redirecting stderr is close.
       3) Multiple patterns via -e or -f differs:
           Ordering of output is different
           Combining with -o: output is different from grep, arguably better
           Combining with -n: output is different from grep, arguably better
-      4) Every long option has a short version and vice-versa
+      4) Every long option has a short version and vice-versa (except --version)
       5) -C must take a parameter. This differs from my local grep's
          documentation, but not its behavior.
       6) The -Z, -z, -J options are implemented via the -X option, we do not
@@ -65,7 +65,7 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 
-
+#define RE2G_VERSION "%s v0.1.32"
 #include "re2g_usage.h"
 
 namespace re2g {
@@ -281,6 +281,7 @@ int main(int argc, const char **argv) {
 
   int o_global = 0,
     o_usage = 0,
+    o_version = 0,
     o_print_match = 0,
     o_also_print_unreplaced = 0,
     o_negate_match = 0,
@@ -340,6 +341,7 @@ int main(int argc, const char **argv) {
     {"file", required_argument, &o_pat_file, 'f'},
     {"no-group-separator", no_argument, &o_no_group_separator, 'T'},
     {"group-separator", required_argument, &o_group_separator, 't'},
+    {"version", no_argument, &o_version, 2},
     { NULL, 0, NULL, 0 }
   };
 
@@ -391,6 +393,9 @@ int main(int argc, const char **argv) {
       break;
     case 'h':
       o_no_print_fname = 1;
+      break;
+    case 2:
+      o_version = 1;
       break;
     case 'c':
       o_count = 1;
@@ -489,6 +494,12 @@ int main(int argc, const char **argv) {
   }
   argc -= optind;
   argv += optind;
+
+  if(o_version){
+    std::printf(RE2G_VERSION, appname);
+    std::printf("\n");
+    return 0;
+  }
 
   if(o_neg_list) {
     o_list = 1;

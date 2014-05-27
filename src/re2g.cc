@@ -308,37 +308,37 @@ int main(int argc, const char **argv) {
   enum {SEARCH, REPLACE} mode;
 
   const struct option options[] = {
-    {"help", no_argument, &o_usage, '?'}, 
-    {"global", no_argument, &o_global, 'g'}, 
-    {"invert-match", no_argument, &o_negate_match, 'v'}, 
-    {"only-matching", no_argument, &o_global, 'o'}, 
-    {"subtitute", required_argument, &o_substitute, 's'}, 
-    {"print-all", no_argument, &o_also_print_unreplaced, 'p'}, 
-    {"print-names", no_argument, &o_print_fname, 'H'}, 
-    {"no-print-names", no_argument, &o_no_print_fname, 'h'}, 
-    {"count", no_argument, &o_count, 'c'}, 
-    {"files-with-matches", no_argument, &o_list, 'l'}, 
-    {"files-without-match", no_argument, &o_neg_list, 'L'}, 
-    {"ignore-case", no_argument, &o_case_insensitive, 'i'}, 
-    {"fixed-strings", no_argument, &o_literal, 'F'}, 
-    {"line-regexp", no_argument, &o_full_line, 'x'}, 
-    {"after-context", required_argument, NULL, 'A'}, 
-    {"before-context", required_argument, NULL, 'B'}, 
-    {"context", optional_argument, NULL, 'C'}, 
-    {"line-number", no_argument, NULL, 'n'}, 
-    {"max-count", required_argument, &o_max_matches, 'm'}, 
-    {"exec", required_argument, NULL, 'X'}, 
-    {"quiet", no_argument, &o_quiet_and_quick, 'q'}, 
-    {"silent", no_argument, &o_quiet_and_quick, 'q'}, 
-    {"null", no_argument, &o_special_delimiter, '0'}, 
-    {"line-buffered", no_argument, &o_line_buffered, 'N'}, 
-    {"decompress", no_argument, &o_line_buffered, 'Z'}, 
-    {"gzdecompress", no_argument, &o_line_buffered, 'z'}, 
-    {"bz2decompress", no_argument, &o_line_buffered, 'J'}, 
-    {"extended-regexp", no_argument, &o_posix_extended_syntax, 'E'}, 
-    {"regexp", required_argument, &o_pat_str, 'e'}, 
-    {"file", required_argument, &o_pat_file, 'f'}, 
-    {"no-group-separator", no_argument, &o_no_group_separator, 'T'}, 
+    {"help", no_argument, &o_usage, '?'},
+    {"global", no_argument, &o_global, 'g'},
+    {"invert-match", no_argument, &o_negate_match, 'v'},
+    {"only-matching", no_argument, &o_global, 'o'},
+    {"subtitute", required_argument, &o_substitute, 's'},
+    {"print-all", no_argument, &o_also_print_unreplaced, 'p'},
+    {"print-names", no_argument, &o_print_fname, 'H'},
+    {"no-print-names", no_argument, &o_no_print_fname, 'h'},
+    {"count", no_argument, &o_count, 'c'},
+    {"files-with-matches", no_argument, &o_list, 'l'},
+    {"files-without-match", no_argument, &o_neg_list, 'L'},
+    {"ignore-case", no_argument, &o_case_insensitive, 'i'},
+    {"fixed-strings", no_argument, &o_literal, 'F'},
+    {"line-regexp", no_argument, &o_full_line, 'x'},
+    {"after-context", required_argument, NULL, 'A'},
+    {"before-context", required_argument, NULL, 'B'},
+    {"context", optional_argument, NULL, 'C'},
+    {"line-number", no_argument, NULL, 'n'},
+    {"max-count", required_argument, &o_max_matches, 'm'},
+    {"exec", required_argument, NULL, 'X'},
+    {"quiet", no_argument, &o_quiet_and_quick, 'q'},
+    {"silent", no_argument, &o_quiet_and_quick, 'q'},
+    {"null", no_argument, &o_special_delimiter, '0'},
+    {"line-buffered", no_argument, &o_line_buffered, 'N'},
+    {"decompress", no_argument, &o_line_buffered, 'Z'},
+    {"gzdecompress", no_argument, &o_line_buffered, 'z'},
+    {"bz2decompress", no_argument, &o_line_buffered, 'J'},
+    {"extended-regexp", no_argument, &o_posix_extended_syntax, 'E'},
+    {"regexp", required_argument, &o_pat_str, 'e'},
+    {"file", required_argument, &o_pat_file, 'f'},
+    {"no-group-separator", no_argument, &o_no_group_separator, 'T'},
     {"group-separator", required_argument, &o_group_separator, 't'},
     { NULL, 0, NULL, 0 }
   };
@@ -354,7 +354,7 @@ int main(int argc, const char **argv) {
   while((c = getopt_long(argc, (char * const *)argv,
                          "?ogvgs:pHhclLiFxB:C:A:nm:X:qN0zZJEe:f:Tt:",
                          (const struct option *)&options[0], &longopt)) != -1) {
-    if(0 == c && longopt >= 0 && 
+    if(0 == c && longopt >= 0 &&
        longopt < sizeof(options) - 1) {
       c = options[longopt].val;
     }
@@ -419,7 +419,7 @@ int main(int argc, const char **argv) {
       break;
     case 'C':
       o_after_context = o_before_context = optarg ? re2g::str_to_size(optarg) : 2;
-      break; 
+      break;
     case 'm':
       o_max_matches = re2g::str_to_size(optarg);
       break;
@@ -455,10 +455,10 @@ int main(int argc, const char **argv) {
       break;
     case 'q':
       o_quiet_and_quick = 1;
-      break; 
+      break;
     case 'E':
       o_posix_extended_syntax = 1;
-      break; 
+      break;
     case 'e':
       o_pat_str++;
       pat_strs.push_back(std::string(optarg));
@@ -494,7 +494,7 @@ int main(int argc, const char **argv) {
     o_list = 1;
   }
 
-  /*  
+  /*
   for(const struct option *o=&options[0];o->name;o++) {
     std::cout << o->name << ':';
     if(o->flag) {

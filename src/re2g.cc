@@ -1,4 +1,4 @@
- /* author: Eric Kobrin <ekobrin@akamai.com>
+/*  author: Eric Kobrin <ekobrin@akamai.com>
 
     Hello code reader. Welcome to my re2-based grep-alike.
     
@@ -93,7 +93,7 @@ private:
   char* end_;
 };
 
-char USAGE[]=RE2G_USAGE_STR;
+char USAGE[] = RE2G_USAGE_STR;
 
 fdbuf::fdbuf(int fd, std::size_t buff_sz, std::size_t put_back) :
   fd_(fd),
@@ -102,29 +102,28 @@ fdbuf::fdbuf(int fd, std::size_t buff_sz, std::size_t put_back) :
   full_sz_(buff_sz_ + put_back_),
   start_(new char[full_sz_]),
   base_(start_ + put_back_),
-  end_(start_ + full_sz_)
-{
-  setg(end_,end_,end_);
+  end_(start_ + full_sz_) {
+  setg(end_, end_, end_);
 }
 
 fdbuf::~fdbuf() {
   delete[] start_;
 }
 
-std::streambuf::int_type fdbuf::underflow(){
-  if(gptr() >= egptr()){
+std::streambuf::int_type fdbuf::underflow() {
+  if(gptr() >= egptr()) {
     int backed = std::min((std::size_t)(gptr() - eback()), put_back_);
-    if(backed > 0){
+    if(backed > 0) {
       //std::cerr << "backed: " << backed << std::endl;
-      std::memcpy(base_ - backed, gptr()-backed, backed);
+      std::memcpy(base_ - backed, gptr() - backed, backed);
     }
     int qty = read(fd_, base_, buff_sz_);
     //std::cerr << "qty: " << qty << std::endl;
-    if(qty < 0){
+    if(qty < 0) {
       //std::cerr << "err: " <<  strerror(errno) << std::endl;
       return traits_type::eof();
     }
-    if(qty == 0){
+    if(qty == 0) {
       //std::cerr << "EOF" <<std::endl;
       return traits_type::eof();
     }
@@ -140,7 +139,7 @@ int extract(const re2::StringPiece &text,
             const re2::StringPiece &rewrite,
             std::string *out,
             bool global) {
-  if(global){
+  if(global) {
 #if HAVE_GLOBAL_EXTRACT
     return  RE2::GlobalExtract(text, pattern, rewrite, out);
 #else
@@ -175,9 +174,9 @@ bool match(const re2::StringPiece &text,
     RE2::PartialMatch(text, pattern);
 }
 
-int str_to_size(const char* str){
+int str_to_size(const char* str) {
   int v = 0;
-  if(str){
+  if(str) {
     v = atoi(str);
   }
   if(v < 0) {
@@ -187,56 +186,56 @@ int str_to_size(const char* str){
 }
 
 void emit_line(struct prefix *prefix, char marker, const std::string s,
-               const std::string eol, bool flush_after){
-  if(prefix->separator){
+               const std::string eol, bool flush_after) {
+  if(prefix->separator) {
     std::cout << *prefix->separator << eol;
     prefix->separator = NULL;
   }
-  if(prefix->fname){
+  if(prefix->fname) {
     std::cout << prefix->fname << marker;
   }
-  if(prefix->line_no >= 0){
+  if(prefix->line_no >= 0) {
     std::cout << prefix->line_no << marker;
   }
-  if(prefix->offset >= 0){
+  if(prefix->offset >= 0) {
     std::cout << prefix->offset << marker;
   }
   std::cout << s << eol;
-  if(flush_after){
+  if(flush_after) {
     std::cout.flush();
   }
 }
 
-enum input_type {STDIN,CAT,NAME};
+enum input_type {STDIN, CAT, NAME};
 
-fdbuf *ioexec(char* const* arglist, const char* fname, enum input_type util_input, int blksize=0){
+fdbuf *ioexec(char* const* arglist, const char* fname, enum input_type util_input, int blksize = 0) {
   int plumb[2];
   pid_t pid;
 
-  if(pipe(&plumb[0])){
+  if(pipe(&plumb[0])) {
     std::cerr << "error piping for " << arglist[0] << ": "
               << strerror(errno) << std::endl;
     return NULL;
   }
   pid = fork();
-  if(pid < 0){
+  if(pid < 0) {
     std::cerr << "error forking for  " << arglist[0] << ": "
               << strerror(errno) << std::endl;
     return NULL;
   }
-  if(!pid){
-    if(util_input != STDIN){
+  if(!pid) {
+    if(util_input != STDIN) {
       close(STDIN_FILENO);
     }
 
-    if(util_input == CAT){
+    if(util_input == CAT) {
       int ifd = open(fname, O_RDONLY);
-      if(ifd <0 ){
+      if(ifd < 0) {
         std::cerr << "error opening " << fname << ": "
                   << strerror(errno) << std::endl;
         std::exit(-1);
       }
-      if(dup2(ifd, STDIN_FILENO) != STDIN_FILENO){
+      if(dup2(ifd, STDIN_FILENO) != STDIN_FILENO) {
         std::cerr << "error dup2ing for input " << arglist[0] << ": "
                   << strerror(errno) << std::endl;
         std::exit(-2);
@@ -245,24 +244,24 @@ fdbuf *ioexec(char* const* arglist, const char* fname, enum input_type util_inpu
     close(STDOUT_FILENO);
     fcntl(STDERR_FILENO, F_SETFD, 1);
     close(plumb[0]);
-    if(dup2(plumb[1], STDOUT_FILENO) != STDOUT_FILENO){
+    if(dup2(plumb[1], STDOUT_FILENO) != STDOUT_FILENO) {
       std::cerr << "error dup2ing for output " << arglist[0] << ": "
                 << strerror(errno) << std::endl;
       std::exit(-3);
     }
     
-    execvp(arglist[0],&arglist[0]);
+    execvp(arglist[0], &arglist[0]);
     std::cerr << "error invoking  " << arglist[0] << ": "
               << strerror(errno) << std::endl;
     std::exit(-4);
   }
 
-  if(util_input == STDIN){
+  if(util_input == STDIN) {
     close(STDIN_FILENO);
   }
   close(plumb[1]);
-  if(blksize>0){
-    return new fdbuf(plumb[0],blksize);
+  if(blksize > 0) {
+    return new fdbuf(plumb[0], blksize);
   } else {
     return new fdbuf(plumb[0]);
   }
@@ -306,38 +305,38 @@ int main(int argc, const char **argv) {
   enum {SEARCH, REPLACE} mode;
 
   const struct option options[] = {
-    {"help",no_argument,&o_usage,'?'},
-    {"global",no_argument,&o_global,'g'},
-    {"invert-match",no_argument,&o_negate_match,'v'},
-    {"only-matching",no_argument,&o_global,'o'},
-    {"subtitute",required_argument,&o_substitute,'s'},
-    {"print-all",no_argument,&o_also_print_unreplaced,'p'},
-    {"print-names",no_argument,&o_print_fname,'H'},
-    {"no-print-names",no_argument,&o_no_print_fname,'h'},
-    {"count",no_argument,&o_count,'c'},
-    {"files-with-matches",no_argument,&o_list,'l'},
-    {"files-without-match",no_argument,&o_neg_list,'L'},
-    {"ignore-case",no_argument,&o_case_insensitive,'i'},
-    {"fixed-strings",no_argument,&o_literal,'F'},
-    {"line-regexp",no_argument,&o_full_line,'x'},
-    {"after-context",required_argument,NULL,'A'},
-    {"before-context",required_argument,NULL,'B'},
-    {"context",optional_argument,NULL,'C'},
-    {"line-number",no_argument,NULL,'n'},
-    {"max-count",required_argument,&o_max_matches,'m'},
-    {"exec",required_argument,NULL,'X'},
-    {"quiet",no_argument,&o_quiet_and_quick,'q'},
-    {"silent",no_argument,&o_quiet_and_quick,'q'},
-    {"null",no_argument,&o_special_delimiter,'0'},
-    {"line-buffered",no_argument,&o_line_buffered,'N'},
-    {"decompress",no_argument,&o_line_buffered,'Z'},
-    {"gzdecompress",no_argument,&o_line_buffered,'z'},
-    {"bz2decompress",no_argument,&o_line_buffered,'J'},
-    {"extended-regexp",no_argument,&o_posix_extended_syntax,'E'},
-    {"regexp",required_argument,&o_pat_str,'e'},
-    {"file",required_argument,&o_pat_file,'f'},
-    {"no-group-separator",no_argument,&o_no_group_separator,'W'},
-    {"group-separator",required_argument,&o_group_separator,'w'},
+    {"help", no_argument, &o_usage, '?'}, 
+    {"global", no_argument, &o_global, 'g'}, 
+    {"invert-match", no_argument, &o_negate_match, 'v'}, 
+    {"only-matching", no_argument, &o_global, 'o'}, 
+    {"subtitute", required_argument, &o_substitute, 's'}, 
+    {"print-all", no_argument, &o_also_print_unreplaced, 'p'}, 
+    {"print-names", no_argument, &o_print_fname, 'H'}, 
+    {"no-print-names", no_argument, &o_no_print_fname, 'h'}, 
+    {"count", no_argument, &o_count, 'c'}, 
+    {"files-with-matches", no_argument, &o_list, 'l'}, 
+    {"files-without-match", no_argument, &o_neg_list, 'L'}, 
+    {"ignore-case", no_argument, &o_case_insensitive, 'i'}, 
+    {"fixed-strings", no_argument, &o_literal, 'F'}, 
+    {"line-regexp", no_argument, &o_full_line, 'x'}, 
+    {"after-context", required_argument, NULL, 'A'}, 
+    {"before-context", required_argument, NULL, 'B'}, 
+    {"context", optional_argument, NULL, 'C'}, 
+    {"line-number", no_argument, NULL, 'n'}, 
+    {"max-count", required_argument, &o_max_matches, 'm'}, 
+    {"exec", required_argument, NULL, 'X'}, 
+    {"quiet", no_argument, &o_quiet_and_quick, 'q'}, 
+    {"silent", no_argument, &o_quiet_and_quick, 'q'}, 
+    {"null", no_argument, &o_special_delimiter, '0'}, 
+    {"line-buffered", no_argument, &o_line_buffered, 'N'}, 
+    {"decompress", no_argument, &o_line_buffered, 'Z'}, 
+    {"gzdecompress", no_argument, &o_line_buffered, 'z'}, 
+    {"bz2decompress", no_argument, &o_line_buffered, 'J'}, 
+    {"extended-regexp", no_argument, &o_posix_extended_syntax, 'E'}, 
+    {"regexp", required_argument, &o_pat_str, 'e'}, 
+    {"file", required_argument, &o_pat_file, 'f'}, 
+    {"no-group-separator", no_argument, &o_no_group_separator, 'W'}, 
+    {"group-separator", required_argument, &o_group_separator, 'w'},
     { NULL, 0, NULL, 0 }
   };
 
@@ -349,16 +348,17 @@ int main(int argc, const char **argv) {
   std::deque<std::string> uargs(0);
   char c;
   int longopt = 0;
-  while((c = getopt_long(argc, (char *const *)argv, "?ogvgs:pHhclLiFxB:C:A:nm:X:qN0zZJEe:f:Ww:",
-                         (const struct option *)&options[0], &longopt))!=-1){
+  while((c = getopt_long(argc, (char * const *)argv,
+                         "?ogvgs:pHhclLiFxB:C:A:nm:X:qN0zZJEe:f:Ww:",
+                         (const struct option *)&options[0], &longopt)) != -1) {
     if(0 == c && longopt >= 0 && 
-       longopt < sizeof(options) - 1){
+       longopt < sizeof(options) - 1) {
       c = options[longopt].val;
     }
     switch(c) {
     case '0':
       o_special_delimiter = 1;
-      if(optarg){
+      if(optarg) {
         eol = std::string(optarg);
       } else {
         eol = std::string("\0");
@@ -380,7 +380,7 @@ int main(int argc, const char **argv) {
       o_negate_match = 1;
       break;
     case 's':
-      rep=std::string(optarg);
+      rep = std::string(optarg);
       o_substitute = 1;
       break;
     case 'H':
@@ -415,7 +415,7 @@ int main(int argc, const char **argv) {
       o_before_context = str_to_size(optarg);
       break;
     case 'C':
-      o_after_context = o_before_context = optarg?str_to_size(optarg):2;
+      o_after_context = o_before_context = optarg ? str_to_size(optarg) : 2;
       break; 
     case 'm':
       o_max_matches = str_to_size(optarg);
@@ -439,11 +439,11 @@ int main(int argc, const char **argv) {
       for(oa = optarg;
           optind < argc
             && oa
-            && ! (oa[0] == ';' && oa[1] == 0) ;
-          oa=argv[optind++]){
+            && !(oa[0] == ';' && oa[1] == 0) ;
+          oa = argv[optind++]) {
         uargs.push_back(oa);
       }
-      if(!(oa[0] == ';' && oa[1] == 0)){
+      if(!(oa[0] == ';' && oa[1] == 0)) {
         o_usage = 1;
       }
       break;
@@ -466,7 +466,7 @@ int main(int argc, const char **argv) {
       break;
     case 'w':
       o_group_separator = 1;
-      if(group_separator){
+      if(group_separator) {
         *group_separator = optarg;
       } else {
         group_separator = new std::string(optarg);
@@ -475,7 +475,7 @@ int main(int argc, const char **argv) {
     case 'W':
       o_no_group_separator = 1;
       o_group_separator = 0;
-      if(group_separator){
+      if(group_separator) {
         delete group_separator;
       }
       group_separator = NULL;
@@ -487,14 +487,14 @@ int main(int argc, const char **argv) {
   argc -= optind;
   argv += optind;
   
-  if(o_neg_list){
+  if(o_neg_list) {
     o_list = 1;
   }
 
   /*  
-  for(const struct option *o=&options[0];o->name;o++){
+  for(const struct option *o=&options[0];o->name;o++) {
     std::cout << o->name << ':';
-    if(o->flag){
+    if(o->flag) {
       std::cout << *o->flag;
     } else {
       std::cout << "NULL";
@@ -505,13 +505,13 @@ int main(int argc, const char **argv) {
   std::cout << "C: [" << o_after_context << ',' << o_before_context << ']' << std::endl;
 
   std::cout << "ARGC: " << argc << std::endl;
-  for(int i=0;i<argc;i++){
+  for(int i=0;i<argc;i++) {
     std::cout << "ARGV[" << i << "]: " << argv[i]  << std::endl;
   }
   std::cout   << std::endl;
   */
-  if(argc >= 1 || o_pat_str || o_pat_file){
-    mode=o_substitute?REPLACE:SEARCH;
+  if(argc >= 1 || o_pat_str || o_pat_file) {
+    mode = o_substitute ? REPLACE : SEARCH;
   } else {
     o_usage = 1;
   }
@@ -535,9 +535,9 @@ int main(int argc, const char **argv) {
 
   std::deque<RE2::RE2*> pats;
 
-  while(!pat_files.empty()){
+  while(!pat_files.empty()) {
     std::ifstream patf(pat_files.front().c_str());
-    if(!patf){
+    if(!patf) {
       std::cerr << appname << ": " << pat_files.front() << ": " << strerror(errno) << std::endl;
       return -1;
     }
@@ -547,14 +547,14 @@ int main(int argc, const char **argv) {
     }
     pat_files.pop_front();
   }
-  if(!o_pat_str && !o_pat_file){
+  if(!o_pat_str && !o_pat_file) {
     pat_strs.push_back(argv[0]);
     argv++;
     argc--;
   }
 
-  while(!pat_strs.empty()){
-    pats.push_back(new RE2::RE2(pat_strs.front(),opts));
+  while(!pat_strs.empty()) {
+    pats.push_back(new RE2::RE2(pat_strs.front(), opts));
     pat_strs.pop_front();
   }
 
@@ -573,7 +573,7 @@ int main(int argc, const char **argv) {
     o_after_context = 0;
   }
 
-  if((o_after_context >0 || o_before_context >0) &&
+  if((o_after_context > 0 || o_before_context > 0) &&
      (!o_no_group_separator && !o_group_separator)) {
     group_separator = new std::string("--");
   }
@@ -609,16 +609,16 @@ int main(int argc, const char **argv) {
   int uargc = uargs.size();
   int rargc = 0;
   RE2::RE2 uarg_pat("\\{\\}");
-  if(!uargs.empty()){
+  if(!uargs.empty()) {
     uargv = new const char*[uargc + 1];
     uargv[uargc] = NULL;
-    for(int aidx = 0; aidx < uargc; aidx++){
+    for(int aidx = 0; aidx < uargc; aidx++) {
       std::string *arg = &uargs[aidx];
-      if(match(*arg, uarg_pat, false)){
-        uargv[aidx]=NULL;
+      if(match(*arg, uarg_pat, false)) {
+        uargv[aidx] = NULL;
         rargc++;
       } else {
-        uargv[aidx]=arg->c_str();
+        uargv[aidx] = arg->c_str();
       }
     }
   }
@@ -628,17 +628,17 @@ int main(int argc, const char **argv) {
     const char* fname = fnames[fidx];
     const char* file_err = NULL;
     int blksize = 0;
-    if(fname[0]=='-' && fname[1] == 0){
+    if(fname[0] == '-' && fname[1] == 0) {
       fname = def_fname;
       using_stdin = true;
     } else {
       struct stat sout;
-      if(stat(fname,&sout) != 0){
+      if(stat(fname, &sout) != 0) {
         file_err = strerror(errno);
       } else {
         blksize = sout.st_blksize;
-        if(! (sout.st_mode & (S_IFIFO | S_IFREG ))){
-          if(sout.st_mode & S_IFDIR){
+        if(!(sout.st_mode & (S_IFIFO | S_IFREG))) {
+          if(sout.st_mode & S_IFDIR) {
             file_err = "Is a directory";
           } else {
             file_err = "Is not a regular file or a pipe";
@@ -646,42 +646,42 @@ int main(int argc, const char **argv) {
         }
       }
     }
-    if(file_err){
+    if(file_err) {
       std::cerr << appname << ": " << fname << ": " << file_err << std::endl;
     } else {
       std::istream *is = NULL;
       fdbuf *pb = NULL;
       std::filebuf *fb = NULL;
-      if(uargv){
+      if(uargv) {
         int ridx = 0;
         //      std::cout << "fork: ";
-        for(int aidx = 0; aidx < uargc; aidx++){
-          if(uargv[aidx] == NULL){
-            rargs[ridx]=std::string(uargs[aidx]);
+        for(int aidx = 0; aidx < uargc; aidx++) {
+          if(uargv[aidx] == NULL) {
+            rargs[ridx] = std::string(uargs[aidx]);
             replace(&rargs[ridx], uarg_pat, fname, true);
-            uargv[aidx]=rargs[ridx].c_str();
+            uargv[aidx] = rargs[ridx].c_str();
             ridx++;
           }
           //        std::cout << "   " << uargv[aidx] << ',';
         }
         enum input_type util_input;
-        if(rargc){
+        if(rargc) {
           util_input = NAME;
         } else {
-          util_input = using_stdin?STDIN:CAT;
+          util_input = using_stdin ? STDIN : CAT;
         }
         
-        pb = ioexec((char *const *)uargv, fname, util_input, blksize);
-        if(!pb){
+        pb = ioexec((char * const *)uargv, fname, util_input, blksize);
+        if(!pb) {
           std::cerr << appname << ": failed to use utility: " << strerror(errno) << std::endl;
           return -1;
         }
         is = new std::istream(pb);
-      } else if(using_stdin){
+      } else if(using_stdin) {
         is = &std::cin;
       } else {
         fb = new std::filebuf();
-        if(fb->open(fname, std::ios_base::in)){
+        if(fb->open(fname, std::ios_base::in)) {
           is = new std::istream(fb);
         }
       }
@@ -700,8 +700,8 @@ int main(int argc, const char **argv) {
         std::string line;
         int ca_printed = o_after_context;
         struct prefix pref = {
-          o_print_fname?fname:NULL,
-          o_print_lineno?1:-1,
+          o_print_fname ? fname : NULL,
+          o_print_lineno ? 1 : -1,
           -1,
           NULL
         };
@@ -717,7 +717,7 @@ int main(int argc, const char **argv) {
           obuf.clear();
           for(std::deque<RE2::RE2*>::iterator pat = pats.begin();
               pat != pats.end();
-              ++pat){
+              ++pat) {
             bool this_pat_matched = false;
             
             if(mode == SEARCH) {
@@ -739,10 +739,10 @@ int main(int argc, const char **argv) {
                 to_print = &line;
               }
             }
-            if(this_pat_matched){
+            if(this_pat_matched) {
               num_pats_matched++;
               if(mode == REPLACE) {
-                if(!obuf.empty()){
+                if(!obuf.empty()) {
                   obuf += '\n'; //TODO: use configurable line ending
                 }
                 obuf += *to_print;
@@ -750,56 +750,56 @@ int main(int argc, const char **argv) {
             }
           }
           bool any_pat_matched = num_pats_matched > 0;
-          if(any_pat_matched && mode == REPLACE){
+          if(any_pat_matched && mode == REPLACE) {
             to_print = &obuf;
           }
-          if(!(any_pat_matched || o_also_print_unreplaced)){
+          if(!(any_pat_matched || o_also_print_unreplaced)) {
             to_print = NULL;
           }
-          if(any_pat_matched){
-            if(o_quiet_and_quick){
+          if(any_pat_matched) {
+            if(o_quiet_and_quick) {
               return 0;
             }
             count++;
             ca_printed = 0;
-            if(o_before_context){
-              line_no-=before.size();
-              pref.separator = (count >1 &&
-                                line_no - last_line_no > 1)?group_separator:NULL;
-              while(!before.empty()){
-                pref.line_no=(pref.line_no>=0)?line_no:-1;
-                emit_line(&pref,'-',before.front(),eol,o_line_buffered);
+            if(o_before_context) {
+              line_no -= before.size();
+              pref.separator = (count > 1 &&
+                                line_no - last_line_no > 1) ? group_separator : NULL;
+              while(!before.empty()) {
+                pref.line_no = (pref.line_no >= 0) ? line_no : -1;
+                emit_line(&pref, '-', before.front(), eol, o_line_buffered);
                 before.pop_front();
                 line_no++;
               }
               last_line_no = line_no;
             }
           }
-          if(ca_printed < o_after_context && !to_print && !o_count){
+          if(ca_printed < o_after_context && !to_print && !o_count) {
             to_print = &line;
-            ca_printed ++;
+            ca_printed++;
           }
           if(to_print) {
             if(!o_count && !o_list) {
-              pref.line_no=(pref.line_no>=0)?line_no:-1;
-              pref.separator = (count >1 &&
-                                line_no - last_line_no > 1)?group_separator:NULL;
-              emit_line(&pref,any_pat_matched?':':'-',*to_print,eol,o_line_buffered);
+              pref.line_no = (pref.line_no >= 0) ? line_no : -1;
+              pref.separator = (count > 1 &&
+                                line_no - last_line_no > 1) ? group_separator : NULL;
+              emit_line(&pref, any_pat_matched ? ':' : '-', *to_print, eol, o_line_buffered);
               last_line_no = line_no;
             }
           } else {
-            if(o_before_context > 0){
-              if(before.size() >= o_before_context){
+            if(o_before_context > 0) {
+              if(before.size() >= o_before_context) {
                 before.pop_front();
               }
               before.push_back(std::string(line));
             }
           }
-          if(line_no>=0){
+          if(line_no >= 0) {
             line_no++;
           }
         }
-        if(count > 0 ){
+        if(count > 0) {
           retval = 0;
         }
         if(o_count) {
@@ -807,32 +807,32 @@ int main(int argc, const char **argv) {
             std::cout << fname << ":";
           }
           std::cout << count << eol;
-          if(o_line_buffered){
+          if(o_line_buffered) {
             std::cout.flush();
           }
         } else if(o_list && (count > 0) ^ o_neg_list) {
           std::cout << fname << eol;
-          if(o_line_buffered){
+          if(o_line_buffered) {
             std::cout.flush();
           }
         }
-        if(using_stdin){
+        if(using_stdin) {
           using_stdin = false;
         } else {
           delete is;
         }
       }
-      if(pb){
+      if(pb) {
         int sl;
         wait(&sl);
         delete pb;
       }
-      if(fb){
+      if(fb) {
         delete fb;
       }
     }
   }
-  if(group_separator){
+  if(group_separator) {
     delete group_separator;
   }
   while(!pats.empty()) {
@@ -840,7 +840,7 @@ int main(int argc, const char **argv) {
     pats.pop_back();
   }
 
-  if(uargv){
+  if(uargv) {
     delete[] uargv;
   }
   return retval;

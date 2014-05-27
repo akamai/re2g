@@ -1,0 +1,9 @@
+#Copy to Makefile.local and define RE2_LIB and RE2_INC
+
+#If RE2 is installed at /opt/re2
+#RE2_LIB=-L/opt/re2/lib/
+#RE2_INC=-I/opt/re2/include
+
+#If RE2 is built in ../re2
+#RE2_LIB=-L../re2/obj
+#RE2_INC=-I../re2

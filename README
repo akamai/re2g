@@ -23,6 +23,10 @@ make RE2_LIB=-L../re2/obj RE2_INC=-I../re2
 If RE2 is installed in an unusual location, you do something like:
 make RE2_LIB=-L/opt/re2/lib/ RE2_INC=-I/opt/re2/include
 
+Alternatively, copy Makefile.local.example to Makefile.local and
+edit the values for RE2_LIB and RE2_INC there. Then you can just
+run Make without setting vars on the command line.
+
 
 # Testing
 

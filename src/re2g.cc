@@ -29,7 +29,7 @@
       1) Environment variables are ignored, including the Locale ones in the
          POSIX standard and the GREP_* ones from GNU.
       2) Our -s is substitution, not silence. It's a good character for s///.
-         There is no option for silence. Redirectind stderr is close.
+         There is no option for silence. Redirecting stderr is close.
       3) Multiple patterns via -e or -f differs:
           Ordering of output is different
           Combining with -o: output is different from grep, arguably better
@@ -46,6 +46,8 @@
          If you need recursion, please use find and xargs.
      11) No fancy color options. You can try to use -s and ANSI sequences.
      12) Binary files aren't treated specially, it's like running `grep -a'
+     13) When using context, noncontiguous groups of results are not separated
+         by lines containing only a pair of dashes.
    */
 
 

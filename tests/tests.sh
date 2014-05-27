@@ -340,14 +340,19 @@ test_same 'util rev' <(rev tests/lorem | $re2g rolod)  <($re2g -X rev \; rolod t
 test_same 'util rev sharing stdin' <(rev tests/lorem | $re2g rolod)  <($re2g -X rev \; rolod < tests/lorem)
 
 if [ -x `which gzip` ]; then
+  unset gzflag;
   gzip -c < tests/lorem > build/lorem.gz
-  if grep -qz dolor build/lorem.gz 2>/dev/null; then
+  if $grep -q -z dolor build/lorem.gz 2>/dev/null; then
     gzflag=z
   else
-    echo 'WARNING: grep on this platform is broken, does not support -z, trying with -Z';
-    grep -qZ dolor build/lorem.gz && gzflag=Z
+    if $grep -q -Z dolor build/lorem.gz 2>/dev/null; then
+      echo 'WARNING: grep on this platform does not support -z to gunzip input, does support -Z';
+      gzflag=Z;
+    else
+      echo 'WARNING: grep on this platform does not support -z or -Z to gunzip input, skipping gzip tests';
+    fi
   fi
-  if [ -s $gzflag ]; then
+  if [ -s "$gzflag" ]; then
     test_same "unzip with $gzflag vs -X {}" <($grep -$gzflag dolor build/lorem.gz)  <($re2g -X gunzip -c '{}' \; dolor build/lorem.gz)
     test_same "unzip with $gzflag" <($grep -$gzflag dolor build/lorem.gz)  <($re2g -z dolor build/lorem.gz)
     test_same "unzip with $gzflag vs -X ;" <($grep -$gzflag dolor build/lorem.gz)  <($re2g -X gunzip \; dolor build/lorem.gz)
@@ -374,7 +379,7 @@ if [ -x `which zcat` ]; then
       fail=$(expr 1 + $fail);
     fi
   else
-    echo 'WARNING: grep on this platform is broken, -Z can'\''t uncompress .Z files' 
+    echo 'WARNING: grep on this platform does not support -Z to uncompress .Z files, skipping compress tests';
   fi
 else
   echo 'WARNING: Unable to find zcat, skipping -Z tests'
@@ -394,7 +399,7 @@ if [ -x `which bzip2` ]; then
       fail=$(expr 1 + $fail);
     fi
   else
-  echo 'WARNING: grep on this platform doesn'\''t support -J'
+  echo 'WARNING: grep on this platform does not support -J to unbzip2 input, skipping bzip2 tests'
   fi
 else
   echo 'WARNING: Unable to find bzip, skipping -J tests'

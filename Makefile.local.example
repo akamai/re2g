@@ -9,4 +9,4 @@
 #RE2_INC=-I../re2
 
 #If testing against a specific grep:
-#USE_GREP=../grep/grep-2.5.4/src/grep
+#USE_GREP=../grep/grep-2.14/src/grep

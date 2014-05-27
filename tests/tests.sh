@@ -1,6 +1,11 @@
 #!/bin/bash
 
 re2g=$1;
+grep=$2;
+
+if [ -z "$grep" ]; then
+  grep=grep;
+fi
 
 fail=0;
 
@@ -222,28 +227,28 @@ re2expect 0 "theteststring" theteststring -vopg '(q.)'
 re2expect 1 "theteststring" theteststring -vopgs '\1z' 't(.)' 
 re2expect 0 "theteststring" theteststring -vopgs '\1z' 'q(.)' 
 
-test_same 'char search' <(grep q tests/tests.sh)  <($re2g q tests/tests.sh)
+test_same 'char search' <($grep q tests/tests.sh)  <($re2g q tests/tests.sh)
 
-test_same 'neg char-search' <(grep -v q tests/tests.sh)  <($re2g -v q tests/tests.sh)
+test_same 'neg char-search' <($grep -v q tests/tests.sh)  <($re2g -v q tests/tests.sh)
 
-test_same 'noflist' <(grep -h q tests/tests.sh)  <($re2g -h q tests/tests.sh)
+test_same 'noflist' <($grep -h q tests/tests.sh)  <($re2g -h q tests/tests.sh)
 
-test_same 'flist' <(grep -H q tests/tests.sh)  <($re2g -H q tests/tests.sh)
+test_same 'flist' <($grep -H q tests/tests.sh)  <($re2g -H q tests/tests.sh)
 
 
-test_same 'multi-file' <(grep red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g red /usr/share/dict/propernames /usr/share/dict/words)
+test_same 'multi-file' <($grep red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g red /usr/share/dict/propernames /usr/share/dict/words)
 
-test_same 'multi-file noflist' <(grep -h red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -h red /usr/share/dict/propernames /usr/share/dict/words)
+test_same 'multi-file noflist' <($grep -h red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -h red /usr/share/dict/propernames /usr/share/dict/words)
 
-test_same 'multi-file flist' <(grep -H red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -H red /usr/share/dict/propernames /usr/share/dict/words)
+test_same 'multi-file flist' <($grep -H red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -H red /usr/share/dict/propernames /usr/share/dict/words)
 
-test_same 'multi-file count' <(grep -c red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -c red /usr/share/dict/propernames /usr/share/dict/words)
+test_same 'multi-file count' <($grep -c red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -c red /usr/share/dict/propernames /usr/share/dict/words)
 
-test_same 'multi-file neg-count' <(grep -vc red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -vc red /usr/share/dict/propernames /usr/share/dict/words)
+test_same 'multi-file neg-count' <($grep -vc red /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -vc red /usr/share/dict/propernames /usr/share/dict/words)
 
-test_same 'whole-line' <(grep -x Fred /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -x Fred /usr/share/dict/propernames /usr/share/dict/words)
+test_same 'whole-line' <($grep -x Fred /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -x Fred /usr/share/dict/propernames /usr/share/dict/words)
 
-test_same 'case-insensitive' <(grep -i Fred /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -i Fred /usr/share/dict/propernames /usr/share/dict/words)
+test_same 'case-insensitive' <($grep -i Fred /usr/share/dict/propernames /usr/share/dict/words)  <($re2g -i Fred /usr/share/dict/propernames /usr/share/dict/words)
 
 test_same 'stdin default' <(echo "food" | grep -H foo)  <(echo "food" | $re2g -H foo)
 
@@ -251,37 +256,37 @@ test_same 'fixed' <(echo "fred" | grep -F f.)  <(echo "fred" | $re2g -F f.)
 
 test_same 'fixed with dot' <(echo "f.red" | grep -F f.)  <(echo "f.red" | $re2g -F f.)
 
-test_same 'list files' <(grep -l re2e src/*.cc tests/*.sh) <($re2g -l re2e src/*.cc tests/*.sh)
+test_same 'list files' <($grep -l re2e src/*.cc tests/*.sh) <($re2g -l re2e src/*.cc tests/*.sh)
 
-test_same 'neg list files' <(grep -vl re2e src/*.cc tests/*.sh) <($re2g -vl re2e src/*.cc tests/*.sh)
+test_same 'neg list files' <($grep -vl re2e src/*.cc tests/*.sh) <($re2g -vl re2e src/*.cc tests/*.sh)
 
 
-test_same 'list neg files' <(grep -L re2e src/*.cc tests/*.sh) <($re2g -L re2e src/*.cc tests/*.sh)
+test_same 'list neg files' <($grep -L re2e src/*.cc tests/*.sh) <($re2g -L re2e src/*.cc tests/*.sh)
 
-test_same 'neg list neg files' <(grep -vL re2e src/*.cc tests/*.sh) <($re2g -vL re2e src/*.cc tests/*.sh)
+test_same 'neg list neg files' <($grep -vL re2e src/*.cc tests/*.sh) <($re2g -vL re2e src/*.cc tests/*.sh)
 
 #uniq is used in the context test to remuve duplicated lines containing just '--'
 #because my local OS X grep and Linux grep differ. re2g operates more like the linux grep
 
-test_same 'context' <(grep --context '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g --context '[Aa]la' /usr/share/dict/propernames)
+test_same 'context' <($grep --context=2 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g --context=2 '[Aa]la' /usr/share/dict/propernames)
 
-test_same '-C 9' <(grep -C 9 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -C 9 '[Aa]la' /usr/share/dict/propernames)
+test_same '-C 9' <($grep -C 9 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -C 9 '[Aa]la' /usr/share/dict/propernames)
 
-test_same '-B 7' <(grep -B 7 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -B 7 '[Aa]la' /usr/share/dict/propernames)
+test_same '-B 7' <($grep -B 7 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -B 7 '[Aa]la' /usr/share/dict/propernames)
 
-test_same '-A 12' <(grep -A 12 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -A 12 '[Aa]la' /usr/share/dict/propernames)
-
-
-test_same '-HC 9' <(grep -HC 9 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -HC 9 '[Aa]la' /usr/share/dict/propernames)
-
-test_same '-HB 7' <(grep -HB 7 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -HB 7 '[Aa]la' /usr/share/dict/propernames)
-
-test_same '-HA 12' <(grep -HA 12 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -HA 12 '[Aa]la' /usr/share/dict/propernames)
+test_same '-A 12' <($grep -A 12 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -A 12 '[Aa]la' /usr/share/dict/propernames)
 
 
-test_same 'max 2' <(grep -m 2 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -m 2 '[Aa]la' /usr/share/dict/propernames)
+test_same '-HC 9' <($grep -HC 9 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -HC 9 '[Aa]la' /usr/share/dict/propernames)
 
-test_same 'max 5' <(grep -m 5 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -m 5 '[Aa]la' /usr/share/dict/propernames)
+test_same '-HB 7' <($grep -HB 7 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -HB 7 '[Aa]la' /usr/share/dict/propernames)
+
+test_same '-HA 12' <($grep -HA 12 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -HA 12 '[Aa]la' /usr/share/dict/propernames)
+
+
+test_same 'max 2' <($grep -m 2 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -m 2 '[Aa]la' /usr/share/dict/propernames)
+
+test_same 'max 5' <($grep -m 5 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re2g -m 5 '[Aa]la' /usr/share/dict/propernames)
 
 #wanted to test against /usr/share/dict/* but local grep is borked wrt context
 #and is repeating lines!
@@ -297,11 +302,11 @@ test_same 'max 5' <(grep -m 5 '[Aa]la' /usr/share/dict/propernames| uniq)  <($re
 #15068:athalamous
 #15069-athalline
 
-test_same 'multi-file-context' <(grep --context '[Aa]la' /usr/share/dict/propernames tests/lorem| uniq)  <($re2g --context '[Aa]la' /usr/share/dict/propernames tests/lorem)
+test_same 'multi-file-context' <($grep --context=2 '[Aa]la' /usr/share/dict/propernames tests/lorem| uniq)  <($re2g --context=2 '[Aa]la' /usr/share/dict/propernames tests/lorem)
 
-test_same 'changing group-separator' <(grep --context '[Aa]la' /usr/share/dict/propernames| uniq |sed 's/^--$/QQ/')  <($re2g --context -w QQ '[Aa]la' /usr/share/dict/propernames)
+test_same 'changing group-separator' <($grep --context=2 '[Aa]la' /usr/share/dict/propernames| uniq |sed 's/^--$/QQ/')  <($re2g --context=2 -w QQ '[Aa]la' /usr/share/dict/propernames)
 
-test_same 'no group-separator' <(grep --context '[Aa]la' /usr/share/dict/propernames| grep -v '^--$')  <($re2g --context -W '[Aa]la' /usr/share/dict/propernames)
+test_same 'no group-separator' <($grep --context=2 '[Aa]la' /usr/share/dict/propernames| grep -v '^--$')  <($re2g --context=2 -W '[Aa]la' /usr/share/dict/propernames)
 
 test_same 'util rev' <(rev tests/lorem | $re2g rolod)  <($re2g -X rev \; rolod tests/lorem)
 
@@ -316,9 +321,9 @@ if [ -x `which gzip` ]; then
     grep -qZ dolor build/lorem.gz && gzflag=Z
   fi
   if [ -s $gzflag ]; then
-    test_same "unzip with $gzflag vs -X {}" <(grep -$gzflag dolor build/lorem.gz)  <($re2g -X gunzip -c '{}' \; dolor build/lorem.gz)
-    test_same "unzip with $gzflag" <(grep -$gzflag dolor build/lorem.gz)  <($re2g -z dolor build/lorem.gz)
-    test_same "unzip with $gzflag vs -X ;" <(grep -$gzflag dolor build/lorem.gz)  <($re2g -X gunzip \; dolor build/lorem.gz)
+    test_same "unzip with $gzflag vs -X {}" <($grep -$gzflag dolor build/lorem.gz)  <($re2g -X gunzip -c '{}' \; dolor build/lorem.gz)
+    test_same "unzip with $gzflag" <($grep -$gzflag dolor build/lorem.gz)  <($re2g -z dolor build/lorem.gz)
+    test_same "unzip with $gzflag vs -X ;" <($grep -$gzflag dolor build/lorem.gz)  <($re2g -X gunzip \; dolor build/lorem.gz)
 
     if [ ! -f build/lorem.gz ]; then
       echo 'FAILED: call to gunzip deleted test file'
@@ -331,11 +336,11 @@ fi
 
 if [ -x `which zcat` ]; then
   compress -c < tests/lorem > build/lorem_c.Z
-  if diff -q <(grep -Z dolor build/lorem_c.Z) <(uncompress -c build/lorem_c.Z | grep dolor) >/dev/null; then
-    test_same 'unzip with -Z vs -X uncompress {}' <(grep -Z dolor build/lorem_c.Z)  <($re2g -X uncompress -c '{}' \; dolor build/lorem_c.Z)
-    test_same 'unzip with -Z vs -x zcat' <(grep -Z dolor build/lorem_c.Z)  <($re2g -X zcat '{}' \; dolor build/lorem_c.Z)
-    test_same 'unzip with -Z for both' <(grep -Z dolor build/lorem_c.Z)  <($re2g -Z dolor build/lorem_c.Z)
-    test_same 'unzip with -Z vs -X uncompress ;' <(grep -Z dolor build/lorem_c.Z)  <($re2g -X uncompress \; dolor build/lorem_c.Z)
+  if diff -q <($grep -Z dolor build/lorem_c.Z) <(uncompress -c build/lorem_c.Z | grep dolor) >/dev/null; then
+    test_same 'unzip with -Z vs -X uncompress {}' <($grep -Z dolor build/lorem_c.Z)  <($re2g -X uncompress -c '{}' \; dolor build/lorem_c.Z)
+    test_same 'unzip with -Z vs -x zcat' <($grep -Z dolor build/lorem_c.Z)  <($re2g -X zcat '{}' \; dolor build/lorem_c.Z)
+    test_same 'unzip with -Z for both' <($grep -Z dolor build/lorem_c.Z)  <($re2g -Z dolor build/lorem_c.Z)
+    test_same 'unzip with -Z vs -X uncompress ;' <($grep -Z dolor build/lorem_c.Z)  <($re2g -X uncompress \; dolor build/lorem_c.Z)
 
     if [ ! -f build/lorem_c.Z ]; then
       echo FAILED: call to uncompress deleted test file
@@ -352,28 +357,32 @@ fi
 
 if [ -x `which bzip2` ]; then
   bzip2 -c < tests/lorem > build/lorem.bz2
-  test_same '-J vs -X bunzip2 -c {}' <(grep -J dolor build/lorem.bz2)  <($re2g -X bunzip2 -c '{}' \; dolor build/lorem.bz2)
-  test_same '-J vs -J' <(grep -J dolor build/lorem.bz2)  <($re2g -J dolor build/lorem.bz2)
-  test_same '-J vs -X bunzip2 ;' <(grep -J dolor build/lorem.bz2)  <($re2g -X bunzip2 \; dolor build/lorem.bz2)
-
-  if [ ! -f build/lorem.bz2 ]; then
-    echo FAILED: call to bunzip2 deleted test file
-    fail=$(expr 1 + $fail);
+  if $grep -qJ dolor build/lorem.bz2 2>/dev/null >/dev/null; then
+    test_same '-J vs -X bunzip2 -c {}' <($grep -J dolor build/lorem.bz2)  <($re2g -X bunzip2 -c '{}' \; dolor build/lorem.bz2)
+    test_same '-J vs -J' <($grep -J dolor build/lorem.bz2)  <($re2g -J dolor build/lorem.bz2)
+    test_same '-J vs -X bunzip2 ;' <($grep -J dolor build/lorem.bz2)  <($re2g -X bunzip2 \; dolor build/lorem.bz2)
+    
+    if [ ! -f build/lorem.bz2 ]; then
+      echo FAILED: call to bunzip2 deleted test file
+      fail=$(expr 1 + $fail);
+    fi
+  else
+  echo 'WARNING: grep on this platform doesn'\''t support -J'
   fi
 else
   echo 'WARNING: Unable to find bzip, skipping -J tests'
 fi
 
 
-test_same 'exit code test without -q' <(grep dolor tests/lorem; echo $?)  <($re2g dolor tests/lorem; echo $?)
+test_same 'exit code test without -q' <($grep dolor tests/lorem; echo $?)  <($re2g dolor tests/lorem; echo $?)
 
 
-test_same '1 exit code test with -q' <(grep -q dolor tests/lorem; echo $?)  <($re2g -q dolor tests/lorem; echo $?)
+test_same '1 exit code test with -q' <($grep -q dolor tests/lorem; echo $?)  <($re2g -q dolor tests/lorem; echo $?)
 
-test_same '0 exit code test with -q' <(grep -q dolr tests/lorem; echo $?)  <($re2g -q dolr tests/lorem; echo $?)
+test_same '0 exit code test with -q' <($grep -q dolr tests/lorem; echo $?)  <($re2g -q dolr tests/lorem; echo $?)
 
 
-test_same '-E and exit code' <(grep -E 'ipsum|ex' tests/lorem; echo $?)  <($re2g -E 'ipsum|ex' tests/lorem; echo $?)
+test_same '-E and exit code' <($grep -E 'ipsum|ex' tests/lorem; echo $?)  <($re2g -E 'ipsum|ex' tests/lorem; echo $?)
 #todo add a test where \b is tested on platforms where grep isn't crazy
 
 
@@ -395,11 +404,11 @@ fi
 #not yet testing for line-buffering
 
 
-test_same 'pattern-file' <(grep -f tests/pats tests/lorem)  <($re2g -f tests/pats tests/lorem)
+test_same 'pattern-file' <($grep -f tests/pats tests/lorem)  <($re2g -f tests/pats tests/lorem)
 
 #grep -o with multiple patterns is a mess.
 #let's just store the previous result and look for changes
-#test_same '' <(grep -of tests/pats tests/lorem)  <($re2g -of tests/pats tests/lorem)
+#test_same '' <($grep -of tests/pats tests/lorem)  <($re2g -of tests/pats tests/lorem)
 
 if diff -q tests/nof_pats_lorem <($re2g -nof tests/pats tests/lorem); then
   echo 'SUCCESS: patfile -nof'

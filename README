@@ -32,6 +32,8 @@ run Make without setting vars on the command line.
 
 `make test' will invoke a shell script for testing your built version of re2g. It's a bit noisy. I tend to run `make test | grep -v SUCCESS' to find out what's not working.
 
+Since the tests compare output to grep, you may want to use a specific grep. The tests pass against gnu grep 2.5.4. You can use a specific grep by setting the USE_GREP make variable:
+make test USE_GREP=../grep-2.5.4/src/grep
 
 # Installing
 

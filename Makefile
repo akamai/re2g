@@ -17,7 +17,7 @@ $(build)/re2g_usage.h: $(src)/usage
 	od -b -A n $(src)/usage|xargs -J % echo '#define RE2G_USAGE_STR {' % '0}'|sed 's/\([0-9]\{1,\}\) /0\1, /g' > $@
 
 test: $(build)/re2g $(tests)/tests.sh
-	$(tests)/tests.sh $(build)/re2g
+	$(tests)/tests.sh $(build)/re2g $(USE_GREP)
 
 clean:
 	$(RM) ./$(build)/*

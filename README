@@ -12,7 +12,7 @@ The build and test process further expects to find bash at /bin/bash and the fol
 
 # Compiling
 
-If RE2 is installed, just run make.
+If RE2 is installed normally, just run make.
 
 If RE2 is built, but not installed, try a variation on this:
 make RE2_LIB=-L/path/to/re2/lib  RE2_INC=-I/path/to/re2/include/dir

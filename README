@@ -5,7 +5,7 @@ For information about the goals of this project, see: src/re2g.cc
 
 You need to have RE2 built and the RE2 headers available. If you use
 a version of RE2 with my GlobalExtract patch, you'll get more functionality
-out of re2g, and the test suite will pass.
+out of re2g, and the test suite will pass. The patch can be found in global_extract.patch
 
 The build and test process further expects to find bash at /bin/bash and the following in the $PATH: od, sed, grep, diff, zcat, rev, uncompress, bzip2. If you are missing any of these you won't be able to run the testcases and building will become more manual.
 

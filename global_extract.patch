@@ -1,0 +1,84 @@
+diff --git a/re2/re2.cc b/re2/re2.cc
+index d67ef45..db94a39 100644
+--- a/re2/re2.cc
++++ b/re2/re2.cc
+@@ -427,6 +427,32 @@ bool RE2::Extract(const StringPiece &text,
+   return re.Rewrite(out, rewrite, vec, nvec);
+ }
+ 
++int RE2::GlobalExtract(const StringPiece &text,
++                 const RE2& re,
++                 const StringPiece &rewrite,
++                 string *out) {
++  StringPiece vec[kVecSize];
++  int nvec = 1 + MaxSubmatch(rewrite);
++  if (nvec > arraysize(vec))
++    return false;
++
++  int replaced = 0;
++  int consumed = 0;
++  bool cleared = false;
++  while(re.Match(text, consumed, text.size(), UNANCHORED, vec, nvec)){
++    if(!cleared) {
++      out->clear();
++      cleared = true;
++    }
++    consumed = vec[0].end() - text.begin();
++    if(re.Rewrite(out, rewrite, vec, nvec)) {
++      replaced++;
++    }
++  }
++  return replaced;
++}
++
++
+ string RE2::QuoteMeta(const StringPiece& unquoted) {
+   string result;
+   result.reserve(unquoted.size() << 1);
+diff --git a/re2/re2.h b/re2/re2.h
+index 1aabcbc..74d86ec 100644
+--- a/re2/re2.h
++++ b/re2/re2.h
+@@ -402,6 +402,13 @@ class RE2 {
+                       const StringPiece &rewrite,
+                       string *out);
+ 
++
++  // GlobalExtract is to Extract as GlobalReplace is to Replace
++  static int GlobalExtract(const StringPiece &text,
++                      const RE2& pattern,
++                      const StringPiece &rewrite,
++                      string *out);
++
+   // Escapes all potentially meaningful regexp characters in
+   // 'unquoted'.  The returned string, used as a regular expression,
+   // will exactly match the original string.  For example,
+diff --git a/re2/testing/re2_test.cc b/re2/testing/re2_test.cc
+index e2f9775..3225c60 100644
+--- a/re2/testing/re2_test.cc
++++ b/re2/testing/re2_test.cc
+@@ -224,6 +224,24 @@ TEST(RE2, Extract) {
+   CHECK_EQ(s, "'foo'");
+ }
+ 
++TEST(RE2, GlobalExtract) {
++  VLOG(1) << "TestGlobalExtract";
++
++  string s;
++
++  CHECK(RE2::GlobalExtract("ateststring", "t", "\\0", &s));
++  CHECK_EQ(s, "ttt");
++
++  CHECK(RE2::GlobalExtract("ateststring", "t.", "\\0", &s));
++  CHECK_EQ(s, "tetstr");
++
++  CHECK(RE2::GlobalExtract("ateststring", "t(.)", "\\1z", &s));
++  CHECK_EQ(s, "ezszrz");
++  // check that false match doesn't overwrite
++  CHECK(!RE2::GlobalExtract("baz", "bar", "'\\0'", &s));
++  CHECK_EQ(s, "ezszrz");
++}
++
+ TEST(RE2, Consume) {
+   VLOG(1) << "TestConsume";
+ 

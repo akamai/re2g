@@ -164,6 +164,7 @@ struct prefix {
   const char* fname;
   int line_no;
   int offset;
+  bool needs_context_sep;
 };
 
 bool match(const re2::StringPiece &text,
@@ -184,8 +185,12 @@ int str_to_size(const char* str){
   return v;
 }
 
-void emit_line(const struct prefix *prefix, char marker, const std::string s,
+void emit_line(struct prefix *prefix, char marker, const std::string s,
                const std::string eol, bool flush_after){
+  if(prefix->needs_context_sep){
+    std::cout << "--" << eol;
+    prefix->needs_context_sep = false;
+  }
   if(prefix->fname){
     std::cout << prefix->fname << marker;
   }
@@ -669,7 +674,8 @@ int main(int argc, const char **argv) {
         struct prefix pref = {
           o_print_fname?fname:NULL,
           o_print_lineno?1:-1,
-          -1
+          -1,
+          false
         };
         while(std::getline(*is, line) && (!o_max_matches || count < o_max_matches)) {
           //std::cout << before.size() << std::endl;
@@ -682,7 +688,6 @@ int main(int argc, const char **argv) {
           for(std::deque<RE2::RE2*>::iterator pat = pats.begin();
               pat != pats.end();
               ++pat){
-            
             bool this_pat_matched = false;
             
             if(mode == SEARCH) {
@@ -739,12 +744,16 @@ int main(int argc, const char **argv) {
           if(ca_printed < o_after_context && !to_print && !o_count){
             to_print = &line;
             ca_printed ++;
+            if(ca_printed == o_after_context){
+              pref.needs_context_sep = true;
+            }
           }
           if(to_print) {
             if(!o_count && !o_list) {
               emit_line(&pref,any_pat_matched?':':'-',*to_print,eol,o_line_buffered);
             }
           } else {
+            pref.needs_context_sep = count > 0;
             if(o_before_context > 0){
               if(before.size() >= o_before_context){
                 before.pop_front();

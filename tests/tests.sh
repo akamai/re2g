@@ -249,26 +249,27 @@ diff -q <(grep -L re2e src/*.cc tests/*.sh) <($re2g -L re2e src/*.cc tests/*.sh)
 
 diff -q <(grep -vL re2e src/*.cc tests/*.sh) <($re2g -vL re2e src/*.cc tests/*.sh) || fail=$(expr 1 + $fail);
 
+echo dd1;
+diff -q <(grep --context '[Aa]la' /usr/share/dict/propernames)  <($re2g --context '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
 
-diff -q <(grep --context '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g --context '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
+echo dd2;
+diff -q <(grep -C 9 '[Aa]la' /usr/share/dict/propernames)  <($re2g -C 9 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
 
-diff -q <(grep -C 9 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -C 9 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
+diff -q <(grep -B 7 '[Aa]la' /usr/share/dict/propernames)  <($re2g -B 7 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
 
-diff -q <(grep -B 7 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -B 7 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
+diff -q <(grep -A 12 '[Aa]la' /usr/share/dict/propernames)  <($re2g -A 12 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
 
-diff -q <(grep -A 12 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -A 12 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
+echo dd3;
+diff -q <(grep -HC 9 '[Aa]la' /usr/share/dict/propernames)  <($re2g -HC 9 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
 
+diff -q <(grep -HB 7 '[Aa]la' /usr/share/dict/propernames)  <($re2g -HB 7 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
 
-diff -q <(grep -HC 9 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -HC 9 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
+diff -q <(grep -HA 12 '[Aa]la' /usr/share/dict/propernames)  <($re2g -HA 12 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
 
-diff -q <(grep -HB 7 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -HB 7 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
+echo dd4;
+diff -q <(grep -m 2 '[Aa]la' /usr/share/dict/propernames)  <($re2g -m 2 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
 
-diff -q <(grep -HA 12 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -HA 12 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
-
-
-diff -q <(grep -m 2 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -m 2 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
-
-diff -q <(grep -m 5 '[Aa]la' /usr/share/dict/propernames|grep -v '^--$')  <($re2g -m 5 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
+diff -q <(grep -m 5 '[Aa]la' /usr/share/dict/propernames)  <($re2g -m 5 '[Aa]la' /usr/share/dict/propernames) || fail=$(expr 1 + $fail);
 
 diff -q <(rev tests/lorem | $re2g rolod)  <($re2g -X rev \; rolod tests/lorem) || fail=$(expr 1 + $fail);
 

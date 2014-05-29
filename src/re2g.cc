@@ -57,7 +57,7 @@
 #include <getopt.h>
 #include <deque>
 #include <unistd.h>
-
+#include <string.h>
 #include <streambuf>
 #include <cstdlib>
 #include <cstdio>
@@ -65,7 +65,7 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 
-#define RE2G_VERSION "%s v0.1.32"
+#define RE2G_VERSION "%s v0.1.33"
 #include "re2g_usage.h"
 
 namespace re2g {
@@ -116,7 +116,7 @@ std::streambuf::int_type fdbuf::underflow() {
     int backed = std::min((std::size_t)(gptr() - eback()), put_back_);
     if(backed > 0) {
       //std::cerr << "backed: " << backed << std::endl;
-      std::memcpy(base_ - backed, gptr() - backed, backed);
+      memcpy(base_ - backed, gptr() - backed, backed);
     }
     int qty = read(fd_, base_, buff_sz_);
     //std::cerr << "qty: " << qty << std::endl;
@@ -353,11 +353,12 @@ int main(int argc, const char **argv) {
   std::deque<std::string> uargs(0);
   char c;
   int longopt = 0;
+  int maxopt = sizeof(options) - 1;
   while((c = getopt_long(argc, (char * const *)argv,
                          "?ogvgs:pHhclLiFxB:C:A:nm:X:qN0zZJEe:f:Tt:",
                          (const struct option *)&options[0], &longopt)) != -1) {
     if(0 == c && longopt >= 0 &&
-       longopt < sizeof(options) - 1) {
+       longopt < maxopt) {
       c = options[longopt].val;
     }
     switch(c) {
@@ -803,7 +804,8 @@ int main(int argc, const char **argv) {
             }
           } else {
             if(o_before_context > 0) {
-              if(before.size() >= o_before_context) {
+	      int bs = before.size();
+              if(bs >= o_before_context) {
                 before.pop_front();
               }
               before.push_back(std::string(line));

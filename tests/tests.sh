@@ -51,7 +51,7 @@ else
 fi 
 
 V=`$re2g --version`
-if echo $V | $grep -q "^`basename re2g` z[0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}$"; then
+if echo $V | $grep -q "^`basename $re2g` v[0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}$"; then
   echo SUCCESS "--version => $V";
 else
   echo FAILURE "--version => $V"
@@ -374,7 +374,7 @@ else
   echo 'WARNING: Unable to find gzip, skipping -z tests'
 fi
 
-if [ -x `which zcat` ]; then
+if [ -x "`which compress`" ]; then
   compress -c < tests/lorem > build/lorem_c.Z
   if diff -q <($grep -Z dolor build/lorem_c.Z) <(uncompress -c build/lorem_c.Z | grep dolor) >/dev/null; then
     test_same 'unzip with -Z vs -X uncompress {}' <($grep -Z dolor build/lorem_c.Z)  <($re2g -X uncompress -c '{}' \; dolor build/lorem_c.Z)
@@ -390,7 +390,7 @@ if [ -x `which zcat` ]; then
     echo 'WARNING: grep on this platform does not support -Z to uncompress .Z files, skipping compress tests';
   fi
 else
-  echo 'WARNING: Unable to find zcat, skipping -Z tests'
+  echo 'WARNING: Unable to find compress, skipping -Z tests'
 fi
 
 
@@ -426,7 +426,7 @@ test_same '-E and exit code' <($grep -E 'ipsum|ex' tests/lorem; echo $?)  <($re2
 #todo add a test where \b is tested on platforms where grep isn't crazy
 
 
-if $re2g -l  fred tests/bad*|xargs  stat -qf '' ;then
+if $re2g -l  fred tests/bad*|xargs  stat -f '' >/dev/null 2>/dev/null ;then
   echo 'FAILURE: unable to detect newline in filename';
   fail=$(expr 1 + $fail);
 else
@@ -434,7 +434,7 @@ else
 fi
 
 
-if $re2g -l0  fred tests/bad*|xargs -0 stat -qf '' ;then
+if $re2g -l0  fred tests/bad*|xargs -0 stat -f '' >/dev/null 2>/dev/null ;then
   echo 'SUCCESS: able to defeat newline in filename';
 else
   echo 'FAILURE: unable to defeat newline in filename';

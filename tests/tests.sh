@@ -426,7 +426,7 @@ test_same '-E and exit code' <($grep -E 'ipsum|ex' tests/lorem; echo $?)  <($re2
 #todo add a test where \b is tested on platforms where grep isn't crazy
 
 
-if $re2g -l  fred tests/bad*|xargs  stat -f '' >/dev/null 2>/dev/null ;then
+if $re2g -l  fred tests/bad*|xargs -I% test -f "%";then
   echo 'FAILURE: unable to detect newline in filename';
   fail=$(expr 1 + $fail);
 else
@@ -434,7 +434,7 @@ else
 fi
 
 
-if $re2g -l0  fred tests/bad*|xargs -0 stat -f '' >/dev/null 2>/dev/null ;then
+if $re2g -l0  fred tests/bad*|xargs -I% -0 test -f "%" ;then
   echo 'SUCCESS: able to defeat newline in filename';
 else
   echo 'FAILURE: unable to defeat newline in filename';

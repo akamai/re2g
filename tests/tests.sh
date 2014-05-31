@@ -262,6 +262,26 @@ else
   echo "WARNING: built without support for GlobalExtract, skipping tests which combine -o and -g";
 fi;
 
+
+#match-any vs match-all
+  re2expect 0 "theteststring" theteststring -e the -e test
+  re2expect 0 "theteststring" theteststring -U -e the -e test
+  re2expect 0 "theteststring" theteststring -V -e the -e test
+
+  re2expect 0 "theteststring" theteststring -e the -e test -e fred
+  re2expect 0 "theteststring" theteststring -U -e the -e test -e fred
+  re2expect 1 "" theteststring -V -e the -e test -e fred
+
+
+  re2expect 1 "" theteststring -v -e the -e test
+  re2expect 1 "" theteststring -v -U -e the -e test
+  re2expect 1 "" theteststring -v -V -e the -e test
+
+  re2expect 1 "" theteststring -v -e the -e test -e fred
+  re2expect 0 "theteststring" theteststring -v -U -e the -e test -e fred
+  re2expect 1 "" theteststring -v -V -e the -e test -e fred
+
+
 test_same 'char search' <($grep q tests/tests.sh)  <($re2g q tests/tests.sh)
 
 test_same 'neg char-search' <($grep -v q tests/tests.sh)  <($re2g -v q tests/tests.sh)
@@ -445,6 +465,11 @@ fi
 
 
 test_same 'pattern-file' <($grep -f tests/pats tests/lorem)  <($re2g -f tests/pats tests/lorem)
+
+test_same 'neg pattern-file' <($grep -vf tests/pats tests/lorem)  <($re2g -vf tests/pats tests/lorem)
+
+test_same 'neg pattern-file' <($grep -vf tests/pats tests/lorem)  <($re2g -vVf tests/pats tests/lorem)
+
 
 #grep -o with multiple patterns is a mess.
 #let's just store the previous result and look for changes

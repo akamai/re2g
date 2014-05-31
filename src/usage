@@ -25,6 +25,8 @@ Output Modification:
    -s substitution, --sub=substitution optional replacement string, supports \0 .. \9 references
    -o, --only-matching: only print matching or substituted portion
    -v, --invert-match: select only lines which match no PATTERNs
+   -V, --match-all: if using multiple patterns, all must match to print a line (default if -v is used)
+   -U, --match-any: if using multiple patterns, any may match to print a line (default except under -v) 
    -g, --global: global search/replace in each line, default is one match per line
    -p, --print-all: (when replacing) print lines where no replacement was made
    -H, --print-names: always print file name (default if more than one FILE)

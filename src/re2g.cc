@@ -65,7 +65,7 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 
-#define RE2G_VERSION "%s v0.1.33"
+#define RE2G_VERSION "%s v0.1.34"
 #include "re2g_usage.h"
 
 namespace re2g {
@@ -305,8 +305,11 @@ int main(int argc, const char **argv) {
     o_pat_file = 0,
     o_line_buffered = isatty(STDOUT_FILENO),
     o_no_group_separator = 0,
-    o_group_separator = 0;
-  enum {SEARCH, REPLACE} mode;
+    o_group_separator = 0,
+    o_set_operator = 0;
+
+  enum {SEARCH, REPLACE} mode = SEARCH;
+  enum {MATCH_ANY, MATCH_ALL} multi_rule = MATCH_ANY;
 
   const struct option options[] = {
     {"help", no_argument, &o_usage, '?'},
@@ -342,6 +345,8 @@ int main(int argc, const char **argv) {
     {"no-group-separator", no_argument, &o_no_group_separator, 'T'},
     {"group-separator", required_argument, &o_group_separator, 't'},
     {"version", no_argument, &o_version, 2},
+    {"match-any", no_argument, &o_set_operator, 'U'},
+    {"match-all", no_argument, &o_set_operator, 'V'},
     { NULL, 0, NULL, 0 }
   };
 
@@ -355,7 +360,7 @@ int main(int argc, const char **argv) {
   int longopt = 0;
   int maxopt = sizeof(options) - 1;
   while((c = getopt_long(argc, (char * const *)argv,
-                         "?ogvgs:pHhclLiFxB:C:A:nm:X:qN0zZJEe:f:Tt:",
+                         "?ogvgs:pHhclLiFxB:C:A:nm:X:qN0zZJEe:f:Tt:VU",
                          (const struct option *)&options[0], &longopt)) != -1) {
     if(0 == c && longopt >= 0 &&
        longopt < maxopt) {
@@ -473,6 +478,14 @@ int main(int argc, const char **argv) {
       o_pat_file++;
       pat_files.push_back(std::string(optarg));
       break;
+    case 'V':
+      o_set_operator = 1;
+      multi_rule = MATCH_ALL;
+      break;
+    case 'U':
+      o_set_operator = 1;
+      multi_rule = MATCH_ANY;
+      break;
     case 't':
       o_group_separator = 1;
       if(group_separator) {
@@ -504,6 +517,9 @@ int main(int argc, const char **argv) {
 
   if(o_neg_list) {
     o_list = 1;
+  }
+  if(o_negate_match && ! o_set_operator){
+    multi_rule = MATCH_ALL;
   }
 
   /*
@@ -754,7 +770,7 @@ int main(int argc, const char **argv) {
                 to_print = &line;
               }
             }
-            if(this_pat_matched) {
+            if(this_pat_matched) {//TODO: check multi-rule
               num_pats_matched++;
               if(mode == REPLACE) {
                 if(!obuf.empty()) {
@@ -764,14 +780,18 @@ int main(int argc, const char **argv) {
               }
             }
           }
-          bool any_pat_matched = num_pats_matched > 0;
-          if(any_pat_matched && mode == REPLACE) {
+
+          bool right_pats_matched = multi_rule==MATCH_ANY?
+            num_pats_matched > 0:
+            num_pats_matched == pats.size();
+
+          if(right_pats_matched && mode == REPLACE) {
             to_print = &obuf;
           }
-          if(!(any_pat_matched || o_also_print_unreplaced)) {
+          if(!(right_pats_matched || o_also_print_unreplaced)) {
             to_print = NULL;
           }
-          if(any_pat_matched) {
+          if(right_pats_matched) {
             if(o_quiet_and_quick) {
               return 0;
             }
@@ -799,7 +819,7 @@ int main(int argc, const char **argv) {
               pref.line_no = (pref.line_no >= 0) ? line_no : -1;
               pref.separator = (count > 1 &&
                                 line_no - last_line_no > 1) ? group_separator : NULL;
-              re2g::emit_line(&pref, any_pat_matched ? ':' : '-', *to_print, eol, o_line_buffered);
+              re2g::emit_line(&pref, right_pats_matched ? ':' : '-', *to_print, eol, o_line_buffered);
               last_line_no = line_no;
             }
           } else {

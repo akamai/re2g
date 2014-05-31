@@ -10,3 +10,9 @@
 
 #If testing against a specific grep:
 #USE_GREP=../grep/grep-2.14/src/grep
+
+#To install in your $HOME/bin
+#PREFIX=$(HOME)
+
+#To install in your /opt/re2g
+#BINDIR=/opt/re2g

@@ -20,7 +20,7 @@ to run the testcases and building will become more manual.
 
 # Compiling
 
-If RE2 is installed normally, just run make.
+If RE2 is installed normally, just run `make`.
 
 If RE2 is built, but not installed, try a variation on this:
 
@@ -40,7 +40,7 @@ Alternatively, copy `Makefile.local.example` to `Makefile.local` and
 edit the values for `RE2_LIB` and `RE2_INC` there. Then you can just
 run Make without setting vars on the command line.
 
-Run `make clean` when changing these variables or Makefile.local.
+Run `make clean` when changing these variables or `Makefile.local`.
 
 
 # Testing
@@ -63,8 +63,17 @@ Run `make clean` when changing these variables or altering
 
 # Installing
 
-There is no "make install" target. Just copy `build/re2g` to wherever
-you want it.
+You can just copy `build/re2g` to wherever you want it, or run `make install`
+
+To override the install directory override the `PREFIX` or `BINDIR`
+make variables on the command line or in your `Makefile.local`.
+
+`make install` will install into `$(BINDIR)` which defaults to
+`$(PREFIX)/bin`
+
+`$(PREFIX)` defaults to `/usr/local`
+
+There are examples in `Makefile.local.example`.
 
 
 # Notes

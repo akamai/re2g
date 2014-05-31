@@ -4,6 +4,9 @@ tests=tests
 
 -include Makefile.local
 
+PREFIX?=/usr/local
+BINDIR?=$(PREFIX)/bin
+INSTALL?=install
 CXX?=g++
 CXXFLAGS?=-I$(src) -I$(build) -L$(build) -Wall $(RE2_INC) $(RE2_LIB)
 LDFLAGS?=-lre2 -pthread
@@ -21,6 +24,10 @@ $(build)/re2g_usage.h: $(src)/usage
 
 test: $(build)/re2g $(tests)/tests.sh
 	$(tests)/tests.sh $(build)/re2g $(USE_GREP)
+
+install: $(build)/re2g
+	mkdir -p $(BINDIR)
+	$(INSTALL) $< $(BINDIR)/
 
 clean:
 	$(RM) ./$(build)/*

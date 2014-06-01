@@ -115,17 +115,13 @@ std::streambuf::int_type fdbuf::underflow() {
   if(gptr() >= egptr()) {
     std::size_t backed = std::min((std::size_t)(gptr() - eback()), put_back_);
     if(backed > 0) {
-      //std::cerr << "backed: " << backed << std::endl;
       memcpy(base_ - backed, gptr() - backed, backed);
     }
     ssize_t qty = read(fd_, base_, buff_sz_);
-    //std::cerr << "qty: " << qty << std::endl;
     if(qty < 0) {
-      //std::cerr << "err: " <<  strerror(errno) << std::endl;
       return traits_type::eof();
     }
     if(qty == 0) {
-      //std::cerr << "EOF" <<std::endl;
       return traits_type::eof();
     }
     setg(start_, base_, base_ + qty);
@@ -511,32 +507,26 @@ int main(int argc, const char **argv) {
     return 0;
   }
 
-  if(o_neg_list) {
-    o_list = 1;
-  }
-  if(o_negate_match && ! o_set_operator){
-    multi_rule = MATCH_ALL;
-  }
-
-  /*
+#ifdef RE2G_DEBUG_OPTION_PARSER
   for(const struct option *o=&options[0];o->name;o++) {
-    std::cout << o->name << ':';
+    std::cerr << o->name << ':';
     if(o->flag) {
-      std::cout << *o->flag;
+      std::cerr << *o->flag;
     } else {
-      std::cout << "NULL";
+      std::cerr << "NULL";
     }
-    std::cout << std::endl;
+    std::cerr << std::endl;
   }
-
-  std::cout << "C: [" << o_after_context << ',' << o_before_context << ']' << std::endl;
-
-  std::cout << "ARGC: " << argc << std::endl;
+  
+  std::cerr << "C: [" << o_after_context << ',' << o_before_context << ']' << std::endl;
+  
+  std::cerr << "ARGC: " << argc << std::endl;
   for(int i=0;i<argc;i++) {
-    std::cout << "ARGV[" << i << "]: " << argv[i]  << std::endl;
+    std::cerr << "ARGV[" << i << "]: " << argv[i]  << std::endl;
   }
-  std::cout   << std::endl;
-  */
+  std::cerr   << std::endl;
+#endif
+
   if(argc >= 1 || o_pat_str || o_pat_file) {
     mode = o_substitute ? REPLACE : SEARCH;
   } else {
@@ -587,6 +577,14 @@ int main(int argc, const char **argv) {
 
 
   //rationalize flags
+  if(o_neg_list) {
+    o_list = 1;
+  }
+
+  if(o_negate_match && ! o_set_operator){
+    multi_rule = MATCH_ALL;
+  }
+
   if(o_negate_match) {
     o_print_match = 0;
   }
@@ -681,7 +679,6 @@ int main(int argc, const char **argv) {
       std::filebuf *fb = NULL;
       if(uargv) {
         std::size_t ridx = 0;
-        //      std::cout << "fork: ";
         for(std::size_t aidx = 0; aidx < uargc; aidx++) {
           if(uargv[aidx] == NULL) {
             rargs[ridx] = std::string(uargs[aidx]);
@@ -689,7 +686,6 @@ int main(int argc, const char **argv) {
             uargv[aidx] = rargs[ridx].c_str();
             ridx++;
           }
-          //        std::cout << "   " << uargv[aidx] << ',';
         }
         enum re2g::input_type util_input;
         if(rargc) {
@@ -716,7 +712,8 @@ int main(int argc, const char **argv) {
       std::deque<std::string> before(o_before_context);
       before.clear();
       if(using_stdin) {
-        //for output compatibility with grep
+        //this is for output compatibility with grep,
+        //should evenually support --label
         fname = "(standard input)";
       }
 
@@ -735,7 +732,6 @@ int main(int argc, const char **argv) {
         int line_no = 1;
         int last_line_no = -1;
         while(std::getline(*is, line) && (!o_max_matches || count < max_matches)) {
-          //std::cout << before.size() << std::endl;
           std::string *to_print = NULL;
           std::string in(line);
           std::string out;
@@ -751,8 +747,11 @@ int main(int argc, const char **argv) {
               this_pat_matched = o_negate_match ^ re2g::match(in, **pat, o_full_line);
               to_print = &in;
             } else if(mode == REPLACE) {
-              // need to pick: (-o) Extract, (default) Replace, (-g)GlobalReplace
-              // also, print non matching lines? (-p)
+              /* REPLACE mode is used to support:
+                 Extract (-o),
+                 Replace (-s),
+                 GlobalReplace (-g -s)
+                 may also print non matching lines (-p) */
 
               if(o_print_match) {
                 this_pat_matched = o_negate_match ^ (re2g::extract(in, **pat, rep, &out, o_global) > 0);
@@ -766,7 +765,7 @@ int main(int argc, const char **argv) {
                 to_print = &line;
               }
             }
-            if(this_pat_matched) {//TODO: check multi-rule
+            if(this_pat_matched) {
               num_pats_matched++;
               if(mode == REPLACE) {
                 if(!obuf.empty()) {

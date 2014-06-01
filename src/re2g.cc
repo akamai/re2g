@@ -181,8 +181,8 @@ int str_to_size(const char* str) {
   return v;
 }
 
-void emit_line(struct prefix *prefix, char marker, const std::string s,
-               const std::string eol, bool flush_after) {
+void emit_line(struct prefix *prefix, char marker, const std::string &s,
+               const std::string &eol, bool flush_after) {
   if(prefix->separator) {
     std::cout << *prefix->separator << eol;
     prefix->separator = NULL;
@@ -362,6 +362,8 @@ int main(int argc, const char **argv) {
     case '0':
       o_special_delimiter = 1;
       if(optarg) {
+        //current config doesn't allow an arg,
+        //should create an option for it.
         eol = std::string(optarg);
       } else {
         eol = std::string("\0");

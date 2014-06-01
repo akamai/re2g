@@ -51,7 +51,7 @@ else
 fi 
 
 V=`$re2g --version`
-if echo $V | $grep -q "^`basename $re2g` v[0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}$"; then
+if echo $V | $grep -q "^`basename $re2g` v[0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}\(-dev\)\{0,1\}$"; then
   echo SUCCESS "--version => $V";
 else
   echo FAILURE "--version => $V"

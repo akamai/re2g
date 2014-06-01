@@ -65,7 +65,7 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 
-#define RE2G_VERSION "%s v0.1.34"
+#define RE2G_VERSION "%s v0.1.35-dev"
 #include "re2g_usage.h"
 
 namespace re2g {
@@ -87,8 +87,8 @@ private:
 private:
   int fd_;
   std::size_t put_back_;
-  int buff_sz_;
-  int full_sz_;
+  std::size_t buff_sz_;
+  std::size_t full_sz_;
   char* start_;
   char* base_;
   char* end_;
@@ -98,7 +98,7 @@ char USAGE[] = RE2G_USAGE_STR;
 
 fdbuf::fdbuf(int fd, std::size_t buff_sz, std::size_t put_back) :
   fd_(fd),
-  put_back_(std::max(put_back, size_t(1))),
+  put_back_(std::max(put_back, std::size_t(1))),
   buff_sz_(std::max(buff_sz, put_back_)),
   full_sz_(buff_sz_ + put_back_),
   start_(new char[full_sz_]),
@@ -113,12 +113,12 @@ fdbuf::~fdbuf() {
 
 std::streambuf::int_type fdbuf::underflow() {
   if(gptr() >= egptr()) {
-    int backed = std::min((std::size_t)(gptr() - eback()), put_back_);
+    std::size_t backed = std::min((std::size_t)(gptr() - eback()), put_back_);
     if(backed > 0) {
       //std::cerr << "backed: " << backed << std::endl;
       memcpy(base_ - backed, gptr() - backed, backed);
     }
-    int qty = read(fd_, base_, buff_sz_);
+    ssize_t qty = read(fd_, base_, buff_sz_);
     //std::cerr << "qty: " << qty << std::endl;
     if(qty < 0) {
       //std::cerr << "err: " <<  strerror(errno) << std::endl;
@@ -164,7 +164,6 @@ int replace(std::string *text,
 struct prefix {
   const char* fname;
   int line_no;
-  int offset;
   std::string *separator;
 };
 
@@ -198,9 +197,6 @@ void emit_line(struct prefix *prefix, char marker, const std::string s,
   if(prefix->line_no >= 0) {
     std::cout << prefix->line_no << marker;
   }
-  if(prefix->offset >= 0) {
-    std::cout << prefix->offset << marker;
-  }
   std::cout << s << eol;
   if(flush_after) {
     std::cout.flush();
@@ -209,11 +205,11 @@ void emit_line(struct prefix *prefix, char marker, const std::string s,
 
 enum input_type {STDIN, CAT, NAME};
 
-fdbuf *ioexec(char* const* arglist, const char* fname, enum input_type util_input, int blksize = 0) {
+fdbuf *ioexec(char* const* arglist, const char* fname, enum input_type util_input, std::size_t blksize = 0) {
   int plumb[2];
   pid_t pid;
-
-  if(pipe(&plumb[0])) {
+    
+    if(pipe(&plumb[0])) {
     std::cerr << "error piping for " << arglist[0] << ": "
               << strerror(errno) << std::endl;
     return NULL;
@@ -268,7 +264,7 @@ fdbuf *ioexec(char* const* arglist, const char* fname, enum input_type util_inpu
   }
 }
 
-};
+}
 
 int main(int argc, const char **argv) {
   const char *appname = argv[0];
@@ -618,7 +614,7 @@ int main(int argc, const char **argv) {
     mode = REPLACE;
   }
 
-  int num_files = argc;
+  std::size_t num_files = std::size_t(argc);
 
   if(num_files > 1 && !o_no_print_fname) {
     o_print_fname = 1;
@@ -637,13 +633,13 @@ int main(int argc, const char **argv) {
   }
 
   const char **uargv = NULL;
-  int uargc = uargs.size();
-  int rargc = 0;
+  std::size_t uargc = uargs.size();
+  std::size_t rargc = 0;
   RE2::RE2 uarg_pat("\\{\\}");
   if(!uargs.empty()) {
     uargv = new const char*[uargc + 1];
     uargv[uargc] = NULL;
-    for(int aidx = 0; aidx < uargc; aidx++) {
+    for(std::size_t aidx = 0; aidx < uargc; aidx++) {
       std::string *arg = &uargs[aidx];
       if(re2g::match(*arg, uarg_pat, false)) {
         uargv[aidx] = NULL;
@@ -655,10 +651,10 @@ int main(int argc, const char **argv) {
   }
   std::deque<std::string> rargs(rargc);
   int retval = 1;
-  for(int fidx = 0; fidx < num_files; fidx++) {
+  for(std::size_t fidx = 0; fidx < num_files; fidx++) {
     const char* fname = fnames[fidx];
     const char* file_err = NULL;
-    int blksize = 0;
+    std::size_t blksize = 0;
     if(fname[0] == '-' && fname[1] == 0) {
       fname = def_fname;
       using_stdin = true;
@@ -684,9 +680,9 @@ int main(int argc, const char **argv) {
       re2g::fdbuf *pb = NULL;
       std::filebuf *fb = NULL;
       if(uargv) {
-        int ridx = 0;
+        std::size_t ridx = 0;
         //      std::cout << "fork: ";
-        for(int aidx = 0; aidx < uargc; aidx++) {
+        for(std::size_t aidx = 0; aidx < uargc; aidx++) {
           if(uargv[aidx] == NULL) {
             rargs[ridx] = std::string(uargs[aidx]);
             re2g::replace(&rargs[ridx], uarg_pat, fname, true);
@@ -727,24 +723,24 @@ int main(int argc, const char **argv) {
       if(!is) {
         std::cerr << appname << ": " << fname << ": " << strerror(errno) << std::endl;
       } else {
-        long long count = 0;
+        const std::size_t max_matches = std::size_t(o_max_matches);
+        std::size_t count = 0;
         std::string line;
         int ca_printed = o_after_context;
         struct re2g::prefix pref = {
           o_print_fname ? fname : NULL,
           o_print_lineno ? 1 : -1,
-          -1,
           NULL
         };
         int line_no = 1;
         int last_line_no = -1;
-        while(std::getline(*is, line) && (!o_max_matches || count < o_max_matches)) {
+        while(std::getline(*is, line) && (!o_max_matches || count < max_matches)) {
           //std::cout << before.size() << std::endl;
           std::string *to_print = NULL;
           std::string in(line);
           std::string out;
           std::string obuf;
-          int num_pats_matched = 0;
+          std::size_t num_pats_matched = 0;
           obuf.clear();
           for(std::deque<RE2::RE2*>::iterator pat = pats.begin();
               pat != pats.end();
@@ -824,8 +820,8 @@ int main(int argc, const char **argv) {
             }
           } else {
             if(o_before_context > 0) {
-	      int bs = before.size();
-              if(bs >= o_before_context) {
+              std::size_t bc = std::size_t(o_before_context);
+              if(before.size() >= bc) {
                 before.pop_front();
               }
               before.push_back(std::string(line));

@@ -74,11 +74,11 @@
 namespace re2g {
 
 class fdbuf : public std::streambuf {
-public:
+ public:
   explicit fdbuf(int fd, std::size_t buff_sz = 4096, std::size_t put_back = 128);
   ~fdbuf();
 
-private:
+ private:
   // overrides base class underflow()
   std::streambuf::int_type underflow();
 
@@ -87,7 +87,7 @@ private:
   fdbuf(const fdbuf &);
   fdbuf &operator= (const fdbuf &);
 
-private:
+ private:
   int fd_;
   std::size_t put_back_;
   std::size_t buff_sz_;
@@ -115,16 +115,16 @@ fdbuf::~fdbuf() {
 }
 
 std::streambuf::int_type fdbuf::underflow() {
-  if(gptr() >= egptr()) {
+  if (gptr() >= egptr()) {
     std::size_t backed = std::min((std::size_t)(gptr() - eback()), put_back_);
-    if(backed > 0) {
+    if (backed > 0) {
       memcpy(base_ - backed, gptr() - backed, backed);
     }
     ssize_t qty = read(fd_, base_, buff_sz_);
-    if(qty < 0) {
+    if (qty < 0) {
       return traits_type::eof();
     }
-    if(qty == 0) {
+    if (qty == 0) {
       return traits_type::eof();
     }
     setg(start_, base_, base_ + qty);
@@ -139,7 +139,7 @@ int extract(const re2::StringPiece &text,
             const re2::StringPiece &rewrite,
             std::string *out,
             bool global) {
-  if(global) {
+  if (global) {
 #if HAVE_GLOBAL_EXTRACT
     return  RE2::GlobalExtract(text, pattern, rewrite, out);
 #else
@@ -175,10 +175,10 @@ bool match(const re2::StringPiece &text,
 
 int str_to_size(const char* str) {
   int v = 0;
-  if(str) {
+  if (str) {
     v = atoi(str);
   }
-  if(v < 0) {
+  if (v < 0) {
     v = 0;
   }
   return v;
@@ -186,18 +186,18 @@ int str_to_size(const char* str) {
 
 void emit_line(struct prefix *prefix, char marker, const std::string &s,
                const std::string &eol, bool flush_after) {
-  if(prefix->separator) {
+  if (prefix->separator) {
     std::cout << *prefix->separator << eol;
     prefix->separator = NULL;
   }
-  if(prefix->fname) {
+  if (prefix->fname) {
     std::cout << prefix->fname << marker;
   }
-  if(prefix->line_no >= 0) {
+  if (prefix->line_no >= 0) {
     std::cout << prefix->line_no << marker;
   }
   std::cout << s << eol;
-  if(flush_after) {
+  if (flush_after) {
     std::cout.flush();
   }
 }
@@ -208,30 +208,30 @@ fdbuf *ioexec(char* const* arglist, const char* fname, enum input_type util_inpu
   int plumb[2];
   pid_t pid;
 
-  if(pipe(&plumb[0])) {
+  if (pipe(&plumb[0])) {
     std::cerr << "error piping for " << arglist[0] << ": "
               << strerror(errno) << std::endl;
     return NULL;
   }
   pid = fork();
-  if(pid < 0) {
+  if (pid < 0) {
     std::cerr << "error forking for  " << arglist[0] << ": "
               << strerror(errno) << std::endl;
     return NULL;
   }
-  if(!pid) {
-    if(util_input != STDIN) {
+  if (!pid) {
+    if (util_input != STDIN) {
       close(STDIN_FILENO);
     }
 
-    if(util_input == CAT) {
+    if (util_input == CAT) {
       int ifd = open(fname, O_RDONLY);
-      if(ifd < 0) {
+      if (ifd < 0) {
         std::cerr << "error opening " << fname << ": "
                   << strerror(errno) << std::endl;
         std::exit(-1);
       }
-      if(dup2(ifd, STDIN_FILENO) != STDIN_FILENO) {
+      if (dup2(ifd, STDIN_FILENO) != STDIN_FILENO) {
         std::cerr << "error dup2ing for input " << arglist[0] << ": "
                   << strerror(errno) << std::endl;
         std::exit(-2);
@@ -240,7 +240,7 @@ fdbuf *ioexec(char* const* arglist, const char* fname, enum input_type util_inpu
     close(STDOUT_FILENO);
     fcntl(STDERR_FILENO, F_SETFD, 1);
     close(plumb[0]);
-    if(dup2(plumb[1], STDOUT_FILENO) != STDOUT_FILENO) {
+    if (dup2(plumb[1], STDOUT_FILENO) != STDOUT_FILENO) {
       std::cerr << "error dup2ing for output " << arglist[0] << ": "
                 << strerror(errno) << std::endl;
       std::exit(-3);
@@ -252,24 +252,28 @@ fdbuf *ioexec(char* const* arglist, const char* fname, enum input_type util_inpu
     std::exit(-4);
   }
 
-  if(util_input == STDIN) {
+  if (util_input == STDIN) {
     close(STDIN_FILENO);
   }
   close(plumb[1]);
-  if(blksize > 0) {
+  if (blksize > 0) {
     return new re2g::fdbuf(plumb[0], blksize);
   } else {
     return new re2g::fdbuf(plumb[0]);
   }
 }
 
-} // namespace re2g
+
+
+}  // namespace re2g
+
+
 
 int main(int argc, const char **argv) {
   const char *appname = argv[0];
   const char *apn = argv[0];
-  while(*apn) {
-    if(*apn++ == '/') {
+  while (*apn) {
+    if (*apn++ == '/') {
       appname = apn;
     }
   }
@@ -354,19 +358,19 @@ int main(int argc, const char **argv) {
   char c;
   int longopt = 0;
   int maxopt = sizeof(options) - 1;
-  while((c = getopt_long(argc, (char * const *)argv,
+  while ((c = getopt_long(argc, (char * const *)argv,
                          "?ogvs:pHhclLiFxB:C:A:nm:X:qN0zZJEe:f:Tt:VU",
                          (const struct option *)&options[0], &longopt)) != -1) {
-    if(0 == c && longopt >= 0 &&
+    if (0 == c && longopt >= 0 &&
        longopt < maxopt) {
       c = options[longopt].val;
     }
-    switch(c) {
+    switch (c) {
     case '0':
       o_special_delimiter = 1;
-      if(optarg) {
-        //current config doesn't allow an arg,
-        //should create an option for it.
+      if (optarg) {
+        // current config doesn't allow an arg,
+        // should create an option for it.
         eol = std::string(optarg);
       } else {
         eol = std::string("\0");
@@ -447,14 +451,14 @@ int main(int argc, const char **argv) {
       uargs.clear();
       // consume until arg is a single semi-colon like find -exec
       const char* oa;
-      for(oa = optarg;
+      for (oa = optarg;
           optind < argc
             && oa
             && !(oa[0] == ';' && oa[1] == 0);
           oa = argv[optind++]) {
         uargs.push_back(oa);
       }
-      if(!(oa[0] == ';' && oa[1] == 0)) {
+      if (!(oa[0] == ';' && oa[1] == 0)) {
         o_usage = 1;
       }
       break;
@@ -485,7 +489,7 @@ int main(int argc, const char **argv) {
       break;
     case 't':
       o_group_separator = 1;
-      if(group_separator) {
+      if (group_separator) {
         *group_separator = optarg;
       } else {
         group_separator = new std::string(optarg);
@@ -494,7 +498,7 @@ int main(int argc, const char **argv) {
     case 'T':
       o_no_group_separator = 1;
       o_group_separator = 0;
-      if(group_separator) {
+      if (group_separator) {
         delete group_separator;
       }
       group_separator = NULL;
@@ -506,111 +510,111 @@ int main(int argc, const char **argv) {
   argc -= optind;
   argv += optind;
 
-  if(o_version){
+  if (o_version) {
     std::printf(RE2G_VERSION, appname);
     std::printf("\n");
     return 0;
   }
 
 #ifdef RE2G_DEBUG_OPTION_PARSER
-  for(const struct option *o=&options[0]; o->name; o++) {
+  for (const struct option *o=&options[0]; o->name; o++) {
     std::cerr << o->name << ':';
-    if(o->flag) {
+    if (o->flag) {
       std::cerr << *o->flag;
     } else {
       std::cerr << "NULL";
     }
     std::cerr << std::endl;
   }
-  
+
   std::cerr << "C: [" << o_after_context << ',' << o_before_context << ']' << std::endl;
-  
+
   std::cerr << "ARGC: " << argc << std::endl;
-  for(int i=0; i<argc; i++) {
+  for (int i = 0; i < argc; i++) {
     std::cerr << "ARGV[" << i << "]: " << argv[i]  << std::endl;
   }
   std::cerr   << std::endl;
 #endif
 
-  if(argc >= 1 || o_pat_str || o_pat_file) {
+  if (argc >= 1 || o_pat_str || o_pat_file) {
     mode = o_substitute ? REPLACE : SEARCH;
   } else {
     o_usage = 1;
   }
 
-  if(o_usage) {
+  if (o_usage) {
     printf(re2g::USAGE, appname);
     return -1;
   }
 
   re2::RE2::Options opts(re2::RE2::DefaultOptions);
 
-  if(o_case_insensitive) {
+  if (o_case_insensitive) {
     opts.set_case_sensitive(false);
   }
-  if(o_literal) {
+  if (o_literal) {
     opts.set_literal(true);
   }
-  if(o_posix_extended_syntax) {
+  if (o_posix_extended_syntax) {
     opts.set_posix_syntax(true);
   }
 
   std::deque<RE2::RE2*> pats;
 
-  while(!pat_files.empty()) {
+  while (!pat_files.empty()) {
     std::ifstream patf(pat_files.front().c_str());
-    if(!patf) {
+    if (!patf) {
       std::cerr << appname << ": " << pat_files.front() << ": " << strerror(errno) << std::endl;
       return -1;
     }
     std::string pat_str;
-    while(std::getline(patf, pat_str)) {
+    while (std::getline(patf, pat_str)) {
       pat_strs.push_back(pat_str);
     }
     pat_files.pop_front();
   }
-  if(!o_pat_str && !o_pat_file) {
+  if (!o_pat_str && !o_pat_file) {
     pat_strs.push_back(argv[0]);
     argv++;
     argc--;
   }
 
-  while(!pat_strs.empty()) {
+  while (!pat_strs.empty()) {
     pats.push_back(new RE2::RE2(pat_strs.front(), opts));
     pat_strs.pop_front();
   }
 
 
   // rationalize flags
-  if(o_neg_list) {
+  if (o_neg_list) {
     o_list = 1;
   }
 
-  if(o_negate_match && ! o_set_operator){
+  if (o_negate_match && !o_set_operator) {
     multi_rule = MATCH_ALL;
   }
 
-  if(o_negate_match) {
+  if (o_negate_match) {
     o_print_match = 0;
   }
 
-  if(o_count || mode == SEARCH) {
+  if (o_count || mode == SEARCH) {
     o_also_print_unreplaced = 0;
   }
 
-  if(o_also_print_unreplaced) {
+  if (o_also_print_unreplaced) {
     o_before_context = 0;
     o_after_context = 0;
   }
 
-  if((o_after_context > 0 || o_before_context > 0) &&
+  if ((o_after_context > 0 || o_before_context > 0) &&
      (!o_no_group_separator && !o_group_separator)) {
     group_separator = new std::string("--");
   }
 
 
 
-  if(mode == SEARCH && o_print_match) {
+  if (mode == SEARCH && o_print_match) {
     // o_print_match for SEARCH uses REPLACE code with constant repstr
     rep = std::string("\\0");
     o_also_print_unreplaced = 0;
@@ -619,14 +623,14 @@ int main(int argc, const char **argv) {
 
   std::size_t num_files = std::size_t(argc);
 
-  if(num_files > 1 && !o_no_print_fname) {
+  if (num_files > 1 && !o_no_print_fname) {
     o_print_fname = 1;
   }
 
   const char** fnames;
   const char* def_fname = "-";
   bool using_stdin;
-  if(num_files == 0) {
+  if (num_files == 0) {
     num_files = 1;
     using_stdin = true;
     fnames = &def_fname;
@@ -639,12 +643,12 @@ int main(int argc, const char **argv) {
   std::size_t uargc = uargs.size();
   std::size_t rargc = 0;
   RE2::RE2 uarg_pat("\\{\\}");
-  if(!uargs.empty()) {
+  if (!uargs.empty()) {
     uargv = new const char*[uargc + 1];
     uargv[uargc] = NULL;
-    for(std::size_t aidx = 0; aidx < uargc; aidx++) {
+    for (std::size_t aidx = 0; aidx < uargc; aidx++) {
       std::string *arg = &uargs[aidx];
-      if(re2g::match(*arg, uarg_pat, false)) {
+      if (re2g::match(*arg, uarg_pat, false)) {
         uargv[aidx] = NULL;
         rargc++;
       } else {
@@ -654,21 +658,21 @@ int main(int argc, const char **argv) {
   }
   std::deque<std::string> rargs(rargc);
   int retval = 1;
-  for(std::size_t fidx = 0; fidx < num_files; fidx++) {
+  for (std::size_t fidx = 0; fidx < num_files; fidx++) {
     const char* fname = fnames[fidx];
     const char* file_err = NULL;
     std::size_t blksize = 0;
-    if(fname[0] == '-' && fname[1] == 0) {
+    if (fname[0] == '-' && fname[1] == 0) {
       fname = def_fname;
       using_stdin = true;
     } else {
       struct stat sout;
-      if(stat(fname, &sout) != 0) {
+      if (stat(fname, &sout) != 0) {
         file_err = strerror(errno);
       } else {
         blksize = sout.st_blksize;
-        if(!(sout.st_mode & (S_IFIFO | S_IFREG))) {
-          if(sout.st_mode & S_IFDIR) {
+        if (!(sout.st_mode & (S_IFIFO | S_IFREG))) {
+          if (sout.st_mode & S_IFDIR) {
             file_err = "Is a directory";
           } else {
             file_err = "Is not a regular file or a pipe";
@@ -676,16 +680,16 @@ int main(int argc, const char **argv) {
         }
       }
     }
-    if(file_err) {
+    if (file_err) {
       std::cerr << appname << ": " << fname << ": " << file_err << std::endl;
     } else {
       std::istream *is = NULL;
       re2g::fdbuf *pb = NULL;
       std::filebuf *fb = NULL;
-      if(uargv) {
+      if (uargv) {
         std::size_t ridx = 0;
-        for(std::size_t aidx = 0; aidx < uargc; aidx++) {
-          if(uargv[aidx] == NULL) {
+        for (std::size_t aidx = 0; aidx < uargc; aidx++) {
+          if (uargv[aidx] == NULL) {
             rargs[ridx] = std::string(uargs[aidx]);
             re2g::replace(&rargs[ridx], uarg_pat, fname, true);
             uargv[aidx] = rargs[ridx].c_str();
@@ -693,36 +697,36 @@ int main(int argc, const char **argv) {
           }
         }
         enum re2g::input_type util_input;
-        if(rargc) {
+        if (rargc) {
           util_input = re2g::NAME;
         } else {
           util_input = using_stdin ? re2g::STDIN : re2g::CAT;
         }
 
         pb = ioexec((char * const *)uargv, fname, util_input, blksize);
-        if(!pb) {
+        if (!pb) {
           std::cerr << appname << ": failed to use utility: " << strerror(errno) << std::endl;
           return -1;
         }
         is = new std::istream(pb);
-      } else if(using_stdin) {
+      } else if (using_stdin) {
         is = &std::cin;
       } else {
         fb = new std::filebuf();
-        if(fb->open(fname, std::ios_base::in)) {
+        if (fb->open(fname, std::ios_base::in)) {
           is = new std::istream(fb);
         }
       }
 
       std::deque<std::string> before(o_before_context);
       before.clear();
-      if(using_stdin) {
+      if (using_stdin) {
         // this is for output compatibility with grep,
         // should evenually support --label
         fname = "(standard input)";
       }
 
-      if(!is) {
+      if (!is) {
         std::cerr << appname << ": " << fname << ": " << strerror(errno) << std::endl;
       } else {
         const std::size_t max_matches = std::size_t(o_max_matches);
@@ -736,29 +740,29 @@ int main(int argc, const char **argv) {
         };
         int line_no = 1;
         int last_line_no = -1;
-        while(std::getline(*is, line) && (!o_max_matches || count < max_matches)) {
+        while (std::getline(*is, line) && (!o_max_matches || count < max_matches)) {
           std::string *to_print = NULL;
           std::string in(line);
           std::string out;
           std::string obuf;
           std::size_t num_pats_matched = 0;
           obuf.clear();
-          for(std::deque<RE2::RE2*>::iterator pat = pats.begin();
+          for (std::deque<RE2::RE2*>::iterator pat = pats.begin();
               pat != pats.end();
               ++pat) {
             bool this_pat_matched = false;
 
-            if(mode == SEARCH) {
+            if (mode == SEARCH) {
               this_pat_matched = o_negate_match ^ re2g::match(in, **pat, o_full_line);
               to_print = &in;
-            } else if(mode == REPLACE) {
+            } else if (mode == REPLACE) {
               /* REPLACE mode is used to support:
                  Extract (-o),
                  Replace (-s),
                  GlobalReplace (-g -s)
                  may also print non matching lines (-p) */
 
-              if(o_print_match) {
+              if (o_print_match) {
                 this_pat_matched = o_negate_match ^ (re2g::extract(in, **pat, rep, &out, o_global) > 0);
                 to_print = &out;
               } else {
@@ -766,42 +770,42 @@ int main(int argc, const char **argv) {
                 to_print = &in;
               }
 
-              if(o_also_print_unreplaced && !this_pat_matched) {
+              if (o_also_print_unreplaced && !this_pat_matched) {
                 to_print = &line;
               }
             }
-            if(this_pat_matched) {
+            if (this_pat_matched) {
               num_pats_matched++;
-              if(mode == REPLACE) {
-                if(!obuf.empty()) {
-                  obuf += '\n'; // TODO(ekobrin) use configurable line ending
+              if (mode == REPLACE) {
+                if (!obuf.empty()) {
+                  obuf += '\n';  // TODO(ekobrin) use configurable line ending
                 }
                 obuf += *to_print;
               }
             }
           }
 
-          bool right_pats_matched = multi_rule==MATCH_ANY?
+          bool right_pats_matched = multi_rule == MATCH_ANY?
             num_pats_matched > 0:
             num_pats_matched == pats.size();
 
-          if(right_pats_matched && mode == REPLACE) {
+          if (right_pats_matched && mode == REPLACE) {
             to_print = &obuf;
           }
-          if(!(right_pats_matched || o_also_print_unreplaced)) {
+          if (!(right_pats_matched || o_also_print_unreplaced)) {
             to_print = NULL;
           }
-          if(right_pats_matched) {
-            if(o_quiet_and_quick) {
+          if (right_pats_matched) {
+            if (o_quiet_and_quick) {
               return 0;
             }
             count++;
             ca_printed = 0;
-            if(o_before_context) {
+            if (o_before_context) {
               line_no -= before.size();
               pref.separator = (count > 1 &&
                                 line_no - last_line_no > 1) ? group_separator : NULL;
-              while(!before.empty()) {
+              while (!before.empty()) {
                 pref.line_no = (pref.line_no >= 0) ? line_no : -1;
                 re2g::emit_line(&pref, '-', before.front(), eol, o_line_buffered);
                 before.pop_front();
@@ -810,12 +814,12 @@ int main(int argc, const char **argv) {
               last_line_no = line_no;
             }
           }
-          if(ca_printed < o_after_context && !to_print && !o_count) {
+          if (ca_printed < o_after_context && !to_print && !o_count) {
             to_print = &line;
             ca_printed++;
           }
-          if(to_print) {
-            if(!o_count && !o_list) {
+          if (to_print) {
+            if (!o_count && !o_list) {
               pref.line_no = (pref.line_no >= 0) ? line_no : -1;
               pref.separator = (count > 1 &&
                                 line_no - last_line_no > 1) ? group_separator : NULL;
@@ -823,60 +827,60 @@ int main(int argc, const char **argv) {
               last_line_no = line_no;
             }
           } else {
-            if(o_before_context > 0) {
+            if (o_before_context > 0) {
               std::size_t bc = std::size_t(o_before_context);
-              if(before.size() >= bc) {
+              if (before.size() >= bc) {
                 before.pop_front();
               }
               before.push_back(std::string(line));
             }
           }
-          if(line_no >= 0) {
+          if (line_no >= 0) {
             line_no++;
           }
         }
-        if(count > 0) {
+        if (count > 0) {
           retval = 0;
         }
-        if(o_count) {
-          if(o_print_fname) {
+        if (o_count) {
+          if (o_print_fname) {
             std::cout << fname << ":";
           }
           std::cout << count << eol;
-          if(o_line_buffered) {
+          if (o_line_buffered) {
             std::cout.flush();
           }
-        } else if(o_list && (count > 0) ^ o_neg_list) {
+        } else if (o_list && (count > 0) ^ o_neg_list) {
           std::cout << fname << eol;
-          if(o_line_buffered) {
+          if (o_line_buffered) {
             std::cout.flush();
           }
         }
-        if(using_stdin) {
+        if (using_stdin) {
           using_stdin = false;
         } else {
           delete is;
         }
       }
-      if(pb) {
+      if (pb) {
         int sl;
         wait(&sl);
         delete pb;
       }
-      if(fb) {
+      if (fb) {
         delete fb;
       }
     }
   }
-  if(group_separator) {
+  if (group_separator) {
     delete group_separator;
   }
-  while(!pats.empty()) {
+  while (!pats.empty()) {
     delete pats.back();
     pats.pop_back();
   }
 
-  if(uargv) {
+  if (uargv) {
     delete[] uargv;
   }
   return retval;

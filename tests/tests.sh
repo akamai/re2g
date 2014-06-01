@@ -43,11 +43,34 @@ function test_same () {
   fi
 }
 
+fail=0;
+
 if diff <($re2g -?) <(sed 's/%1\$s/'`basename $re2g`'/g' src/usage); then
-  echo SUCCESS "-? => USAGE";
+  grep -o '{.*argument.*'\''},' < src/re2g.cc |tr -d '{},",'\' |
+  grep -v -e silent -e exec |
+  while read long arg junk short; do
+    shortarg="";
+    longarg="";
+    if [ "$arg" = "required_argument" ]; then
+      shortarg=' [A-Z]*';
+      longarg='=[A-Z]*';
+    fi
+    if [ "$arg" = "optional_argument" ]; then
+      shortarg=' [A-Z]*';
+      longarg='\[=[A-Z]*\]';
+    fi  
+    argstr="-$short$shortarg, --$long$longarg"
+    if $re2g -? | grep -q -e "$argstr"; then
+      echo "SUCCESS found --$long";
+    else
+      echo FAILURE "-?: missing: '$argstr'";
+      fail=`expr $fail + 1`;
+    fi;
+  done
+  #  echo SUCCESS "-? => USAGE";
 else
-  echo FAILURE "-h => help has diverged"
-  fail=1;
+  echo FAILURE "-? => help has diverged"
+  fail=`expr $fail + 1`;
 fi 
 
 V=`$re2g --version`
@@ -55,7 +78,7 @@ if echo $V | $grep -q "^`basename $re2g` v[0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}\
   echo SUCCESS "--version => $V";
 else
   echo FAILURE "--version => $V"
-  fail=1;
+  fail=`expr $fail + 1`;
 fi 
 
 

@@ -312,7 +312,7 @@ int main(int argc, const char **argv) {
     {"global", no_argument, &o_global, 'g'},
     {"invert-match", no_argument, &o_negate_match, 'v'},
     {"only-matching", no_argument, &o_global, 'o'},
-    {"subtitute", required_argument, &o_substitute, 's'},
+    {"substitute", required_argument, &o_substitute, 's'},
     {"print-all", no_argument, &o_also_print_unreplaced, 'p'},
     {"print-names", no_argument, &o_print_fname, 'H'},
     {"no-print-names", no_argument, &o_no_print_fname, 'h'},

@@ -86,7 +86,7 @@ fi
 rmode=0;
 
 gopt=$(grep -o '^ *"\(\(.:\)\|\(.\)\)*",' src/re2g.cc|tr -d '," '|sed 's/\([^:]:*\)/\1 /g')
-diff <(echo " $gopt"|tr ' ' '\n'|sort)  <(echo " $argl"|tr ' ' '\n'|sort)
+diff <(echo " $gopt"|tr ' ' '\n'|sort|grep .)  <(echo " $argl"|tr ' ' '\n'|sort|grep .)
 if [ $? = 0 ]; then
   echo SUCCESS "getopt call ok";
 else

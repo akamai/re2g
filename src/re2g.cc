@@ -356,7 +356,7 @@ int main(int argc, const char **argv) {
   int longopt = 0;
   int maxopt = sizeof(options) - 1;
   while((c = getopt_long(argc, (char * const *)argv,
-                         "?ogvgs:pHhclLiFxB:C:A:nm:X:qN0zZJEe:f:Tt:VU",
+                         "?ogvs:pHhclLiFxB:C:A:nm:X:qN0zZJEe:f:Tt:VU",
                          (const struct option *)&options[0], &longopt)) != -1) {
     if(0 == c && longopt >= 0 &&
        longopt < maxopt) {

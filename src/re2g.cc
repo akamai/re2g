@@ -1,4 +1,5 @@
-/*  author: Eric Kobrin <ekobrin@akamai.com>
+/*  Copyright 2014 Akamai Technologies
+    author: Eric Kobrin <ekobrin@akamai.com>
 
     Hello code reader. Welcome to my re2-based grep-alike.
 
@@ -49,21 +50,23 @@
          by lines containing only a pair of dashes.
    */
 
-
-#include <re2/re2.h>
-#include <iostream>
-#include <fstream>
 #include <errno.h>
 #include <getopt.h>
-#include <deque>
 #include <unistd.h>
 #include <string.h>
-#include <streambuf>
-#include <cstdlib>
-#include <cstdio>
 #include <fcntl.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+
+#include <re2/re2.h>
+
+#include <iostream>
+#include <fstream>
+#include <deque>
+#include <streambuf>
+#include <cstdlib>
+#include <cstdio>
+
 
 #define RE2G_VERSION "%s v0.1.35-dev"
 #include "re2g_usage.h"
@@ -204,8 +207,8 @@ enum input_type {STDIN, CAT, NAME};
 fdbuf *ioexec(char* const* arglist, const char* fname, enum input_type util_input, std::size_t blksize = 0) {
   int plumb[2];
   pid_t pid;
-    
-    if(pipe(&plumb[0])) {
+
+  if(pipe(&plumb[0])) {
     std::cerr << "error piping for " << arglist[0] << ": "
               << strerror(errno) << std::endl;
     return NULL;
@@ -447,7 +450,7 @@ int main(int argc, const char **argv) {
       for(oa = optarg;
           optind < argc
             && oa
-            && !(oa[0] == ';' && oa[1] == 0) ;
+            && !(oa[0] == ';' && oa[1] == 0);
           oa = argv[optind++]) {
         uargs.push_back(oa);
       }
@@ -510,7 +513,7 @@ int main(int argc, const char **argv) {
   }
 
 #ifdef RE2G_DEBUG_OPTION_PARSER
-  for(const struct option *o=&options[0];o->name;o++) {
+  for(const struct option *o=&options[0]; o->name; o++) {
     std::cerr << o->name << ':';
     if(o->flag) {
       std::cerr << *o->flag;
@@ -523,7 +526,7 @@ int main(int argc, const char **argv) {
   std::cerr << "C: [" << o_after_context << ',' << o_before_context << ']' << std::endl;
   
   std::cerr << "ARGC: " << argc << std::endl;
-  for(int i=0;i<argc;i++) {
+  for(int i=0; i<argc; i++) {
     std::cerr << "ARGV[" << i << "]: " << argv[i]  << std::endl;
   }
   std::cerr   << std::endl;
@@ -578,7 +581,7 @@ int main(int argc, const char **argv) {
   }
 
 
-  //rationalize flags
+  // rationalize flags
   if(o_neg_list) {
     o_list = 1;
   }
@@ -608,7 +611,7 @@ int main(int argc, const char **argv) {
 
 
   if(mode == SEARCH && o_print_match) {
-    //o_print_match for SEARCH uses REPLACE code with constant repstr
+    // o_print_match for SEARCH uses REPLACE code with constant repstr
     rep = std::string("\\0");
     o_also_print_unreplaced = 0;
     mode = REPLACE;
@@ -714,8 +717,8 @@ int main(int argc, const char **argv) {
       std::deque<std::string> before(o_before_context);
       before.clear();
       if(using_stdin) {
-        //this is for output compatibility with grep,
-        //should evenually support --label
+        // this is for output compatibility with grep,
+        // should evenually support --label
         fname = "(standard input)";
       }
 
@@ -771,7 +774,7 @@ int main(int argc, const char **argv) {
               num_pats_matched++;
               if(mode == REPLACE) {
                 if(!obuf.empty()) {
-                  obuf += '\n'; //TODO: use configurable line ending
+                  obuf += '\n'; // TODO: use configurable line ending
                 }
                 obuf += *to_print;
               }

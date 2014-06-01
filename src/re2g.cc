@@ -263,7 +263,7 @@ fdbuf *ioexec(char* const* arglist, const char* fname, enum input_type util_inpu
   }
 }
 
-}
+} // namespace re2g
 
 int main(int argc, const char **argv) {
   const char *appname = argv[0];
@@ -774,7 +774,7 @@ int main(int argc, const char **argv) {
               num_pats_matched++;
               if(mode == REPLACE) {
                 if(!obuf.empty()) {
-                  obuf += '\n'; // TODO: use configurable line ending
+                  obuf += '\n'; // TODO(ekobrin) use configurable line ending
                 }
                 obuf += *to_print;
               }

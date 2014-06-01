@@ -47,18 +47,26 @@ fail=0;
 
 if diff <($re2g -?) <(sed 's/%1\$s/'`basename $re2g`'/g' src/usage); then
   grep -o '{.*argument.*'\''},' < src/re2g.cc |tr -d '{},",'\' |
-  grep -v -e silent -e exec |
+#  grep -v -e silent -e exec |
   while read long arg junk short; do
     shortarg="";
     longarg="";
-    if [ "$arg" = "required_argument" ]; then
-      shortarg=' [A-Z]*';
-      longarg='=[A-Z]*';
-    fi
-    if [ "$arg" = "optional_argument" ]; then
-      shortarg=' [A-Z]*';
-      longarg='\[=[A-Z]*\]';
-    fi  
+    case "$long" in 
+      exec)
+        shortarg=' []A-Z .;[]*';
+        longarg='=[]A-Z .;[]*';;
+      silent)
+        shortarg=', --quiet';;
+      *)
+        if [ "$arg" = "required_argument" ]; then
+          shortarg=' [A-Z]*';
+          longarg='=[A-Z]*';
+        fi
+        if [ "$arg" = "optional_argument" ]; then
+          shortarg=' [A-Z]*';
+          longarg='\[=[A-Z]*\]';
+        fi;;
+    esac
     argstr="-$short$shortarg, --$long$longarg"
     if $re2g -? | grep -q -e "$argstr"; then
       echo "SUCCESS found --$long";

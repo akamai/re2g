@@ -44,28 +44,30 @@ function test_same () {
 }
 
 fail=0;
-
+argl='';
 if diff <($re2g -?) <(sed 's/%1\$s/'`basename $re2g`'/g' src/usage); then
-  grep -o '{.*argument.*'\''},' < src/re2g.cc |tr -d '{},",'\' |
-#  grep -v -e silent -e exec |
   while read long arg junk short; do
     shortarg="";
     longarg="";
+    argl="$argl $short";
+    if [ "$arg" = "required_argument" ]; then
+      shortarg=' [A-Z]*';
+      longarg='=[A-Z]*';
+      argl="$argl:";
+    fi
+    if [ "$arg" = "optional_argument" ]; then
+      shortarg=' [A-Z]*';
+      longarg='\[=[A-Z]*\]';
+      argl="$argl:";
+    fi;
     case "$long" in 
       exec)
         shortarg=' []A-Z .;[]*';
         longarg='=[]A-Z .;[]*';;
       silent)
-        shortarg=', --quiet';;
-      *)
-        if [ "$arg" = "required_argument" ]; then
-          shortarg=' [A-Z]*';
-          longarg='=[A-Z]*';
-        fi
-        if [ "$arg" = "optional_argument" ]; then
-          shortarg=' [A-Z]*';
-          longarg='\[=[A-Z]*\]';
-        fi;;
+        shortarg=', --quiet';
+        longarg='';
+        argl=$(echo " $argl" | sed "s/ $short//");
     esac
     argstr="-$short$shortarg, --$long$longarg"
     if $re2g -? | grep -q -e "$argstr"; then
@@ -74,12 +76,23 @@ if diff <($re2g -?) <(sed 's/%1\$s/'`basename $re2g`'/g' src/usage); then
       echo FAILURE "-?: missing: '$argstr'";
       fail=`expr $fail + 1`;
     fi;
-  done
+  done < <(grep -o '{.*argument.*'\''},' < src/re2g.cc |tr -d '{},",'\')
   #  echo SUCCESS "-? => USAGE";
 else
   echo FAILURE "-? => help has diverged"
   fail=`expr $fail + 1`;
 fi 
+
+rmode=0;
+
+gopt=$(grep -o '^ *"\(\(.:\)\|\(.\)\)*",' src/re2g.cc|tr -d '," '|sed 's/\([^:]:*\)/\1 /g')
+diff <(echo " $gopt"|tr ' ' '\n'|sort)  <(echo " $argl"|tr ' ' '\n'|sort)
+if [ $? = 0 ]; then
+  echo SUCCESS "getopt call ok";
+else
+  echo FAILURE "getopt call bad"
+  fail=`expr $fail + 1`;
+fi
 
 V=`$re2g --version`
 if echo $V | $grep -q "^`basename $re2g` v[0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}\(-dev\)\{0,1\}$"; then

@@ -1,3 +1,11 @@
+v0.1.35 2016.01.21
+------------------
+Code cleanup
+Added support for debugging via a compile-time-flag
+Added -/ option for chosing a character other than semicolon for
+terminating -X command, which makes re2g work better with `find'
+
+
 v0.1.34 2014.05.31
 ------------------
 Added --match-any and --match-all

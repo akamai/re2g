@@ -307,7 +307,8 @@ int main(int argc, const char **argv) {
     o_line_buffered = isatty(STDOUT_FILENO),
     o_no_group_separator = 0,
     o_group_separator = 0,
-    o_set_operator = 0;
+    o_set_operator = 0,
+    o_termination_marker = ';';
 
   enum {SEARCH, REPLACE} mode = SEARCH;
   enum {MATCH_ANY, MATCH_ALL} multi_rule = MATCH_ANY;
@@ -333,6 +334,7 @@ int main(int argc, const char **argv) {
     {"line-number", no_argument, NULL, 'n'},
     {"max-count", required_argument, &o_max_matches, 'm'},
     {"exec", required_argument, NULL, 'X'},
+    {"exec-end", required_argument, &o_termination_marker, '/'},
     {"quiet", no_argument, &o_quiet_and_quick, 'q'},
     {"silent", no_argument, &o_quiet_and_quick, 'q'},
     {"null", no_argument, &o_special_delimiter, '0'},
@@ -361,7 +363,7 @@ int main(int argc, const char **argv) {
   int longopt = 0;
   int maxopt = sizeof(options) - 1;
   while ((c = getopt_long(argc, (char * const *)argv,
-                         "?ogvs:pHhclLiFxB:C:A:nm:X:qN0zZJEe:f:Tt:VU",
+                         "?ogvs:pHhclLiFxB:C:A:nm:X:/:qN0zZJEe:f:Tt:VU",
                          (const struct option *)&options[0], &longopt)) != -1) {
     if (0 == c && longopt >= 0 &&
        longopt < maxopt) {
@@ -452,17 +454,25 @@ int main(int argc, const char **argv) {
       break;
     case 'X':
       uargs.clear();
-      // consume until arg is a single semi-colon like find -exec
+      /* consume until arg is the termination marker, default is
+         semicolon like find -exec */
       const char* oa;
       for (oa = optarg;
           optind < argc
             && oa
-            && !(oa[0] == ';' && oa[1] == 0);
+            && !(oa[0] == o_termination_marker && oa[1] == 0);
           oa = argv[optind++]) {
         uargs.push_back(oa);
       }
-      if (!(oa[0] == ';' && oa[1] == 0)) {
+      if (!(oa[0] == o_termination_marker && oa[1] == 0)) {
         o_usage = 1;
+      }
+      break;
+    case '/':
+      if (optarg[0] == 0 || optarg[1] != 0) {
+        o_usage = 1;
+      } else {
+        o_termination_marker = optarg[0];
       }
       break;
     case 'n':

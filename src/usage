@@ -1,4 +1,4 @@
-usage: %1$s [-?ogvgpHhclLiFxnqN0zZJEW][-X UTILITY ...][-s SUBSTITUTION][-B NUM][-A NUM][-C NUM][-m NUM][-W SEPARATOR] PATTERN|[-e PATTERN|-f PATFILE] [FILE1 FILE2...]
+usage: %1$s [-?ogvgpHhclLiFxnqN0zZJEW][[-/ CHAR] -X UTILITY ...][-s SUBSTITUTION][-B NUM][-A NUM][-C NUM][-m NUM][-W SEPARATOR] PATTERN|[-e PATTERN|-f PATFILE] [FILE1 FILE2...]
 
 Search for PATTERN in each FILE or standard input
 PATTERN is an RE2 expression
@@ -45,6 +45,7 @@ Utility invocation:
    -Z, --decompress  same as -X zcat \; NOTE: zcat must be in $PATH
    -z, --gzdecompress  same as -X gzcat \; NOTE: gzcat must be in $PATH
    -J, --bz2decompress  same as -X bzcat \; NOTE: bzcat must be in $PATH
+   -/ CHAR, --exec-end=CHAR replace sentinel character with CHAR, defauts to semicolon
 
 Miscellaneous:
    --version Display version information
